@@ -286,16 +286,19 @@ ${resumeAnalysis}
 Interview Transcript:
 ${transcript}
 
-Include:
-1. Overall Performance Rating (1-10)
+IMPORTANT: Start with a clear overall result:
+**RESULT: PASS** or **RESULT: FAIL**
+
+Then include:
+1. Overall Performance Score (1-10)
 2. Key Strengths (3-5 points)
 3. Areas for Improvement (3-5 points)
 4. Technical Competency Assessment
 5. Communication Skills Rating
-6. Recommendation (Strong Hire / Hire / Maybe / No Hire)
+6. Hiring Recommendation (Strong Hire / Hire / Maybe / No Hire)
 7. Detailed Notes
 
-Format as a structured report.`,
+Format as a clear, structured report.`,
           },
         ],
         temperature: 0.7,

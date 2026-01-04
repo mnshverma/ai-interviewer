@@ -114,76 +114,58 @@ function App() {
     ]);
   }, []);
 
-  // Handle answer completion
-  const handleAnswerComplete = useCallback(async (recordingBlob) => {
-    if (!interviewConfig) return;
+  // Handle answer completion (receives answer text directly from VideoInterview)
+  const handleAnswerComplete = useCallback(async (answerText) => {
+    if (!interviewConfig || !answerText?.trim()) return;
 
-    // Start voice recognition for answer
-    setIsListening(true);
+    // Add answer to transcript
+    addToTranscript('candidate', answerText);
 
-    speechService.startListening(
-      ({ interim, final }) => {
-        // Handle interim results if needed
-      },
-      async (finalAnswer) => {
-        // Answer complete
-        setIsListening(false);
+    // Optional: Evaluate answer
+    const currentQuestion = questions[currentQuestionIndex];
+    
+    try {
+      const evaluation = await evaluateAnswer(
+        currentQuestion,
+        answerText,
+        resumeAnalysis,
+        interviewConfig.aiModel
+      );
 
-        if (!finalAnswer.trim()) {
-          alert('No answer detected. Please try again.');
-          return;
-        }
-
-        // Add answer to transcript
-        addToTranscript('candidate', finalAnswer);
-
-        // Optional: Evaluate answer
-        const currentQuestion = questions[currentQuestionIndex];
-        
-        try {
-          const evaluation = await evaluateAnswer(
-            currentQuestion,
-            finalAnswer,
-            resumeAnalysis,
-            interviewConfig.aiModel
-          );
-
-          if (evaluation.success) {
-            addToTranscript('candidate', finalAnswer, evaluation.feedback);
-          }
-        } catch (err) {
-          console.error('Evaluation error:', err);
-        }
-
-        // Move to next question
-        const nextIndex = currentQuestionIndex + 1;
-        
-        if (nextIndex < questions.length) {
-          setCurrentQuestionIndex(nextIndex);
-          const nextQuestion = questions[nextIndex];
-          
-          addToTranscript('interviewer', nextQuestion);
-
-          if (interviewConfig.enableVoice) {
-            setIsAISpeaking(true);
-            try {
-              await speechService.speak(nextQuestion);
-            } catch (err) {
-              console.error('Speech error:', err);
-            }
-            setIsAISpeaking(false);
-          }
-        } else {
-          // Interview complete
-          await completeInterview();
-        }
-      },
-      (error) => {
-        setIsListening(false);
-        console.error('Speech recognition error:', error);
-        alert('Speech recognition error. Please try typing your answer or check microphone permissions.');
+      if (evaluation.success && evaluation.feedback) {
+        // Update the last transcript entry with feedback
+        setTranscript(prev => {
+          const updated = [...prev];
+          updated[updated.length - 1].feedback = evaluation.feedback;
+          return updated;
+        });
       }
-    );
+    } catch (err) {
+      console.error('Evaluation error:', err);
+    }
+
+    // Move to next question
+    const nextIndex = currentQuestionIndex + 1;
+    
+    if (nextIndex < questions.length) {
+      setCurrentQuestionIndex(nextIndex);
+      const nextQuestion = questions[nextIndex];
+      
+      addToTranscript('interviewer', nextQuestion);
+
+      if (interviewConfig.enableVoice) {
+        setIsAISpeaking(true);
+        try {
+          await speechService.speak(nextQuestion);
+        } catch (err) {
+          console.error('Speech error:', err);
+        }
+        setIsAISpeaking(false);
+      }
+    } else {
+      // Interview complete
+      await completeInterview();
+    }
   }, [interviewConfig, questions, currentQuestionIndex, resumeAnalysis, addToTranscript]);
 
   // Complete interview
@@ -314,6 +296,7 @@ function App() {
                 onAnswerComplete={handleAnswerComplete}
                 isAISpeaking={isAISpeaking}
                 onVideoReady={() => {}}
+                autoStartListening={true}
               />
               
               {interviewState === 'completed' && (

@@ -5,26 +5,82 @@ const VideoInterview = ({
   currentQuestion, 
   onAnswerComplete,
   isAISpeaking,
-  onVideoReady 
+  onVideoReady,
+  autoStartListening
 }) => {
   const [stream, setStream] = useState(null);
-  const [isRecording, setIsRecording] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+  const [currentAnswer, setCurrentAnswer] = useState('');
   const [error, setError] = useState('');
   const videoRef = useRef(null);
-  const mediaRecorderRef = useRef(null);
-  const recordedChunksRef = useRef([]);
+  const recognitionRef = useRef(null);
+  const silenceTimerRef = useRef(null);
 
   useEffect(() => {
     if (isActive) {
       startCamera();
+      initializeSpeechRecognition();
     } else {
       stopCamera();
     }
 
     return () => {
       stopCamera();
+      stopListening();
     };
   }, [isActive]);
+
+  // Auto-start listening after AI finishes speaking
+  useEffect(() => {
+    if (autoStartListening && !isAISpeaking && !isListening) {
+      setTimeout(() => {
+        startListening();
+      }, 500);
+    }
+  }, [autoStartListening, isAISpeaking]);
+
+  const initializeSpeechRecognition = () => {
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      recognitionRef.current = new SpeechRecognition();
+      recognitionRef.current.continuous = true;
+      recognitionRef.current.interimResults = true;
+      recognitionRef.current.lang = 'en-US';
+
+      recognitionRef.current.onresult = (event) => {
+        let finalTranscript = currentAnswer;
+
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const transcript = event.results[i][0].transcript;
+          
+          if (event.results[i].isFinal) {
+            finalTranscript += transcript + ' ';
+          }
+        }
+
+        setCurrentAnswer(finalTranscript);
+
+        // Reset silence timer - auto-submit after 3 seconds of silence
+        clearTimeout(silenceTimerRef.current);
+        silenceTimerRef.current = setTimeout(() => {
+          if (finalTranscript.trim()) {
+            submitAnswer(finalTranscript.trim());
+          }
+        }, 3000);
+      };
+
+      recognitionRef.current.onerror = (event) => {
+        console.error('Speech recognition error:', event.error);
+        if (event.error === 'no-speech' && currentAnswer.trim()) {
+          submitAnswer(currentAnswer.trim());
+        }
+      };
+
+      recognitionRef.current.onend = () => {
+        setIsListening(false);
+      };
+    }
+  };
 
   const startCamera = async () => {
     try {
@@ -43,23 +99,11 @@ const VideoInterview = ({
         videoRef.current.srcObject = mediaStream;
       }
 
-      // Setup media recorder
-      const mediaRecorder = new MediaRecorder(mediaStream, {
-        mimeType: 'video/webm;codecs=vp8,opus'
-      });
-
-      mediaRecorder.ondataavailable = (event) => {
-        if (event.data.size > 0) {
-          recordedChunksRef.current.push(event.data);
-        }
-      };
-
-      mediaRecorderRef.current = mediaRecorder;
       onVideoReady?.(true);
       setError('');
     } catch (err) {
       console.error('Camera access error:', err);
-      setError('Unable to access camera. Please grant camera permissions.');
+      setError('Unable to access camera and microphone. Please grant permissions.');
       onVideoReady?.(false);
     }
   };
@@ -71,39 +115,34 @@ const VideoInterview = ({
     }
   };
 
-  const startRecording = () => {
-    if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'inactive') {
-      recordedChunksRef.current = [];
-      mediaRecorderRef.current.start(100);
-      setIsRecording(true);
-    }
-  };
-
-  const stopRecording = () => {
-    return new Promise((resolve) => {
-      if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
-        mediaRecorderRef.current.onstop = () => {
-          const blob = new Blob(recordedChunksRef.current, { type: 'video/webm' });
-          resolve(blob);
-          setIsRecording(false);
-        };
-        mediaRecorderRef.current.stop();
-      } else {
-        resolve(null);
+  const startListening = () => {
+    if (recognitionRef.current && !isListening) {
+      setCurrentAnswer('');
+      try {
+        recognitionRef.current.start();
+        setIsListening(true);
+      } catch (err) {
+        console.error('Failed to start recognition:', err);
       }
-    });
+    }
   };
 
-  const downloadRecording = async () => {
-    const blob = await stopRecording();
-    if (blob) {
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `interview_${Date.now()}.webm`;
-      a.click();
-      URL.revokeObjectURL(url);
+  const stopListening = () => {
+    if (recognitionRef.current && isListening) {
+      try {
+        recognitionRef.current.stop();
+      } catch (err) {
+        // Already stopped
+      }
+      setIsListening(false);
+      clearTimeout(silenceTimerRef.current);
     }
+  };
+
+  const submitAnswer = (answer) => {
+    stopListening();
+    setCurrentAnswer('');
+    onAnswerComplete?.(answer);
   };
 
   return (
@@ -114,8 +153,11 @@ const VideoInterview = ({
             <div style={{ fontSize: 'var(--font-size-4xl)', marginBottom: 'var(--space-md)' }}>
               📹
             </div>
-            <h3 className="mb-md">Camera Access Required</h3>
+            <h3 className="mb-md">Camera & Microphone Required</h3>
             <p className="text-secondary">{error}</p>
+            <p className="text-tertiary mt-md" style={{ fontSize: 'var(--font-size-sm)' }}>
+              Please enable camera and microphone permissions in your browser settings
+            </p>
           </div>
         </div>
       ) : (
@@ -129,57 +171,57 @@ const VideoInterview = ({
           />
 
           <div className="video-overlay">
-            <div className="flex justify-between items-center">
-              <div>
-                {isRecording && (
-                  <div className="status-indicator recording">
-                    <div className="status-dot"></div>
-                    <span>Recording</span>
-                  </div>
-                )}
+            {/* Status Indicators */}
+            <div className="flex justify-between items-center mb-md">
+              <div className="flex gap-sm">
                 {isAISpeaking && (
                   <div className="status-indicator active">
                     <div className="status-dot"></div>
-                    <span>AI Speaking...</span>
+                    <span>🤖 AI Speaking...</span>
                   </div>
                 )}
-              </div>
-
-              <div className="flex gap-sm">
-                {!isRecording ? (
-                  <button
-                    className="btn btn-danger"
-                    onClick={startRecording}
-                    disabled={!stream || isAISpeaking}
-                  >
-                    ⏺ Start Recording Answer
-                  </button>
-                ) : (
-                  <button
-                    className="btn btn-success"
-                    onClick={async () => {
-                      const recording = await stopRecording();
-                      onAnswerComplete?.(recording);
-                    }}
-                  >
-                    ⏹ Stop & Submit Answer
-                  </button>
+                {isListening && (
+                  <div className="status-indicator recording">
+                    <div className="status-dot"></div>
+                    <span>🎤 Listening...</span>
+                  </div>
                 )}
               </div>
             </div>
 
+            {/* Current Question */}
             {currentQuestion && (
-              <div className="mt-md" style={{
-                background: 'hsla(220, 18%, 15%, 0.9)',
+              <div style={{
+                background: 'hsla(220, 18%, 15%, 0.95)',
                 backdropFilter: 'blur(20px)',
                 padding: 'var(--space-md)',
                 borderRadius: 'var(--radius-md)',
-                border: '1px solid var(--color-border)'
+                border: '2px solid var(--color-primary)',
+                marginBottom: 'var(--space-md)'
               }}>
-                <h4 className="mb-sm" style={{ color: 'var(--color-primary)' }}>
-                  Current Question:
+                <h4 style={{ color: 'var(--color-primary)', marginBottom: 'var(--space-sm)' }}>
+                  ❓ Question:
                 </h4>
-                <p>{currentQuestion}</p>
+                <p style={{ fontSize: 'var(--font-size-lg)' }}>{currentQuestion}</p>
+              </div>
+            )}
+
+            {/* Current Answer Being Captured */}
+            {isListening && currentAnswer && (
+              <div style={{
+                background: 'hsla(160, 70%, 50%, 0.1)',
+                backdropFilter: 'blur(20px)',
+                padding: 'var(--space-md)',
+                borderRadius: 'var(--radius-md)',
+                border: '2px solid var(--color-accent)',
+              }}>
+                <h4 style={{ color: 'var(--color-accent)', marginBottom: 'var(--space-sm)' }}>
+                  💬 Your Answer:
+                </h4>
+                <p style={{ fontSize: 'var(--font-size-base)' }}>{currentAnswer}</p>
+                <small className="text-tertiary mt-sm" style={{ display: 'block' }}>
+                  ⏱️ Auto-submitting in 3 seconds after you stop speaking...
+                </small>
               </div>
             )}
           </div>

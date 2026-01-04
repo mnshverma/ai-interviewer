@@ -4,7 +4,6 @@ const InterviewSettings = ({ onStartInterview, hasData }) => {
   const [interviewType, setInterviewType] = useState('technical');
   const [aiModel, setAiModel] = useState('meta-llama/llama-3.3-70b-instruct:free');
   const [enableVoice, setEnableVoice] = useState(true);
-  const [enableRecording, setEnableRecording] = useState(true);
 
   const handleStart = () => {
     if (!hasData) {
@@ -15,8 +14,7 @@ const InterviewSettings = ({ onStartInterview, hasData }) => {
     onStartInterview({
       interviewType,
       aiModel,
-      enableVoice,
-      enableRecording
+      enableVoice
     });
   };
 
@@ -85,19 +83,19 @@ const InterviewSettings = ({ onStartInterview, hasData }) => {
         </small>
       </div>
 
-      <div className="input-group">
-        <label className="flex items-center gap-sm" style={{ cursor: 'pointer' }}>
-          <input
-            type="checkbox"
-            checked={enableRecording}
-            onChange={(e) => setEnableRecording(e.target.checked)}
-            style={{ width: '20px', height: '20px', cursor: 'pointer' }}
-          />
-          <span>Enable Interview Recording</span>
-        </label>
-        <small className="text-tertiary">
-          Record video during the interview for later review
-        </small>
+      <div style={{
+        padding: 'var(--space-md)',
+        background: 'hsla(160, 70%, 50%, 0.05)',
+        border: '1px solid hsla(160, 70%, 50%, 0.2)',
+        borderRadius: 'var(--radius-md)',
+        marginBottom: 'var(--space-md)'
+      }}>
+        <h4 style={{ color: 'var(--color-accent)', marginBottom: 'var(--space-sm)', fontSize: 'var(--font-size-base)' }}>
+          ✨ Auto-Recording Enabled
+        </h4>
+        <p className="text-tertiary" style={{ fontSize: 'var(--font-size-sm)', margin: 0 }}>
+          Your answers will be automatically captured via speech-to-text. Just speak naturally after each question!
+        </p>
       </div>
 
       <button
