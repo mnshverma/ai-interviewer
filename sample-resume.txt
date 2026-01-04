@@ -1,0 +1,72 @@
+JOHN DOE
+Senior Software Engineer
+Email: john.doe@email.com | Phone: (555) 123-4567
+LinkedIn: linkedin.com/in/johndoe | GitHub: github.com/johndoe
+
+PROFESSIONAL SUMMARY
+Experienced Full-Stack Software Engineer with 8+ years of expertise in building scalable web applications, cloud infrastructure, and leading development teams. Passionate about clean code, system architecture, and mentoring junior developers.
+
+TECHNICAL SKILLS
+• Programming Languages: JavaScript, Python, Java, TypeScript, Go
+• Frontend: React, Vue.js, Next.js, HTML5, CSS3, Redux
+• Backend: Node.js, Express, Django, Spring Boot, FastAPI
+• Databases: PostgreSQL, MongoDB, Redis, MySQL
+• Cloud & DevOps: AWS (EC2, S3, Lambda), Docker, Kubernetes, CI/CD
+• Tools: Git, Jenkins, Terraform, webpack, Jest, pytest
+
+PROFESSIONAL EXPERIENCE
+
+Senior Software Engineer | TechCorp Inc. | San Francisco, CA
+January 2020 - Present
+• Led a team of 5 engineers in developing a microservices-based e-commerce platform serving 2M+ users
+• Architected and implemented RESTful APIs using Node.js and Express, reducing response time by 40%
+• Designed and deployed AWS infrastructure using Terraform, resulting in 99.9% uptime
+• Implemented CI/CD pipelines with Jenkins and Docker, reducing deployment time from 2 hours to 15 minutes
+• Mentored 3 junior developers, conducting code reviews and pair programming sessions
+• Collaborated with product managers and designers to define technical requirements
+
+Software Engineer | StartupXYZ | Austin, TX
+June 2017 - December 2019
+• Developed responsive web applications using React and Redux for 500K+ monthly active users
+• Built backend services with Python Django and PostgreSQL, handling 10M+ API requests daily
+• Implemented real-time features using WebSockets and Redis for live notifications
+• Reduced page load times by 60% through code splitting and lazy loading techniques
+• Participated in agile development process with bi-weekly sprints and daily standups
+
+Junior Software Developer | CodeFactory | Remote
+March 2015 - May 2017
+• Created interactive dashboards using Vue.js and Chart.js for data visualization
+• Developed REST APIs using Node.js and MongoDB for mobile applications
+• Wrote comprehensive unit and integration tests achieving 85% code coverage
+• Fixed bugs and implemented feature requests based on user feedback
+• Collaborated with cross-functional teams in a remote-first environment
+
+EDUCATION
+Bachelor of Science in Computer Science
+University of California, Berkeley | 2011 - 2015
+GPA: 3.7/4.0
+
+CERTIFICATIONS
+• AWS Certified Solutions Architect - Associate (2021)
+• Certified Kubernetes Application Developer (2022)
+
+NOTABLE PROJECTS
+E-Commerce Platform Redesign
+• Led the complete redesign of checkout flow, increasing conversion rate by 25%
+• Implemented headless CMS using Next.js and Contentful for marketing pages
+• Tech Stack: Next.js, TypeScript, Stripe API, AWS Lambda
+
+Real-Time Analytics Dashboard
+• Built real-time analytics dashboard processing 1M+ events per hour
+• Used WebSockets for live data streaming and Redis for caching
+• Tech Stack: React, Node.js, Socket.io, Redis, PostgreSQL
+
+Open Source Contributions
+• Contributor to popular React libraries with 500+ GitHub stars
+• Maintained npm packages with 10K+ weekly downloads
+• Active in Stack Overflow community with 5K+ reputation
+
+ACHIEVEMENTS & AWARDS
+• "Employee of the Year" at TechCorp Inc. (2022)
+• Hackathon Winner - Built AI-powered code review tool (2021)
+• Tech Speaker at ReactConf 2023 on "Building Scalable Applications"
