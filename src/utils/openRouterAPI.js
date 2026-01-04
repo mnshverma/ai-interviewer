@@ -9,7 +9,7 @@ const getApiKey = () => {
   return apiKey;
 };
 
-export const analyzeResume = async (resumeText, model = 'google/gemini-2.0-flash-exp:free') => {
+export const analyzeResume = async (resumeText, model = 'meta-llama/llama-3.3-70b-instruct:free') => {
   try {
     const apiKey = getApiKey();
 
@@ -45,7 +45,7 @@ Provide the analysis in a structured JSON format.`,
           },
         ],
         temperature: 0.7,
-        max_tokens: 1500,
+        max_tokens: 1000,
       }),
     });
 
@@ -105,7 +105,7 @@ Provide the analysis in a structured format highlighting what to assess in inter
           }
         ],
         temperature: 0.7,
-        max_tokens: 1500
+        max_tokens: 1000
       })
     });
 
@@ -168,7 +168,7 @@ Format each question on a new line, numbered 1-10.`,
           },
         ],
         temperature: 0.8,
-        max_tokens: 2000,
+        max_tokens: 1500,
       }),
     });
 
@@ -231,7 +231,7 @@ Provide a brief evaluation (2-3 sentences) on:
           },
         ],
         temperature: 0.7,
-        max_tokens: 300,
+        max_tokens: 200,
       }),
     });
 
@@ -299,7 +299,7 @@ Format as a structured report.`,
           },
         ],
         temperature: 0.7,
-        max_tokens: 2500,
+        max_tokens: 2000,
       }),
     });
 
