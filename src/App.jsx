@@ -40,9 +40,9 @@ function App() {
       
       // Analyze based on input mode
       if (inputData.mode === 'resume') {
-        analysisResult = await analyzeResume(inputData.text);
+        analysisResult = await analyzeResume(inputData.text, config.aiModel);
       } else {
-        analysisResult = await analyzeJobDescription(inputData.text);
+        analysisResult = await analyzeJobDescription(inputData.text, config.aiModel);
       }
       
       if (!analysisResult.success) {
@@ -54,7 +54,8 @@ function App() {
       // Generate questions
       const questionsResult = await generateInterviewQuestions(
         analysisResult.analysis,
-        config.interviewType
+        config.interviewType,
+        config.aiModel
       );
 
       if (!questionsResult.success || questionsResult.questions.length === 0) {
@@ -143,7 +144,8 @@ function App() {
           const evaluation = await evaluateAnswer(
             currentQuestion,
             finalAnswer,
-            resumeAnalysis
+            resumeAnalysis,
+            interviewConfig.aiModel
           );
 
           if (evaluation.success) {
@@ -207,7 +209,8 @@ function App() {
 
       const reportResult = await generateFinalReport(
         transcriptText,
-        resumeAnalysis
+        resumeAnalysis,
+        interviewConfig.aiModel
       );
 
       if (reportResult.success) {

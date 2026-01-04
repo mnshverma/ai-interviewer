@@ -9,7 +9,7 @@ const getApiKey = () => {
   return apiKey;
 };
 
-export const analyzeResume = async (resumeText) => {
+export const analyzeResume = async (resumeText, model = 'google/gemini-2.0-flash-exp:free') => {
   try {
     const apiKey = getApiKey();
 
@@ -22,7 +22,7 @@ export const analyzeResume = async (resumeText) => {
         "X-Title": "AI Interviewer",
       },
       body: JSON.stringify({
-        model: "meta-llama/llama-3.1-8b-instruct:free",
+        model: model,
         messages: [
           {
             role: "system",
@@ -70,7 +70,7 @@ Provide the analysis in a structured JSON format.`,
   }
 };
 
-export const analyzeJobDescription = async (jobDescText) => {
+export const analyzeJobDescription = async (jobDescText, model = 'google/gemini-2.0-flash-exp:free') => {
   try {
     const apiKey = getApiKey();
     const response = await fetch(OPENROUTER_API_URL, {
@@ -82,7 +82,7 @@ export const analyzeJobDescription = async (jobDescText) => {
         'X-Title': 'AI Interviewer'
       },
       body: JSON.stringify({
-        model: 'meta-llama/llama-3.1-8b-instruct:free',
+        model: model,
         messages: [
           {
             role: 'system',
@@ -132,7 +132,8 @@ Provide the analysis in a structured format highlighting what to assess in inter
 
 export const generateInterviewQuestions = async (
   resumeAnalysis,
-  interviewType
+  interviewType,
+  model = 'google/gemini-2.0-flash-exp:free'
 ) => {
   try {
     const apiKey = getApiKey();
@@ -146,7 +147,7 @@ export const generateInterviewQuestions = async (
         "X-Title": "AI Interviewer",
       },
       body: JSON.stringify({
-        model: "meta-llama/llama-3.1-8b-instruct:free",
+        model: model,
         messages: [
           {
             role: "system",
@@ -198,7 +199,7 @@ Format each question on a new line, numbered 1-10.`,
   }
 };
 
-export const evaluateAnswer = async (question, answer, context) => {
+export const evaluateAnswer = async (question, answer, context, model = 'google/gemini-2.0-flash-exp:free') => {
   try {
     const apiKey = getApiKey();
     const response = await fetch(OPENROUTER_API_URL, {
@@ -210,7 +211,7 @@ export const evaluateAnswer = async (question, answer, context) => {
         "X-Title": "AI Interviewer",
       },
       body: JSON.stringify({
-        model: "meta-llama/llama-3.1-8b-instruct:free",
+        model: model,
         messages: [
           {
             role: "system",
@@ -254,7 +255,8 @@ Provide a brief evaluation (2-3 sentences) on:
 
 export const generateFinalReport = async (
   transcript,
-  resumeAnalysis
+  resumeAnalysis,
+  model = 'google/gemini-2.0-flash-exp:free'
 ) => {
   try {
     const apiKey = getApiKey();
@@ -267,7 +269,7 @@ export const generateFinalReport = async (
         "X-Title": "AI Interviewer",
       },
       body: JSON.stringify({
-        model: "meta-llama/llama-3.1-8b-instruct:free",
+        model: model,
         messages: [
           {
             role: "system",
