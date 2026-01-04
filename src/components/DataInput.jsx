@@ -84,17 +84,44 @@ const DataInput = ({ onDataProvided }) => {
 
   return (
     <div className="card fade-in">
-      <h2 className="mb-md">📋 Interview Preparation</h2>
+      <div style={{ marginBottom: 'var(--space-lg)' }}>
+        <h2 style={{ 
+          fontSize: 'var(--font-size-2xl)', 
+          marginBottom: 'var(--space-sm)',
+          background: 'linear-gradient(135deg, var(--gradient-emerald-start), var(--gradient-emerald-end))',
+          WebkitBackgroundClip: 'text',
+          WebkitTextFillColor: 'transparent',
+          fontWeight: '800'
+        }}>
+          📋 Interview Preparation
+        </h2>
+        <p className="text-secondary" style={{ fontSize: 'var(--font-size-sm)' }}>
+          Choose your input method to generate personalized questions
+        </p>
+      </div>
       
-      {/* Mode Selector */}
-      <div className="mb-lg" style={{ display: 'flex', gap: 'var(--space-sm)' }}>
+      {/* Mode Selector with Icons */}
+      <div style={{ 
+        display: 'flex', 
+        gap: 'var(--space-sm)', 
+        marginBottom: 'var(--space-lg)',
+        padding: 'var(--space-sm)',
+        background: 'rgba(0, 0, 0, 0.2)',
+        borderRadius: 'var(--radius-xl)',
+        border: '1px solid rgba(255, 255, 255, 0.05)'
+      }}>
         <button
           className={`btn ${inputMode === 'resume' ? 'btn-primary' : 'btn-secondary'}`}
           onClick={() => {
             setInputMode('resume');
             clearData();
           }}
-          style={{ flex: 1 }}
+          style={{ 
+            flex: 1,
+            padding: 'var(--space-md)',
+            fontSize: 'var(--font-size-base)',
+            fontWeight: '700'
+          }}
         >
           📄 Upload Resume
         </button>
@@ -104,7 +131,12 @@ const DataInput = ({ onDataProvided }) => {
             setInputMode('jobdesc');
             clearData();
           }}
-          style={{ flex: 1 }}
+          style={{ 
+            flex: 1,
+            padding: 'var(--space-md)',
+            fontSize: 'var(--font-size-base)',
+            fontWeight: '700'
+          }}
         >
           💼 Job Description
         </button>
