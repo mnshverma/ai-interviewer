@@ -16,10 +16,10 @@ const TOAST_ICONS = {
 };
 
 const TOAST_COLORS = {
-  success: { bg: 'rgba(56, 239, 125, 0.15)', border: 'rgba(56, 239, 125, 0.4)', text: '#38ef7d' },
-  error: { bg: 'rgba(245, 87, 108, 0.15)', border: 'rgba(245, 87, 108, 0.4)', text: '#f5576c' },
-  warning: { bg: 'rgba(255, 210, 0, 0.15)', border: 'rgba(255, 210, 0, 0.4)', text: '#ffd200' },
-  info: { bg: 'rgba(102, 126, 234, 0.15)', border: 'rgba(102, 126, 234, 0.4)', text: '#667eea' }
+  success: { bg: 'rgba(59, 130, 246, 0.15)', border: 'rgba(59, 130, 246, 0.4)', text: '#60a5fa' },
+  error: { bg: 'rgba(239, 68, 68, 0.15)', border: 'rgba(239, 68, 68, 0.4)', text: '#ef4444' },
+  warning: { bg: 'rgba(245, 158, 11, 0.15)', border: 'rgba(245, 158, 11, 0.4)', text: '#f59e0b' },
+  info: { bg: 'rgba(99, 102, 241, 0.15)', border: 'rgba(99, 102, 241, 0.4)', text: '#6366f1' }
 };
 
 const Toast = ({ id, message, type = 'info', onRemove }) => {

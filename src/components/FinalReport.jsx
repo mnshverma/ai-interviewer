@@ -1,5 +1,26 @@
+import ScoreVisualization from './ScoreVisualization';
+import { useToast } from './Toast';
+
 const FinalReport = ({ report, onClose, onDownload }) => {
+  const toast = useToast();
+
   if (!report) return null;
+
+  const handleCopyReport = async () => {
+    try {
+      await navigator.clipboard.writeText(report);
+      toast.success('Report copied to clipboard!');
+    } catch (err) {
+      // Fallback for older browsers
+      const textarea = document.createElement('textarea');
+      textarea.value = report;
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textarea);
+      toast.success('Report copied to clipboard!');
+    }
+  };
 
   return (
     <div style={{
@@ -18,7 +39,7 @@ const FinalReport = ({ report, onClose, onDownload }) => {
       animation: 'fadeIn 0.3s ease'
     }}>
       <div className="card scale-in" style={{
-        maxWidth: '800px',
+        maxWidth: '900px',
         width: '100%',
         maxHeight: '90vh',
         overflow: 'auto',
@@ -57,6 +78,9 @@ const FinalReport = ({ report, onClose, onDownload }) => {
           </p>
         </div>
 
+        {/* Score Visualization */}
+        <ScoreVisualization report={report} />
+
         <div style={{
           padding: 'var(--space-lg)',
           background: 'var(--color-bg-secondary)',
@@ -64,22 +88,20 @@ const FinalReport = ({ report, onClose, onDownload }) => {
           border: '1px solid var(--color-border)',
           marginBottom: 'var(--space-lg)',
           whiteSpace: 'pre-wrap',
-          lineHeight: '1.8'
+          lineHeight: '1.8',
+          fontSize: 'var(--font-size-sm)'
         }}>
           {report}
         </div>
 
-        <div className="flex gap-sm justify-center">
-          <button
-            className="btn btn-primary"
-            onClick={onDownload}
-          >
+        <div className="flex gap-sm justify-center" style={{ flexWrap: 'wrap' }}>
+          <button className="btn btn-primary" onClick={onDownload}>
             💾 Download Report
           </button>
-          <button
-            className="btn btn-secondary"
-            onClick={onClose}
-          >
+          <button className="btn btn-secondary" onClick={handleCopyReport}>
+            📋 Copy to Clipboard
+          </button>
+          <button className="btn btn-secondary" onClick={onClose}>
             Close
           </button>
         </div>

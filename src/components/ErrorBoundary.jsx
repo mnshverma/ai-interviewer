@@ -27,15 +27,15 @@ class ErrorBoundary extends Component {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          background: 'linear-gradient(135deg, #0f2027, #203a43, #2c5364)',
+          background: 'linear-gradient(135deg, #0b1120, #111d3a, #15274f)',
           padding: '2rem'
         }}>
           <div style={{
             maxWidth: '600px',
             width: '100%',
-            background: 'rgba(30, 39, 73, 0.95)',
+            background: 'rgba(15, 23, 42, 0.95)',
             backdropFilter: 'blur(20px)',
-            border: '2px solid rgba(245, 87, 108, 0.3)',
+            border: '2px solid rgba(239, 68, 68, 0.3)',
             borderRadius: '1.5rem',
             padding: '3rem',
             textAlign: 'center',
@@ -45,14 +45,14 @@ class ErrorBoundary extends Component {
             <h2 style={{
               fontSize: '1.875rem',
               fontWeight: 800,
-              color: '#f5576c',
+              color: '#ef4444',
               marginBottom: '1rem',
               fontFamily: 'Inter, -apple-system, sans-serif'
             }}>
               Something went wrong
             </h2>
             <p style={{
-              color: '#a5b4fc',
+              color: '#94a3b8',
               marginBottom: '1.5rem',
               lineHeight: 1.6,
               fontFamily: 'Inter, -apple-system, sans-serif'
@@ -64,12 +64,12 @@ class ErrorBoundary extends Component {
               <div style={{
                 padding: '1rem',
                 background: 'rgba(245, 87, 108, 0.1)',
-                border: '1px solid rgba(245, 87, 108, 0.3)',
+                border: '1px solid rgba(239, 68, 68, 0.3)',
                 borderRadius: '0.75rem',
                 marginBottom: '1.5rem',
                 textAlign: 'left',
                 fontSize: '0.875rem',
-                color: '#f5576c',
+                color: '#ef4444',
                 fontFamily: 'monospace',
                 wordBreak: 'break-word'
               }}>
@@ -82,7 +82,7 @@ class ErrorBoundary extends Component {
                 onClick={this.handleReset}
                 style={{
                   padding: '0.75rem 2rem',
-                  background: 'linear-gradient(135deg, #11998e, #38ef7d)',
+                  background: 'linear-gradient(135deg, #2563eb, #3b82f6)',
                   color: 'white',
                   border: 'none',
                   borderRadius: '1rem',
@@ -98,7 +98,7 @@ class ErrorBoundary extends Component {
                 onClick={() => window.location.reload()}
                 style={{
                   padding: '0.75rem 2rem',
-                  background: 'linear-gradient(135deg, #667eea, #764ba2)',
+                  background: 'linear-gradient(135deg, #6366f1, #4f46e5)',
                   color: 'white',
                   border: 'none',
                   borderRadius: '1rem',

@@ -75,9 +75,9 @@ const InterviewHistory = ({ onLoadSession, onClose }) => {
   };
 
   const getScoreColor = (score) => {
-    if (score >= 7) return '#38ef7d';
-    if (score >= 4) return '#ffd200';
-    return '#f5576c';
+    if (score >= 7) return '#3b82f6';
+    if (score >= 4) return '#f59e0b';
+    return '#ef4444';
   };
 
   return (
@@ -110,7 +110,7 @@ const InterviewHistory = ({ onLoadSession, onClose }) => {
           <div>
             <h2 style={{
               fontSize: 'var(--font-size-2xl)',
-              background: 'linear-gradient(135deg, var(--gradient-ocean-start), var(--gradient-ocean-end))',
+              background: 'linear-gradient(135deg, var(--color-primary), var(--color-accent))',
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
               fontWeight: 800
@@ -149,10 +149,10 @@ const InterviewHistory = ({ onLoadSession, onClose }) => {
                 style={{
                   padding: 'var(--space-md) var(--space-lg)',
                   background: selectedSession?.id === session.id
-                    ? 'rgba(102, 126, 234, 0.15)'
+                    ? 'rgba(59, 130, 246, 0.15)'
                     : 'rgba(255, 255, 255, 0.03)',
                   border: selectedSession?.id === session.id
-                    ? '1px solid rgba(102, 126, 234, 0.4)'
+                    ? '1px solid rgba(59, 130, 246, 0.4)'
                     : '1px solid rgba(255, 255, 255, 0.05)',
                   borderRadius: 'var(--radius-lg)',
                   cursor: 'pointer',
@@ -196,8 +196,8 @@ const InterviewHistory = ({ onLoadSession, onClose }) => {
                       fontSize: 'var(--font-size-xs)',
                       padding: '2px 8px',
                       borderRadius: 'var(--radius-full)',
-                      background: session.mode === 'resume' ? 'rgba(56, 239, 125, 0.15)' : 'rgba(102, 126, 234, 0.15)',
-                      color: session.mode === 'resume' ? '#38ef7d' : '#667eea'
+                      background: session.mode === 'resume' ? 'rgba(59, 130, 246, 0.15)' : 'rgba(99, 102, 241, 0.15)',
+                      color: session.mode === 'resume' ? '#3b82f6' : '#6366f1'
                     }}>
                       {session.mode === 'resume' ? 'Resume' : 'Job Desc'}
                     </span>

@@ -1,43 +1,41 @@
 /* ============================================
-   AI INTERVIEWER - PREMIUM GRADIENT THEME
+   MANVAR AI INTERVIEWER - BLUE & WHITE THEME
    ============================================ */
 
 :root {
-  /* Forest Gradient Theme Colors */
-  --gradient-forest-start: #0f2027;
-  --gradient-forest-mid: #203a43;
-  --gradient-forest-end: #2c5364;
-  
-  --gradient-emerald-start: #11998e;
-  --gradient-emerald-end: #38ef7d;
-  
-  --gradient-ocean-start: #667eea;
-  --gradient-ocean-end: #764ba2;
-  
-  --gradient-sunset-start: #f093fb;
-  --gradient-sunset-end: #f5576c;
-  
-  --gradient-gold-start: #f7971e;
-  --gradient-gold-end: #ffd200;
+  /* Blue Palette */
+  --blue-50: #eff6ff;
+  --blue-100: #dbeafe;
+  --blue-200: #bfdbfe;
+  --blue-300: #93c5fd;
+  --blue-400: #60a5fa;
+  --blue-500: #3b82f6;
+  --blue-600: #2563eb;
+  --blue-700: #1d4ed8;
+  --blue-800: #1e40af;
+  --blue-900: #1e3a8a;
+  --blue-950: #0f1d4a;
 
   /* Core Colors */
-  --color-primary: #38ef7d;
-  --color-secondary: #667eea;
-  --color-accent: #f5576c;
-  --color-success: #38ef7d;
-  --color-warning: #ffd200;
-  --color-danger: #f5576c;
+  --color-primary: #3b82f6;
+  --color-primary-light: #60a5fa;
+  --color-primary-dark: #2563eb;
+  --color-secondary: #6366f1;
+  --color-accent: #0ea5e9;
+  --color-success: #22c55e;
+  --color-warning: #f59e0b;
+  --color-danger: #ef4444;
   
-  /* Background */
-  --color-bg: #0a0e27;
-  --color-bg-secondary: #151b3d;
-  --color-bg-tertiary: #1e2749;
-  --color-bg-card: rgba(30, 39, 73, 0.85);
+  /* Background — Deep Blue Base */
+  --color-bg: #0b1120;
+  --color-bg-secondary: #111827;
+  --color-bg-tertiary: #1e293b;
+  --color-bg-card: rgba(15, 23, 42, 0.92);
   
-  /* Text */
-  --color-text: #e8eaf6;
-  --color-text-secondary: #a5b4fc;
-  --color-text-tertiary: #6b7280;
+  /* Text — White Palette */
+  --color-text: #f1f5f9;
+  --color-text-secondary: #94a3b8;
+  --color-text-tertiary: #64748b;
   
   /* Spacing */
   --space-xs: 0.25rem;
@@ -66,13 +64,13 @@
   --radius-2xl: 1.5rem;
   --radius-full: 9999px;
   
-  /* Shadows */
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  /* Shadows — Blue Tinted */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.15);
   --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
-  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
-  --shadow-glow: 0 0 20px rgba(56, 239, 125, 0.3);
-  --shadow-glow-purple: 0 0 20px rgba(102, 126, 234, 0.3);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.25);
+  --shadow-glow: 0 0 25px rgba(59, 130, 246, 0.35);
+  --shadow-glow-accent: 0 0 25px rgba(99, 102, 241, 0.3);
 }
 
 * {
@@ -90,7 +88,7 @@ body {
 }
 
 /* ============================================
-   ANIMATED BACKGROUND - FOREST GRADIENT
+   ANIMATED BACKGROUND — DEEP BLUE
    ============================================ */
 
 .app-container {
@@ -107,11 +105,12 @@ body {
   height: 100%;
   z-index: 0;
   background: linear-gradient(135deg, 
-    var(--gradient-forest-start) 0%,
-    var(--gradient-forest-mid) 50%,
-    var(--gradient-forest-end) 100%
+    #0b1120 0%,
+    #111d3a 40%,
+    #15274f 70%,
+    #0f1d4a 100%
   );
-  animation: gradientShift 15s ease infinite;
+  animation: gradientShift 20s ease infinite;
 }
 
 .animated-bg::before {
@@ -122,7 +121,7 @@ body {
   width: 200%;
   height: 200%;
   background: radial-gradient(circle, 
-    rgba(56, 239, 125, 0.1) 0%,
+    rgba(59, 130, 246, 0.08) 0%,
     transparent 70%
   );
   animation: rotate 30s linear infinite;
@@ -136,7 +135,7 @@ body {
   width: 200%;
   height: 200%;
   background: radial-gradient(circle, 
-    rgba(102, 126, 234, 0.1) 0%,
+    rgba(99, 102, 241, 0.06) 0%,
     transparent 70%
   );
   animation: rotate 40s linear infinite reverse;
@@ -145,16 +144,12 @@ body {
 @keyframes gradientShift {
   0%, 100% {
     background: linear-gradient(135deg, 
-      var(--gradient-forest-start) 0%,
-      var(--gradient-forest-mid) 50%,
-      var(--gradient-forest-end) 100%
+      #0b1120 0%, #111d3a 40%, #15274f 70%, #0f1d4a 100%
     );
   }
   50% {
     background: linear-gradient(135deg, 
-      var(--gradient-forest-mid) 0%,
-      var(--gradient-forest-end) 50%,
-      var(--gradient-ocean-start) 100%
+      #0f1629 0%, #152040 40%, #1a2d5c 70%, #111d3a 100%
     );
   }
 }
@@ -177,16 +172,16 @@ body {
 }
 
 /* ============================================
-   HEADER - PREMIUM STYLE
+   HEADER — BLUE & WHITE
    ============================================ */
 
 .app-header {
   background: linear-gradient(135deg,
-    rgba(56, 239, 125, 0.15) 0%,
-    rgba(102, 126, 234, 0.15) 100%
+    rgba(59, 130, 246, 0.12) 0%,
+    rgba(99, 102, 241, 0.1) 100%
   );
-  backdrop-filter: blur(20px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(24px);
+  border-bottom: 1px solid rgba(59, 130, 246, 0.15);
   padding: var(--space-lg) var(--space-2xl);
   box-shadow: var(--shadow-xl);
   position: sticky;
@@ -209,11 +204,9 @@ body {
 }
 
 .logo-icon {
-  font-size: var(--font-size-4xl);
-  background: linear-gradient(135deg, var(--gradient-emerald-start), var(--gradient-emerald-end));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  filter: drop-shadow(var(--shadow-glow));
+  width: 44px;
+  height: 44px;
+  filter: drop-shadow(0 0 12px rgba(59, 130, 246, 0.5));
   animation: pulse 3s ease-in-out infinite;
 }
 
@@ -225,8 +218,9 @@ body {
 .logo-text h1 {
   font-size: var(--font-size-3xl);
   font-weight: 800;
-  background: linear-gradient(135deg, var(--gradient-emerald-start), var(--gradient-emerald-end));
+  background: linear-gradient(135deg, #ffffff, var(--blue-200));
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
   letter-spacing: -0.02em;
 }
@@ -244,16 +238,16 @@ body {
 }
 
 /* ============================================
-   CARDS - GLASSMORPHISM STYLE
+   CARDS — GLASSMORPHISM BLUE
    ============================================ */
 
 .card {
   background: linear-gradient(135deg,
-    rgba(30, 39, 73, 0.95) 0%,
-    rgba(21, 27, 61, 0.90) 100%
+    rgba(15, 23, 42, 0.95) 0%,
+    rgba(17, 24, 39, 0.92) 100%
   );
   backdrop-filter: blur(20px);
-  border: 2px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(59, 130, 246, 0.15);
   border-radius: var(--radius-2xl);
   padding: var(--space-2xl);
   box-shadow: var(--shadow-xl);
@@ -271,7 +265,7 @@ body {
   height: 100%;
   background: linear-gradient(90deg,
     transparent,
-    rgba(56, 239, 125, 0.1),
+    rgba(59, 130, 246, 0.08),
     transparent
   );
   transition: left 0.5s ease;
@@ -282,13 +276,13 @@ body {
 }
 
 .card:hover {
-  transform: translateY(-5px);
+  transform: translateY(-4px);
   box-shadow: var(--shadow-xl), var(--shadow-glow);
-  border-color: rgba(56, 239, 125, 0.3);
+  border-color: rgba(59, 130, 246, 0.3);
 }
 
 /* ============================================
-   BUTTONS - GRADIENT STYLES
+   BUTTONS — BLUE GRADIENTS
    ============================================ */
 
 .btn {
@@ -307,6 +301,7 @@ body {
   overflow: hidden;
   text-decoration: none;
   box-shadow: var(--shadow-md);
+  font-family: var(--font-family);
 }
 
 .btn::before {
@@ -317,7 +312,7 @@ body {
   width: 0;
   height: 0;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.15);
   transform: translate(-50%, -50%);
   transition: width 0.6s ease, height 0.6s ease;
 }
@@ -328,7 +323,7 @@ body {
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, var(--gradient-emerald-start), var(--gradient-emerald-end));
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
   color: white;
   box-shadow: var(--shadow-lg), var(--shadow-glow);
 }
@@ -343,18 +338,18 @@ body {
 }
 
 .btn-secondary {
-  background: linear-gradient(135deg, var(--gradient-ocean-start), var(--gradient-ocean-end));
+  background: linear-gradient(135deg, var(--color-secondary), #4f46e5);
   color: white;
-  box-shadow: var(--shadow-lg), var(--shadow-glow-purple);
+  box-shadow: var(--shadow-lg), var(--shadow-glow-accent);
 }
 
 .btn-secondary:hover {
   transform: translateY(-2px);
-  box-shadow: var(--shadow-xl), var(--shadow-glow-purple);
+  box-shadow: var(--shadow-xl), var(--shadow-glow-accent);
 }
 
 .btn-danger {
-  background: linear-gradient(135deg, var(--gradient-sunset-start), var(--gradient-sunset-end));
+  background: linear-gradient(135deg, var(--color-danger), #dc2626);
   color: white;
 }
 
@@ -370,7 +365,7 @@ body {
 }
 
 /* ============================================
-   INPUTS - MODERN STYLE
+   INPUTS — BLUE THEME
    ============================================ */
 
 .input-group {
@@ -381,7 +376,7 @@ body {
   display: block;
   margin-bottom: var(--space-sm);
   font-weight: 600;
-  color: var(--color-primary);
+  color: var(--color-primary-light);
   font-size: var(--font-size-sm);
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -392,14 +387,32 @@ select,
 textarea {
   width: 100%;
   padding: var(--space-md) var(--space-lg);
-  background: rgba(255, 255, 255, 0.05);
-  border: 2px solid rgba(255, 255, 255, 0.1);
+  background: rgba(30, 41, 59, 0.8);
+  border: 2px solid rgba(59, 130, 246, 0.2);
   border-radius: var(--radius-lg);
   color: var(--color-text);
   font-size: var(--font-size-base);
   font-family: var(--font-family);
   transition: all 0.3s ease;
-  backdrop-filter: blur(10px);
+}
+
+/* Selects — solid dark background for readable dropdown options */
+select {
+  background: #1e293b;
+  cursor: pointer;
+}
+
+select option {
+  background: #1e293b;
+  color: #f1f5f9;
+  padding: 8px 12px;
+  font-family: var(--font-family);
+}
+
+select option:hover,
+select option:checked {
+  background: #334155;
+  color: #60a5fa;
 }
 
 .input:focus,
@@ -407,8 +420,12 @@ select:focus,
 textarea:focus {
   outline: none;
   border-color: var(--color-primary);
-  background: rgba(255, 255, 255, 0.08);
-  box-shadow: 0 0 0 4px rgba(56, 239, 125, 0.1), var(--shadow-glow);
+  background: rgba(30, 41, 59, 0.95);
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15), var(--shadow-glow);
+}
+
+select:focus {
+  background: #1e293b;
 }
 
 textarea {
@@ -425,8 +442,8 @@ textarea {
   align-items: center;
   gap: var(--space-sm);
   padding: var(--space-sm) var(--space-lg);
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(59, 130, 246, 0.1);
+  border: 1px solid rgba(59, 130, 246, 0.2);
   border-radius: var(--radius-full);
   font-size: var(--font-size-sm);
   font-weight: 600;
@@ -435,8 +452,8 @@ textarea {
 
 .status-indicator.active {
   background: linear-gradient(135deg,
-    rgba(56, 239, 125, 0.2),
-    rgba(17, 153, 142, 0.2)
+    rgba(59, 130, 246, 0.2),
+    rgba(14, 165, 233, 0.2)
   );
   border-color: var(--color-primary);
   box-shadow: var(--shadow-glow);
@@ -444,10 +461,10 @@ textarea {
 
 .status-indicator.recording {
   background: linear-gradient(135deg,
-    rgba(245, 87, 108, 0.2),
-    rgba(240, 147, 251, 0.2)
+    rgba(239, 68, 68, 0.2),
+    rgba(245, 158, 11, 0.2)
   );
-  border-color: var(--color-accent);
+  border-color: var(--color-danger);
   animation: recordingPulse 2s ease-in-out infinite;
 }
 
@@ -470,7 +487,7 @@ textarea {
 }
 
 /* ============================================
-   VIDEO CONTAINER - PREMIUM STYLE
+   VIDEO CONTAINER — BLUE BORDER
    ============================================ */
 
 .video-container {
@@ -478,10 +495,10 @@ textarea {
   border-radius: var(--radius-2xl);
   overflow: hidden;
   box-shadow: var(--shadow-xl);
-  border: 3px solid rgba(56, 239, 125, 0.3);
+  border: 2px solid rgba(59, 130, 246, 0.3);
   background: linear-gradient(135deg,
-    rgba(15, 32, 39, 0.95),
-    rgba(32, 58, 67, 0.95)
+    rgba(11, 17, 32, 0.95),
+    rgba(15, 29, 74, 0.95)
   );
 }
 
@@ -519,7 +536,7 @@ textarea {
 .loading-spinner {
   width: 50px;
   height: 50px;
-  border: 4px solid rgba(255, 255, 255, 0.1);
+  border: 4px solid rgba(59, 130, 246, 0.15);
   border-top-color: var(--color-primary);
   border-radius: 50%;
   animation: spin 1s linear infinite;
@@ -579,23 +596,23 @@ textarea {
 .grid-2 { grid-template-columns: repeat(2, 1fr); }
 
 /* ============================================
-   TRANSCRIPT STYLING
+   TRANSCRIPT — BLUE ACCENTS
    ============================================ */
 
 .transcript-container {
   max-height: 500px;
   overflow-y: auto;
   padding: var(--space-md);
-  background: rgba(0, 0, 0, 0.2);
+  background: rgba(15, 23, 42, 0.5);
   border-radius: var(--radius-lg);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(59, 130, 246, 0.1);
 }
 
 .transcript-item {
   padding: var(--space-md);
   margin-bottom: var(--space-md);
   border-radius: var(--radius-md);
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(30, 41, 59, 0.4);
   border-left: 3px solid transparent;
   transition: all 0.3s ease;
 }
@@ -603,46 +620,46 @@ textarea {
 .transcript-item.interviewer {
   border-left-color: var(--color-primary);
   background: linear-gradient(90deg,
-    rgba(56, 239, 125, 0.05),
+    rgba(59, 130, 246, 0.08),
     transparent
   );
 }
 
 .transcript-item.candidate {
-  border-left-color: var(--color-secondary);
+  border-left-color: var(--color-accent);
   background: linear-gradient(90deg,
-    rgba(102, 126, 234, 0.05),
+    rgba(14, 165, 233, 0.08),
     transparent
   );
 }
 
 .transcript-item:hover {
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(30, 41, 59, 0.6);
   transform: translateX(5px);
 }
 
 /* ============================================
-   FILE UPLOAD AREA
+   FILE UPLOAD — BLUE DASHED
    ============================================ */
 
 .file-upload-area {
-  border: 3px dashed rgba(56, 239, 125, 0.3);
+  border: 3px dashed rgba(59, 130, 246, 0.3);
   border-radius: var(--radius-2xl);
   padding: var(--space-2xl);
   text-align: center;
   cursor: pointer;
   transition: all 0.3s ease;
   background: linear-gradient(135deg,
-    rgba(56, 239, 125, 0.02),
-    rgba(17, 153, 142, 0.05)
+    rgba(59, 130, 246, 0.03),
+    rgba(14, 165, 233, 0.05)
   );
 }
 
 .file-upload-area:hover {
   border-color: var(--color-primary);
   background: linear-gradient(135deg,
-    rgba(56, 239, 125, 0.08),
-    rgba(17, 153, 142, 0.1)
+    rgba(59, 130, 246, 0.08),
+    rgba(14, 165, 233, 0.1)
   );
   transform: scale(1.02);
 }
@@ -650,8 +667,8 @@ textarea {
 .file-upload-area.drag-over {
   border-color: var(--color-primary);
   background: linear-gradient(135deg,
-    rgba(56, 239, 125, 0.15),
-    rgba(17, 153, 142, 0.15)
+    rgba(59, 130, 246, 0.15),
+    rgba(14, 165, 233, 0.15)
   );
   box-shadow: var(--shadow-glow);
 }
@@ -684,6 +701,11 @@ textarea {
     flex-direction: column;
     gap: var(--space-md);
   }
+
+  .header-actions {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
 }
 
 @media (max-width: 768px) {
@@ -698,4 +720,90 @@ textarea {
   .logo-text h1 {
     font-size: var(--font-size-2xl);
   }
+
+  .btn {
+    padding: var(--space-sm) var(--space-md);
+    font-size: var(--font-size-sm);
+  }
+
+  .video-container {
+    min-height: 250px;
+  }
+}
+
+/* ============================================
+   TOAST ANIMATIONS
+   ============================================ */
+
+@keyframes toastIn {
+  from {
+    opacity: 0;
+    transform: translateX(100px) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+@keyframes toastOut {
+  from {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(100px) scale(0.9);
+  }
+}
+
+/* ============================================
+   TIMER STYLES
+   ============================================ */
+
+@keyframes timerPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+.timer-warning {
+  animation: timerPulse 0.5s ease-in-out infinite;
+}
+
+/* ============================================
+   PRACTICE MODE
+   ============================================ */
+
+.practice-card {
+  border: 2px solid rgba(245, 158, 11, 0.3);
+  background: linear-gradient(135deg,
+    rgba(15, 23, 42, 0.95) 0%,
+    rgba(30, 41, 59, 0.90) 100%
+  );
+}
+
+/* ============================================
+   SELECTION & SCROLLBAR
+   ============================================ */
+
+::selection {
+  background: rgba(59, 130, 246, 0.3);
+  color: #fff;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(59, 130, 246, 0.25);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(59, 130, 246, 0.4);
 }

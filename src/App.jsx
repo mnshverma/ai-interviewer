@@ -4,15 +4,17 @@ import InterviewSettings from './components/InterviewSettings';
 import VideoInterview from './components/VideoInterview';
 import TranscriptPanel from './components/TranscriptPanel';
 import FinalReport from './components/FinalReport';
+import InterviewHistory, { saveInterviewSession } from './components/InterviewHistory';
+import { useToast } from './components/Toast';
 import { analyzeResume, analyzeJobDescription, generateInterviewQuestions, evaluateAnswer, generateFinalReport } from './utils/openRouterAPI';
 import { speechService } from './utils/speechService';
 import './index.css';
 
 function App() {
   // State management
-  const [inputData, setInputData] = useState(null); // Changed from resumeData
+  const [inputData, setInputData] = useState(null);
   const [interviewConfig, setInterviewConfig] = useState(null);
-  const [interviewState, setInterviewState] = useState('setup'); // setup, analyzing, ready, interviewing, completed
+  const [interviewState, setInterviewState] = useState('setup');
   const [resumeAnalysis, setResumeAnalysis] = useState('');
   const [questions, setQuestions] = useState([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -20,12 +22,14 @@ function App() {
   const [isAISpeaking, setIsAISpeaking] = useState(false);
   const [finalReport, setFinalReport] = useState(null);
   const [showReport, setShowReport] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
   const [error, setError] = useState('');
+  const [recordedVideo, setRecordedVideo] = useState(null);
 
-  // Ref to always have latest transcript in closures
   const transcriptRef = useRef([]);
+  const toast = useToast();
 
-  // Handle data input (resume or job description)
+  // Handle data input
   const handleDataProvided = useCallback((data) => {
     setInputData(data);
     setError('');
@@ -40,7 +44,6 @@ function App() {
     try {
       let analysisResult;
       
-      // Analyze based on input mode
       if (inputData.mode === 'resume') {
         analysisResult = await analyzeResume(inputData.text, config.aiModel);
       } else {
@@ -53,11 +56,12 @@ function App() {
 
       setResumeAnalysis(analysisResult.analysis);
 
-      // Generate questions
+      // Generate questions with difficulty level
       const questionsResult = await generateInterviewQuestions(
         analysisResult.analysis,
         config.interviewType,
-        config.aiModel
+        config.aiModel,
+        config.difficulty
       );
 
       if (!questionsResult.success || questionsResult.questions.length === 0) {
@@ -67,7 +71,6 @@ function App() {
       setQuestions(questionsResult.questions);
       setInterviewState('ready');
 
-      // Wait a moment then start interviewing
       setTimeout(() => {
         startInterviewing(config, questionsResult.questions[0]);
       }, 1000);
@@ -75,6 +78,7 @@ function App() {
     } catch (err) {
       console.error('Interview start error:', err);
       setError(err.message);
+      toast.error('Failed to start interview: ' + err.message);
       setInterviewState('setup');
     }
   }, [inputData]);
@@ -83,13 +87,12 @@ function App() {
   const startInterviewing = useCallback(async (config, firstQuestion) => {
     setInterviewState('interviewing');
 
-    // Add greeting to transcript (mode-aware message)
     const inputLabel = inputData?.mode === 'resume' ? 'resume' : 'job description';
     const greeting = `Hello! I'm your AI interviewer. I've reviewed your ${inputLabel} and prepared ${questions.length} questions for you. Let's begin with the first question.`;
     
     addToTranscript('interviewer', greeting);
 
-    if (config.enableVoice) {
+    if (config.enableVoice && !config.practiceMode) {
       setIsAISpeaking(true);
       try {
         await speechService.speak(greeting);
@@ -102,7 +105,7 @@ function App() {
     }
 
     addToTranscript('interviewer', firstQuestion);
-  }, [questions.length]);
+  }, [questions.length, inputData]);
 
   // Add to transcript
   const addToTranscript = useCallback((speaker, text, feedback = null) => {
@@ -114,14 +117,12 @@ function App() {
     });
   }, []);
 
-  // Handle answer completion (receives answer text directly from VideoInterview)
+  // Handle answer completion
   const handleAnswerComplete = useCallback(async (answerText) => {
     if (!interviewConfig || !answerText?.trim()) return;
 
-    // Add answer to transcript
     addToTranscript('candidate', answerText);
 
-    // Optional: Evaluate answer
     const currentQuestion = questions[currentQuestionIndex];
     
     try {
@@ -133,10 +134,10 @@ function App() {
       );
 
       if (evaluation.success && evaluation.feedback) {
-        // Update the last transcript entry with feedback
         setTranscript(prev => {
           const updated = [...prev];
           updated[updated.length - 1].feedback = evaluation.feedback;
+          transcriptRef.current = updated;
           return updated;
         });
       }
@@ -144,7 +145,18 @@ function App() {
       console.error('Evaluation error:', err);
     }
 
-    // Move to next question
+    moveToNextQuestion();
+  }, [interviewConfig, questions, currentQuestionIndex, resumeAnalysis, addToTranscript]);
+
+  // Skip question
+  const handleSkipQuestion = useCallback(() => {
+    addToTranscript('candidate', '(Question skipped)');
+    toast.info('Question skipped');
+    moveToNextQuestion();
+  }, [addToTranscript]);
+
+  // Move to next question
+  const moveToNextQuestion = useCallback(async () => {
     const nextIndex = currentQuestionIndex + 1;
     
     if (nextIndex < questions.length) {
@@ -153,7 +165,7 @@ function App() {
       
       addToTranscript('interviewer', nextQuestion);
 
-      if (interviewConfig.enableVoice) {
+      if (interviewConfig?.enableVoice && !interviewConfig?.practiceMode) {
         setIsAISpeaking(true);
         try {
           await speechService.speak(nextQuestion);
@@ -163,10 +175,9 @@ function App() {
         setIsAISpeaking(false);
       }
     } else {
-      // Interview complete
       await completeInterview();
     }
-  }, [interviewConfig, questions, currentQuestionIndex, resumeAnalysis, addToTranscript]);
+  }, [interviewConfig, questions, currentQuestionIndex, addToTranscript]);
 
   // Complete interview
   const completeInterview = useCallback(async () => {
@@ -175,7 +186,7 @@ function App() {
     const closingMessage = "Thank you for completing the interview! I'm generating your evaluation report now.";
     addToTranscript('interviewer', closingMessage);
 
-    if (interviewConfig.enableVoice) {
+    if (interviewConfig?.enableVoice && !interviewConfig?.practiceMode) {
       try {
         await speechService.speak(closingMessage);
       } catch (err) {
@@ -183,7 +194,6 @@ function App() {
       }
     }
 
-    // Generate final report — use ref for latest transcript (avoids stale closure)
     try {
       const latestTranscript = transcriptRef.current;
       const transcriptText = latestTranscript
@@ -199,19 +209,49 @@ function App() {
       if (reportResult.success) {
         setFinalReport(reportResult.report);
         setShowReport(true);
+
+        // Save to history
+        const scoreMatch = reportResult.report.match(/(?:overall|performance)\s*(?:score|rating)?[\s:]*(\d+)/i);
+        saveInterviewSession({
+          mode: inputData?.mode || 'resume',
+          interviewType: interviewConfig?.interviewType || 'mixed',
+          score: scoreMatch ? parseInt(scoreMatch[1]) : null,
+          questionCount: questions.length,
+          report: reportResult.report,
+          transcript: transcriptText
+        });
+        toast.success('Interview completed! Report saved to history.');
       } else {
         throw new Error(reportResult.error);
       }
     } catch (err) {
       console.error('Report generation error:', err);
       setError('Failed to generate final report: ' + err.message);
+      toast.error('Failed to generate report');
     }
-  }, [interviewConfig, resumeAnalysis, addToTranscript]);
+  }, [interviewConfig, resumeAnalysis, addToTranscript, inputData, questions.length]);
+
+  // Handle video recording ready
+  const handleRecordingReady = useCallback((blob) => {
+    setRecordedVideo(blob);
+    toast.success('Interview video recording saved!');
+  }, []);
+
+  // Download recorded video
+  const handleDownloadVideo = useCallback(() => {
+    if (!recordedVideo) return;
+    const url = URL.createObjectURL(recordedVideo);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `interview_recording_${Date.now()}.webm`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success('Video downloaded!');
+  }, [recordedVideo]);
 
   // Download report
   const handleDownloadReport = useCallback(() => {
     if (!finalReport) return;
-
     const blob = new Blob([finalReport], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -219,6 +259,7 @@ function App() {
     a.download = `interview_report_${Date.now()}.txt`;
     a.click();
     URL.revokeObjectURL(url);
+    toast.success('Report downloaded!');
   }, [finalReport]);
 
   // Reset interview
@@ -230,8 +271,10 @@ function App() {
     setQuestions([]);
     setCurrentQuestionIndex(0);
     setTranscript([]);
+    transcriptRef.current = [];
     setFinalReport(null);
     setShowReport(false);
+    setRecordedVideo(null);
     setError('');
     speechService.stopSpeaking();
     speechService.stopListening();
@@ -260,6 +303,11 @@ function App() {
               <p className="text-secondary">
                 AI is analyzing the {inputData?.mode === 'resume' ? 'resume' : 'job description'} and generating personalized interview questions
               </p>
+              {interviewConfig?.difficulty && (
+                <p className="text-tertiary mt-sm" style={{ fontSize: 'var(--font-size-sm)' }}>
+                  Difficulty: {interviewConfig.difficulty.charAt(0).toUpperCase() + interviewConfig.difficulty.slice(1)}
+                </p>
+              )}
             </div>
           </div>
         );
@@ -273,7 +321,7 @@ function App() {
               </div>
               <h2 className="mb-md">Interview Ready!</h2>
               <p className="text-secondary mb-lg">
-                {questions.length} questions generated. Starting interview...
+                {questions.length} questions generated. Starting {interviewConfig?.practiceMode ? 'practice' : 'interview'}...
               </p>
               <div className="loading-spinner" style={{ margin: '0 auto' }}></div>
             </div>
@@ -287,7 +335,7 @@ function App() {
             height: '100%', 
             padding: 'var(--space-lg)', 
             display: 'grid',
-            gridTemplateColumns: '1.5fr 1fr',
+            gridTemplateColumns: interviewConfig?.practiceMode ? '1fr 1fr' : '1.5fr 1fr',
             gap: 'var(--space-lg)'
           }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-lg)' }}>
@@ -295,9 +343,13 @@ function App() {
                 isActive={true}
                 currentQuestion={questions[currentQuestionIndex]}
                 onAnswerComplete={handleAnswerComplete}
+                onSkipQuestion={handleSkipQuestion}
                 isAISpeaking={isAISpeaking}
                 onVideoReady={() => {}}
                 autoStartListening={true}
+                practiceMode={interviewConfig?.practiceMode || false}
+                timeLimit={interviewConfig?.timeLimit || 0}
+                onRecordingReady={handleRecordingReady}
               />
               
               {interviewState === 'completed' && (
@@ -306,10 +358,15 @@ function App() {
                   <p className="text-secondary mb-md">
                     Your evaluation report is ready
                   </p>
-                  <div className="flex gap-sm justify-center">
+                  <div className="flex gap-sm justify-center" style={{ flexWrap: 'wrap' }}>
                     <button className="btn btn-primary" onClick={() => setShowReport(true)}>
                       📊 View Report
                     </button>
+                    {recordedVideo && (
+                      <button className="btn btn-secondary" onClick={handleDownloadVideo}>
+                        🎥 Download Video
+                      </button>
+                    )}
                     <button className="btn btn-secondary" onClick={handleReset}>
                       🔄 New Interview
                     </button>
@@ -323,9 +380,9 @@ function App() {
                 <h3 className="mb-md">📋 Progress</h3>
                 <div className="mb-md">
                   <div className="flex justify-between mb-sm">
-                    <span>Question {currentQuestionIndex + 1} of {questions.length}</span>
+                    <span>Question {Math.min(currentQuestionIndex + 1, questions.length)} of {questions.length}</span>
                     <span className="text-secondary">
-                      {Math.round(((currentQuestionIndex + 1) / questions.length) * 100)}%
+                      {Math.round((Math.min(currentQuestionIndex + 1, questions.length) / questions.length) * 100)}%
                     </span>
                   </div>
                   <div style={{
@@ -336,7 +393,7 @@ function App() {
                     overflow: 'hidden'
                   }}>
                     <div style={{
-                      width: `${((currentQuestionIndex + 1) / questions.length) * 100}%`,
+                      width: `${(Math.min(currentQuestionIndex + 1, questions.length) / questions.length) * 100}%`,
                       height: '100%',
                       background: 'linear-gradient(135deg, var(--color-primary), var(--color-accent))',
                       transition: 'width 0.5s ease'
@@ -344,7 +401,26 @@ function App() {
                   </div>
                 </div>
 
-                </div>
+                {/* Difficulty badge */}
+                {interviewConfig?.difficulty && (
+                  <div style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 'var(--space-xs)',
+                    padding: '4px 12px',
+                    borderRadius: 'var(--radius-full)',
+                    fontSize: 'var(--font-size-xs)',
+                    fontWeight: 600,
+                    background: interviewConfig.difficulty === 'easy' ? 'rgba(56,239,125,0.1)' :
+                      interviewConfig.difficulty === 'hard' ? 'rgba(245,87,108,0.1)' : 'rgba(255,210,0,0.1)',
+                    color: interviewConfig.difficulty === 'easy' ? '#38ef7d' :
+                      interviewConfig.difficulty === 'hard' ? '#f5576c' : '#ffd200'
+                  }}>
+                    {interviewConfig.difficulty === 'easy' ? '🟢' : interviewConfig.difficulty === 'hard' ? '🔴' : '🟡'}
+                    {interviewConfig.difficulty.charAt(0).toUpperCase() + interviewConfig.difficulty.slice(1)}
+                  </div>
+                )}
+              </div>
 
               <TranscriptPanel 
                 transcript={transcript}
@@ -367,21 +443,30 @@ function App() {
         <header className="app-header">
           <div className="header-content">
             <div className="logo-section">
-              <div className="logo-icon">🎯</div>
+              <img src="/logo.svg" alt="Manver" className="logo-icon" style={{ width: '44px', height: '44px' }} />
               <div className="logo-text">
-                <h1>AI Interviewer</h1>
-                <p>Resume-Based Live Interview Platform</p>
+                <h1>Manver AI Interviewer</h1>
+                <p>Smart Interview Platform</p>
               </div>
             </div>
 
             <div className="header-actions">
+              {/* History Button (always visible) */}
+              <button 
+                className="btn btn-secondary" 
+                onClick={() => setShowHistory(true)}
+                style={{ padding: 'var(--space-sm) var(--space-md)', fontSize: 'var(--font-size-sm)' }}
+              >
+                📚 History
+              </button>
+
               {interviewState !== 'setup' && (
                 <>
                   <div className="status-indicator" style={{ background: 'var(--color-bg-tertiary)' }}>
                     <span>
                       {interviewState === 'analyzing' && '🔍 Analyzing'}
                       {interviewState === 'ready' && '⏳ Preparing'}
-                      {interviewState === 'interviewing' && '🎤 Live Interview'}
+                      {interviewState === 'interviewing' && (interviewConfig?.practiceMode ? '🎮 Practice' : '🎤 Live Interview')}
                       {interviewState === 'completed' && '✅ Completed'}
                     </span>
                   </div>
@@ -417,6 +502,12 @@ function App() {
           report={finalReport}
           onClose={() => setShowReport(false)}
           onDownload={handleDownloadReport}
+        />
+      )}
+
+      {showHistory && (
+        <InterviewHistory
+          onClose={() => setShowHistory(false)}
         />
       )}
     </div>

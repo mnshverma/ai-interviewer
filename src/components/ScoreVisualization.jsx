@@ -114,11 +114,11 @@ const ScoreVisualization = ({ report }) => {
       else ctx.lineTo(x, y);
     }
     const gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, maxRadius);
-    gradient.addColorStop(0, 'rgba(56, 239, 125, 0.4)');
-    gradient.addColorStop(1, 'rgba(102, 126, 234, 0.2)');
+    gradient.addColorStop(0, 'rgba(59, 130, 246, 0.4)');
+    gradient.addColorStop(1, 'rgba(99, 102, 241, 0.2)');
     ctx.fillStyle = gradient;
     ctx.fill();
-    ctx.strokeStyle = 'rgba(56, 239, 125, 0.8)';
+    ctx.strokeStyle = 'rgba(59, 130, 246, 0.8)';
     ctx.lineWidth = 2;
     ctx.stroke();
 
@@ -131,7 +131,7 @@ const ScoreVisualization = ({ report }) => {
 
       ctx.beginPath();
       ctx.arc(x, y, 4, 0, Math.PI * 2);
-      ctx.fillStyle = '#38ef7d';
+      ctx.fillStyle = '#3b82f6';
       ctx.fill();
       ctx.strokeStyle = 'rgba(255,255,255,0.5)';
       ctx.lineWidth = 1;
@@ -140,7 +140,7 @@ const ScoreVisualization = ({ report }) => {
 
     // Draw labels
     ctx.font = '11px Inter, sans-serif';
-    ctx.fillStyle = '#a5b4fc';
+    ctx.fillStyle = '#94a3b8';
     ctx.textAlign = 'center';
     for (let i = 0; i < numAxes; i++) {
       const angle = (Math.PI * 2 * i) / numAxes - Math.PI / 2;
@@ -184,7 +184,7 @@ const ScoreVisualization = ({ report }) => {
 
       // Label
       ctx.font = '12px Inter, sans-serif';
-      ctx.fillStyle = '#a5b4fc';
+      ctx.fillStyle = '#94a3b8';
       ctx.textAlign = 'right';
       ctx.fillText(item.label, labelWidth - 8, y + barHeight / 2 + 4);
 
@@ -198,14 +198,14 @@ const ScoreVisualization = ({ report }) => {
       const barWidth = (item.value / 10) * maxBarWidth;
       const barGradient = ctx.createLinearGradient(labelWidth, 0, labelWidth + maxBarWidth, 0);
       if (item.value >= 7) {
-        barGradient.addColorStop(0, '#11998e');
-        barGradient.addColorStop(1, '#38ef7d');
+        barGradient.addColorStop(0, '#2563eb');
+        barGradient.addColorStop(1, '#3b82f6');
       } else if (item.value >= 4) {
-        barGradient.addColorStop(0, '#f7971e');
-        barGradient.addColorStop(1, '#ffd200');
+        barGradient.addColorStop(0, '#f59e0b');
+        barGradient.addColorStop(1, '#fbbf24');
       } else {
-        barGradient.addColorStop(0, '#f093fb');
-        barGradient.addColorStop(1, '#f5576c');
+        barGradient.addColorStop(0, '#dc2626');
+        barGradient.addColorStop(1, '#ef4444');
       }
       ctx.fillStyle = barGradient;
       ctx.beginPath();
@@ -214,7 +214,7 @@ const ScoreVisualization = ({ report }) => {
 
       // Score text
       ctx.font = 'bold 12px Inter, sans-serif';
-      ctx.fillStyle = '#e8eaf6';
+      ctx.fillStyle = '#f1f5f9';
       ctx.textAlign = 'left';
       ctx.fillText(`${item.value}/10`, labelWidth + maxBarWidth + 8, y + barHeight / 2 + 4);
     });
@@ -223,17 +223,17 @@ const ScoreVisualization = ({ report }) => {
   if (!scores) return null;
 
   const getOverallColor = () => {
-    if (scores.overall >= 7) return '#38ef7d';
-    if (scores.overall >= 4) return '#ffd200';
-    return '#f5576c';
+    if (scores.overall >= 7) return '#3b82f6';
+    if (scores.overall >= 4) return '#f59e0b';
+    return '#ef4444';
   };
 
   const getRecColor = () => {
     const rec = scores.recommendation.toLowerCase();
-    if (rec.includes('strong hire') || rec === 'pass') return '#38ef7d';
-    if (rec.includes('hire')) return '#38ef7d';
-    if (rec.includes('maybe')) return '#ffd200';
-    return '#f5576c';
+    if (rec.includes('strong hire') || rec === 'pass') return '#3b82f6';
+    if (rec.includes('hire')) return '#3b82f6';
+    if (rec.includes('maybe')) return '#f59e0b';
+    return '#ef4444';
   };
 
   return (

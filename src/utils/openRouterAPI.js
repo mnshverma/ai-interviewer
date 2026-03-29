@@ -19,7 +19,7 @@ export const analyzeResume = async (resumeText, model = 'meta-llama/llama-3.3-70
         Authorization: `Bearer ${apiKey}`,
         "Content-Type": "application/json",
         "HTTP-Referer": window.location.origin,
-        "X-Title": "AI Interviewer",
+        "X-Title": "Manver AI Interviewer",
       },
       body: JSON.stringify({
         model: model,
@@ -133,10 +133,17 @@ Provide the analysis in a structured format highlighting what to assess in inter
 export const generateInterviewQuestions = async (
   resumeAnalysis,
   interviewType,
-  model = 'meta-llama/llama-3.3-70b-instruct:free'
+  model = 'meta-llama/llama-3.3-70b-instruct:free',
+  difficulty = 'medium'
 ) => {
   try {
     const apiKey = getApiKey();
+
+    const difficultyInstructions = {
+      easy: 'Keep questions at a foundational level. Focus on basic concepts, simple behavioral scenarios, and straightforward technical knowledge. Suitable for junior/entry-level candidates.',
+      medium: 'Use moderate difficulty. Include applied knowledge questions, real-world scenarios, and some problem-solving. Suitable for mid-level candidates.',
+      hard: 'Make questions challenging. Include system design, deep technical analysis, complex problem-solving, edge cases, and trade-off discussions. Suitable for senior/staff-level candidates.'
+    };
 
     const response = await fetch(OPENROUTER_API_URL, {
       method: "POST",
@@ -144,20 +151,20 @@ export const generateInterviewQuestions = async (
         Authorization: `Bearer ${apiKey}`,
         "Content-Type": "application/json",
         "HTTP-Referer": window.location.origin,
-        "X-Title": "AI Interviewer",
+        "X-Title": "Manver AI Interviewer",
       },
       body: JSON.stringify({
         model: model,
         messages: [
           {
             role: "system",
-            content: `You are an experienced ${interviewType} interviewer. Generate relevant, thoughtful interview questions based on the candidate's background.`,
+            content: `You are an experienced ${interviewType} interviewer. Generate relevant, thoughtful interview questions based on the candidate's background. ${difficultyInstructions[difficulty] || difficultyInstructions.medium}`,
           },
           {
             role: "user",
             content: `Based on this resume analysis, generate 8-10 ${interviewType} interview questions that are:
 1. Relevant to the candidate's experience
-2. Progressive in difficulty
+2. Progressive in difficulty (within the ${difficulty} range)
 3. Mix of technical and behavioral (if technical interview)
 4. Designed to assess real-world problem-solving
 
@@ -183,7 +190,8 @@ Format each question on a new line, numbered 1-10.`,
     const questions = questionsText
       .split("\n")
       .filter((line) => /^\d+\./.test(line.trim()))
-      .map((q) => q.replace(/^\d+\.\s*/, "").trim());
+      .map((q) => q.replace(/^\d+\.\s*/, "").trim())
+      .filter((q) => q.length > 0);
 
     return {
       success: true,
@@ -208,7 +216,7 @@ export const evaluateAnswer = async (question, answer, context, model = 'meta-ll
         Authorization: `Bearer ${apiKey}`,
         "Content-Type": "application/json",
         "HTTP-Referer": window.location.origin,
-        "X-Title": "AI Interviewer",
+        "X-Title": "Manver AI Interviewer",
       },
       body: JSON.stringify({
         model: model,
@@ -266,7 +274,7 @@ export const generateFinalReport = async (
         Authorization: `Bearer ${apiKey}`,
         "Content-Type": "application/json",
         "HTTP-Referer": window.location.origin,
-        "X-Title": "AI Interviewer",
+        "X-Title": "Manver AI Interviewer",
       },
       body: JSON.stringify({
         model: model,
