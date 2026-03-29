@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 
 const VideoInterview = ({ 
   isActive, 
@@ -12,9 +12,18 @@ const VideoInterview = ({
   const [isListening, setIsListening] = useState(false);
   const [currentAnswer, setCurrentAnswer] = useState('');
   const [error, setError] = useState('');
+  const [manualInput, setManualInput] = useState('');
+  const [speechSupported, setSpeechSupported] = useState(true);
   const videoRef = useRef(null);
   const recognitionRef = useRef(null);
   const silenceTimerRef = useRef(null);
+  // Use ref to track currentAnswer so speech recognition handlers always read latest value
+  const currentAnswerRef = useRef('');
+
+  // Keep ref in sync with state
+  useEffect(() => {
+    currentAnswerRef.current = currentAnswer;
+  }, [currentAnswer]);
 
   useEffect(() => {
     if (isActive) {
@@ -27,20 +36,35 @@ const VideoInterview = ({
     return () => {
       stopCamera();
       stopListening();
+      if (recognitionRef.current) {
+        recognitionRef.current.onresult = null;
+        recognitionRef.current.onerror = null;
+        recognitionRef.current.onend = null;
+        recognitionRef.current = null;
+      }
     };
   }, [isActive]);
 
   // Auto-start listening after AI finishes speaking
   useEffect(() => {
-    if (autoStartListening && !isAISpeaking && !isListening) {
-      setTimeout(() => {
+    if (autoStartListening && !isAISpeaking && !isListening && speechSupported) {
+      const timer = setTimeout(() => {
         startListening();
       }, 500);
+      return () => clearTimeout(timer);
     }
-  }, [autoStartListening, isAISpeaking]);
+  }, [autoStartListening, isAISpeaking, speechSupported]);
 
   const initializeSpeechRecognition = () => {
     if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+      // Clean up previous instance
+      if (recognitionRef.current) {
+        try { recognitionRef.current.stop(); } catch (e) { /* ignore */ }
+        recognitionRef.current.onresult = null;
+        recognitionRef.current.onerror = null;
+        recognitionRef.current.onend = null;
+      }
+
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
       recognitionRef.current = new SpeechRecognition();
       recognitionRef.current.continuous = true;
@@ -48,7 +72,8 @@ const VideoInterview = ({
       recognitionRef.current.lang = 'en-US';
 
       recognitionRef.current.onresult = (event) => {
-        let finalTranscript = currentAnswer;
+        // Use ref instead of state to avoid stale closure
+        let finalTranscript = currentAnswerRef.current;
 
         for (let i = event.resultIndex; i < event.results.length; i++) {
           const transcript = event.results[i][0].transcript;
@@ -59,6 +84,7 @@ const VideoInterview = ({
         }
 
         setCurrentAnswer(finalTranscript);
+        currentAnswerRef.current = finalTranscript;
 
         // Reset silence timer - auto-submit after 3 seconds of silence
         clearTimeout(silenceTimerRef.current);
@@ -71,14 +97,18 @@ const VideoInterview = ({
 
       recognitionRef.current.onerror = (event) => {
         console.error('Speech recognition error:', event.error);
-        if (event.error === 'no-speech' && currentAnswer.trim()) {
-          submitAnswer(currentAnswer.trim());
+        if (event.error === 'no-speech' && currentAnswerRef.current.trim()) {
+          submitAnswer(currentAnswerRef.current.trim());
         }
       };
 
       recognitionRef.current.onend = () => {
         setIsListening(false);
       };
+
+      setSpeechSupported(true);
+    } else {
+      setSpeechSupported(false);
     }
   };
 
@@ -118,6 +148,7 @@ const VideoInterview = ({
   const startListening = () => {
     if (recognitionRef.current && !isListening) {
       setCurrentAnswer('');
+      currentAnswerRef.current = '';
       try {
         recognitionRef.current.start();
         setIsListening(true);
@@ -128,7 +159,7 @@ const VideoInterview = ({
   };
 
   const stopListening = () => {
-    if (recognitionRef.current && isListening) {
+    if (recognitionRef.current) {
       try {
         recognitionRef.current.stop();
       } catch (err) {
@@ -139,10 +170,25 @@ const VideoInterview = ({
     }
   };
 
-  const submitAnswer = (answer) => {
+  const submitAnswer = useCallback((answer) => {
     stopListening();
     setCurrentAnswer('');
+    currentAnswerRef.current = '';
+    setManualInput('');
     onAnswerComplete?.(answer);
+  }, [onAnswerComplete]);
+
+  const handleManualSubmit = () => {
+    if (manualInput.trim()) {
+      submitAnswer(manualInput.trim());
+    }
+  };
+
+  const handleManualKeyDown = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleManualSubmit();
+    }
   };
 
   return (
@@ -222,6 +268,43 @@ const VideoInterview = ({
                 <small className="text-tertiary mt-sm" style={{ display: 'block' }}>
                   ⏱️ Auto-submitting in 3 seconds after you stop speaking...
                 </small>
+              </div>
+            )}
+
+            {/* Manual Text Input Fallback */}
+            {!speechSupported && currentQuestion && (
+              <div style={{
+                background: 'hsla(220, 18%, 15%, 0.95)',
+                backdropFilter: 'blur(20px)',
+                padding: 'var(--space-md)',
+                borderRadius: 'var(--radius-md)',
+                border: '2px solid var(--color-secondary)',
+                marginTop: 'var(--space-md)'
+              }}>
+                <h4 style={{ color: 'var(--color-secondary)', marginBottom: 'var(--space-sm)' }}>
+                  ⌨️ Type Your Answer:
+                </h4>
+                <textarea
+                  className="input"
+                  value={manualInput}
+                  onChange={(e) => setManualInput(e.target.value)}
+                  onKeyDown={handleManualKeyDown}
+                  placeholder="Type your answer here... (Press Enter to submit)"
+                  rows="3"
+                  style={{
+                    fontSize: 'var(--font-size-sm)',
+                    resize: 'vertical',
+                    marginBottom: 'var(--space-sm)'
+                  }}
+                />
+                <button
+                  className="btn btn-primary"
+                  onClick={handleManualSubmit}
+                  disabled={!manualInput.trim()}
+                  style={{ width: '100%' }}
+                >
+                  ✅ Submit Answer
+                </button>
               </div>
             )}
           </div>

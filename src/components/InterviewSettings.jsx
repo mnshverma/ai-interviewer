@@ -109,27 +109,21 @@ const InterviewSettings = ({ onStartInterview, hasData }) => {
 
       {/* Voice Toggle */}
       <div className="input-group">
-        <div style={{
-          background: 'linear-gradient(135deg, rgba(56, 239, 125, 0.05), rgba(17, 153, 142, 0.05))',
-          padding: 'var(--space-md)',
-          borderRadius: 'var(--radius-lg)',
-          border: '2px solid rgba(56, 239, 125, 0.2)',
-          cursor: 'pointer',
-          transition: 'all 0.3s ease'
-        }}
-        onClick={() => setEnableVoice(!enableVoice)}
-        style={{
-          background: enableVoice 
-            ? 'linear-gradient(135deg, rgba(56, 239, 125, 0.15), rgba(17, 153, 142, 0.15))'
-            : 'linear-gradient(135deg, rgba(56, 239, 125, 0.05), rgba(17, 153, 142, 0.05))',
-          padding: 'var(--space-md)',
-          borderRadius: 'var(--radius-lg)',
-          border: enableVoice 
-            ? '2px solid rgba(56, 239, 125, 0.4)'
-            : '2px solid rgba(56, 239, 125, 0.2)',
-          cursor: 'pointer',
-          transition: 'all 0.3s ease'
-        }}>
+        <div
+          onClick={() => setEnableVoice(!enableVoice)}
+          style={{
+            background: enableVoice 
+              ? 'linear-gradient(135deg, rgba(56, 239, 125, 0.15), rgba(17, 153, 142, 0.15))'
+              : 'linear-gradient(135deg, rgba(56, 239, 125, 0.05), rgba(17, 153, 142, 0.05))',
+            padding: 'var(--space-md)',
+            borderRadius: 'var(--radius-lg)',
+            border: enableVoice 
+              ? '2px solid rgba(56, 239, 125, 0.4)'
+              : '2px solid rgba(56, 239, 125, 0.2)',
+            cursor: 'pointer',
+            transition: 'all 0.3s ease'
+          }}
+        >
           <label className="flex items-center gap-sm" style={{ cursor: 'pointer', margin: 0 }}>
             <input
               type="checkbox"

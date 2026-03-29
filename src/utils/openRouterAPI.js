@@ -70,7 +70,7 @@ Provide the analysis in a structured JSON format.`,
   }
 };
 
-export const analyzeJobDescription = async (jobDescText, model = 'google/gemini-2.0-flash-exp:free') => {
+export const analyzeJobDescription = async (jobDescText, model = 'meta-llama/llama-3.3-70b-instruct:free') => {
   try {
     const apiKey = getApiKey();
     const response = await fetch(OPENROUTER_API_URL, {
@@ -133,7 +133,7 @@ Provide the analysis in a structured format highlighting what to assess in inter
 export const generateInterviewQuestions = async (
   resumeAnalysis,
   interviewType,
-  model = 'google/gemini-2.0-flash-exp:free'
+  model = 'meta-llama/llama-3.3-70b-instruct:free'
 ) => {
   try {
     const apiKey = getApiKey();
@@ -199,7 +199,7 @@ Format each question on a new line, numbered 1-10.`,
   }
 };
 
-export const evaluateAnswer = async (question, answer, context, model = 'google/gemini-2.0-flash-exp:free') => {
+export const evaluateAnswer = async (question, answer, context, model = 'meta-llama/llama-3.3-70b-instruct:free') => {
   try {
     const apiKey = getApiKey();
     const response = await fetch(OPENROUTER_API_URL, {
@@ -256,7 +256,7 @@ Provide a brief evaluation (2-3 sentences) on:
 export const generateFinalReport = async (
   transcript,
   resumeAnalysis,
-  model = 'google/gemini-2.0-flash-exp:free'
+  model = 'meta-llama/llama-3.3-70b-instruct:free'
 ) => {
   try {
     const apiKey = getApiKey();

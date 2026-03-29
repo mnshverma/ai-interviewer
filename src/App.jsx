@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import DataInput from './components/DataInput';
 import InterviewSettings from './components/InterviewSettings';
 import VideoInterview from './components/VideoInterview';
@@ -18,10 +18,12 @@ function App() {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [transcript, setTranscript] = useState([]);
   const [isAISpeaking, setIsAISpeaking] = useState(false);
-  const [isListening, setIsListening] = useState(false);
   const [finalReport, setFinalReport] = useState(null);
   const [showReport, setShowReport] = useState(false);
   const [error, setError] = useState('');
+
+  // Ref to always have latest transcript in closures
+  const transcriptRef = useRef([]);
 
   // Handle data input (resume or job description)
   const handleDataProvided = useCallback((data) => {
@@ -81,8 +83,9 @@ function App() {
   const startInterviewing = useCallback(async (config, firstQuestion) => {
     setInterviewState('interviewing');
 
-    // Add greeting to transcript
-    const greeting = `Hello! I'm your AI interviewer. I've reviewed your resume and prepared ${questions.length} questions for you. Let's begin with the first question.`;
+    // Add greeting to transcript (mode-aware message)
+    const inputLabel = inputData?.mode === 'resume' ? 'resume' : 'job description';
+    const greeting = `Hello! I'm your AI interviewer. I've reviewed your ${inputLabel} and prepared ${questions.length} questions for you. Let's begin with the first question.`;
     
     addToTranscript('interviewer', greeting);
 
@@ -103,15 +106,12 @@ function App() {
 
   // Add to transcript
   const addToTranscript = useCallback((speaker, text, feedback = null) => {
-    setTranscript(prev => [
-      ...prev,
-      {
-        speaker,
-        text,
-        feedback,
-        timestamp: Date.now()
-      }
-    ]);
+    const entry = { speaker, text, feedback, timestamp: Date.now() };
+    setTranscript(prev => {
+      const updated = [...prev, entry];
+      transcriptRef.current = updated;
+      return updated;
+    });
   }, []);
 
   // Handle answer completion (receives answer text directly from VideoInterview)
@@ -183,9 +183,10 @@ function App() {
       }
     }
 
-    // Generate final report
+    // Generate final report — use ref for latest transcript (avoids stale closure)
     try {
-      const transcriptText = transcript
+      const latestTranscript = transcriptRef.current;
+      const transcriptText = latestTranscript
         .map(t => `${t.speaker.toUpperCase()}: ${t.text}`)
         .join('\n\n');
 
@@ -205,7 +206,7 @@ function App() {
       console.error('Report generation error:', err);
       setError('Failed to generate final report: ' + err.message);
     }
-  }, [interviewConfig, transcript, resumeAnalysis, addToTranscript]);
+  }, [interviewConfig, resumeAnalysis, addToTranscript]);
 
   // Download report
   const handleDownloadReport = useCallback(() => {
@@ -343,13 +344,7 @@ function App() {
                   </div>
                 </div>
 
-                {isListening && (
-                  <div className="status-indicator active">
-                    <div className="status-dot"></div>
-                    <span>Listening to your answer...</span>
-                  </div>
-                )}
-              </div>
+                </div>
 
               <TranscriptPanel 
                 transcript={transcript}
