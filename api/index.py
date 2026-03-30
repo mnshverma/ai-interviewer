@@ -1,4 +1,4 @@
-from fastapi import FastAPI, UploadFile, File, HTTPError
+from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import requests
@@ -47,7 +47,7 @@ async def parse_pdf(file: UploadFile = File(...)):
             text += page.extract_text()
         return {"text": text}
     except Exception as e:
-        raise HTTPError(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/api/ai-chat")
 async def ai_chat(req: ChatRequest):
