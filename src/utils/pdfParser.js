@@ -1,11 +1,13 @@
 // PDF parsing using pdf.js
+import * as pdfjsLib from 'pdfjs-dist';
+import pdfWorkerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
+
+// Configure worker — use local bundled worker (not CDN) for reliability
+pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
+
 export const extractTextFromPDF = async (file) => {
   try {
     const arrayBuffer = await file.arrayBuffer();
-    
-    // Dynamic import of pdf.js
-    const pdfjsLib = await import('pdfjs-dist');
-    pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
     
     const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
     let fullText = '';

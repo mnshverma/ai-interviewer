@@ -3,7 +3,7 @@ import { useToast } from './Toast';
 
 const InterviewSettings = ({ onStartInterview, hasData }) => {
   const [interviewType, setInterviewType] = useState('technical');
-  const [aiModel, setAiModel] = useState('meta-llama/llama-3.3-70b-instruct:free');
+  const [aiModel, setAiModel] = useState('openrouter/free');
   const [enableVoice, setEnableVoice] = useState(true);
   const [practiceMode, setPracticeMode] = useState(false);
   const [timeLimit, setTimeLimit] = useState(120); // seconds per question, 0 = unlimited
@@ -177,13 +177,12 @@ const InterviewSettings = ({ onStartInterview, hasData }) => {
           onChange={(e) => setAiModel(e.target.value)}
           style={{ cursor: 'pointer' }}
         >
-          <option value="meta-llama/llama-3.3-70b-instruct:free">⭐ Meta LLaMA 3.3 70B (Recommended)</option>
-          <option value="nvidia/llama-3.1-nemotron-70b-instruct:free">💪 NVIDIA Nemotron 70B (Powerful)</option>
-          <option value="liquid/lfm-40b:free">⚡ Liquid LFM 40B (Fast)</option>
-          <option value="qwen/qwen-2.5-7b-instruct:free">🎯 Qwen 2.5 7B (Efficient)</option>
+          <option value="openrouter/free">⭐ Auto-Select Best Free Model (Recommended)</option>
+          <option value="meta-llama/llama-3.3-70b-instruct:free">🦙 Meta LLaMA 3.3 70B</option>
+          <option value="meta-llama/llama-3.1-8b-instruct:free">🦙 Meta LLaMA 3.1 8B (Fast)</option>
           <option value="google/gemma-2-9b-it:free">🔷 Google Gemma 2 9B</option>
           <option value="microsoft/phi-3-medium-128k-instruct:free">📘 Microsoft Phi 3 Medium</option>
-          <option value="microsoft/phi-3-mini-128k-instruct:free">🚀 Microsoft Phi 3 Mini</option>
+          <option value="qwen/qwen-2.5-7b-instruct:free">🎯 Qwen 2.5 7B</option>
         </select>
         <small className="text-tertiary" style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-xs)' }}>
           <span style={{ fontSize: 'var(--font-size-lg)' }}>✅</span>

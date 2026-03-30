@@ -1,5 +1,17 @@
 const OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions";
 
+// Default model: OpenRouter's free auto-router picks the best available free model
+const DEFAULT_MODEL = 'openrouter/free';
+
+// Fallback models if the primary fails (402/429 errors)
+const FREE_FALLBACK_MODELS = [
+  'openrouter/free',
+  'meta-llama/llama-3.3-70b-instruct:free',
+  'meta-llama/llama-3.1-8b-instruct:free',
+  'google/gemma-2-9b-it:free',
+  'microsoft/phi-3-medium-128k-instruct:free',
+];
+
 // Get API key from environment variable
 const getApiKey = () => {
   const apiKey = import.meta.env.VITE_OPENROUTER_API_KEY;
@@ -9,28 +21,75 @@ const getApiKey = () => {
   return apiKey;
 };
 
-export const analyzeResume = async (resumeText, model = 'meta-llama/llama-3.3-70b-instruct:free') => {
+// Helper: make an API call with automatic fallback on 402/429
+const callWithFallback = async (apiKey, messages, options = {}) => {
+  const { temperature = 0.7, max_tokens = 1000, model } = options;
+  const modelsToTry = model && model !== DEFAULT_MODEL
+    ? [model, ...FREE_FALLBACK_MODELS]
+    : FREE_FALLBACK_MODELS;
+
+  let lastError = null;
+
+  for (const currentModel of modelsToTry) {
+    try {
+      const response = await fetch(OPENROUTER_API_URL, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+          'HTTP-Referer': window.location.origin,
+          'X-Title': 'Manvar AI Interviewer',
+        },
+        body: JSON.stringify({
+          model: currentModel,
+          messages,
+          temperature,
+          max_tokens,
+        }),
+      });
+
+      // If 402 (payment required) or 429 (rate limited), try next model
+      if (response.status === 402 || response.status === 429) {
+        console.warn(`Model ${currentModel} returned ${response.status}, trying next fallback...`);
+        lastError = new Error(`Model ${currentModel}: HTTP ${response.status}`);
+        continue;
+      }
+
+      if (!response.ok) {
+        throw new Error(`OpenRouter API error: ${response.status}`);
+      }
+
+      const data = await response.json();
+      if (!data.choices?.[0]?.message?.content) {
+        throw new Error('Empty response from AI model');
+      }
+
+      return data.choices[0].message.content;
+    } catch (error) {
+      lastError = error;
+      // Only retry on known retryable errors
+      if (error.message?.includes('402') || error.message?.includes('429')) {
+        continue;
+      }
+      throw error;
+    }
+  }
+
+  throw lastError || new Error('All free models failed. Please try again later.');
+};
+
+export const analyzeResume = async (resumeText, model = DEFAULT_MODEL) => {
   try {
     const apiKey = getApiKey();
 
-    const response = await fetch(OPENROUTER_API_URL, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-        "HTTP-Referer": window.location.origin,
-        "X-Title": "Manver AI Interviewer",
+    const analysisText = await callWithFallback(apiKey, [
+      {
+        role: "system",
+        content: `You are an expert technical recruiter and interviewer. Analyze resumes and extract key information to generate relevant interview questions.`,
       },
-      body: JSON.stringify({
-        model: model,
-        messages: [
-          {
-            role: "system",
-            content: `You are an expert technical recruiter and interviewer. Analyze resumes and extract key information to generate relevant interview questions.`,
-          },
-          {
-            role: "user",
-            content: `Analyze this resume and extract:
+      {
+        role: "user",
+        content: `Analyze this resume and extract:
 1. Candidate's name
 2. Years of experience
 3. Key skills (list top 5-7)
@@ -42,19 +101,8 @@ Resume:
 ${resumeText}
 
 Provide the analysis in a structured JSON format.`,
-          },
-        ],
-        temperature: 0.7,
-        max_tokens: 1000,
-      }),
-    });
-
-    if (!response.ok) {
-      throw new Error(`OpenRouter API error: ${response.status}`);
-    }
-
-    const data = await response.json();
-    const analysisText = data.choices[0].message.content;
+      },
+    ], { temperature: 0.7, max_tokens: 1000, model });
 
     return {
       success: true,
@@ -70,27 +118,18 @@ Provide the analysis in a structured JSON format.`,
   }
 };
 
-export const analyzeJobDescription = async (jobDescText, model = 'meta-llama/llama-3.3-70b-instruct:free') => {
+export const analyzeJobDescription = async (jobDescText, model = DEFAULT_MODEL) => {
   try {
     const apiKey = getApiKey();
-    const response = await fetch(OPENROUTER_API_URL, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-        'HTTP-Referer': window.location.origin,
-        'X-Title': 'AI Interviewer'
+
+    const analysisText = await callWithFallback(apiKey, [
+      {
+        role: 'system',
+        content: `You are an expert recruiter analyzing job descriptions to prepare interview questions.`
       },
-      body: JSON.stringify({
-        model: model,
-        messages: [
-          {
-            role: 'system',
-            content: `You are an expert recruiter analyzing job descriptions to prepare interview questions.`
-          },
-          {
-            role: 'user',
-            content: `Analyze this job description and extract:
+      {
+        role: 'user',
+        content: `Analyze this job description and extract:
 1. Role/Position title
 2. Required years of experience
 3. Key technical skills required
@@ -102,20 +141,9 @@ Job Description:
 ${jobDescText}
 
 Provide the analysis in a structured format highlighting what to assess in interviews.`
-          }
-        ],
-        temperature: 0.7,
-        max_tokens: 1000
-      })
-    });
+      }
+    ], { temperature: 0.7, max_tokens: 1000, model });
 
-    if (!response.ok) {
-      throw new Error(`OpenRouter API error: ${response.status}`);
-    }
-
-    const data = await response.json();
-    const analysisText = data.choices[0].message.content;
-    
     return {
       success: true,
       analysis: analysisText,
@@ -133,7 +161,7 @@ Provide the analysis in a structured format highlighting what to assess in inter
 export const generateInterviewQuestions = async (
   resumeAnalysis,
   interviewType,
-  model = 'meta-llama/llama-3.3-70b-instruct:free',
+  model = DEFAULT_MODEL,
   difficulty = 'medium'
 ) => {
   try {
@@ -145,24 +173,14 @@ export const generateInterviewQuestions = async (
       hard: 'Make questions challenging. Include system design, deep technical analysis, complex problem-solving, edge cases, and trade-off discussions. Suitable for senior/staff-level candidates.'
     };
 
-    const response = await fetch(OPENROUTER_API_URL, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-        "HTTP-Referer": window.location.origin,
-        "X-Title": "Manver AI Interviewer",
+    const questionsText = await callWithFallback(apiKey, [
+      {
+        role: "system",
+        content: `You are an experienced ${interviewType} interviewer. Generate relevant, thoughtful interview questions based on the candidate's background. ${difficultyInstructions[difficulty] || difficultyInstructions.medium}`,
       },
-      body: JSON.stringify({
-        model: model,
-        messages: [
-          {
-            role: "system",
-            content: `You are an experienced ${interviewType} interviewer. Generate relevant, thoughtful interview questions based on the candidate's background. ${difficultyInstructions[difficulty] || difficultyInstructions.medium}`,
-          },
-          {
-            role: "user",
-            content: `Based on this resume analysis, generate 8-10 ${interviewType} interview questions that are:
+      {
+        role: "user",
+        content: `Based on this resume analysis, generate 8-10 ${interviewType} interview questions that are:
 1. Relevant to the candidate's experience
 2. Progressive in difficulty (within the ${difficulty} range)
 3. Mix of technical and behavioral (if technical interview)
@@ -172,19 +190,8 @@ Resume Analysis:
 ${resumeAnalysis}
 
 Format each question on a new line, numbered 1-10.`,
-          },
-        ],
-        temperature: 0.8,
-        max_tokens: 1500,
-      }),
-    });
-
-    if (!response.ok) {
-      throw new Error(`OpenRouter API error: ${response.status}`);
-    }
-
-    const data = await response.json();
-    const questionsText = data.choices[0].message.content;
+      },
+    ], { temperature: 0.8, max_tokens: 1500, model });
 
     // Parse questions into array
     const questions = questionsText
@@ -207,28 +214,19 @@ Format each question on a new line, numbered 1-10.`,
   }
 };
 
-export const evaluateAnswer = async (question, answer, context, model = 'meta-llama/llama-3.3-70b-instruct:free') => {
+export const evaluateAnswer = async (question, answer, context, model = DEFAULT_MODEL) => {
   try {
     const apiKey = getApiKey();
-    const response = await fetch(OPENROUTER_API_URL, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-        "HTTP-Referer": window.location.origin,
-        "X-Title": "Manver AI Interviewer",
+
+    const feedback = await callWithFallback(apiKey, [
+      {
+        role: "system",
+        content:
+          "You are an interview evaluator. Provide brief, constructive feedback on answers.",
       },
-      body: JSON.stringify({
-        model: model,
-        messages: [
-          {
-            role: "system",
-            content:
-              "You are an interview evaluator. Provide brief, constructive feedback on answers.",
-          },
-          {
-            role: "user",
-            content: `Context: ${context}
+      {
+        role: "user",
+        content: `Context: ${context}
 Question: ${question}
 Answer: ${answer}
 
@@ -236,21 +234,12 @@ Provide a brief evaluation (2-3 sentences) on:
 1. Relevance and completeness
 2. Technical accuracy (if applicable)
 3. Communication clarity`,
-          },
-        ],
-        temperature: 0.7,
-        max_tokens: 200,
-      }),
-    });
+      },
+    ], { temperature: 0.7, max_tokens: 200, model });
 
-    if (!response.ok) {
-      throw new Error(`OpenRouter API error: ${response.status}`);
-    }
-
-    const data = await response.json();
     return {
       success: true,
-      feedback: data.choices[0].message.content,
+      feedback,
     };
   } catch (error) {
     console.error("Answer evaluation error:", error);
@@ -264,29 +253,20 @@ Provide a brief evaluation (2-3 sentences) on:
 export const generateFinalReport = async (
   transcript,
   resumeAnalysis,
-  model = 'meta-llama/llama-3.3-70b-instruct:free'
+  model = DEFAULT_MODEL
 ) => {
   try {
     const apiKey = getApiKey();
-    const response = await fetch(OPENROUTER_API_URL, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-        "HTTP-Referer": window.location.origin,
-        "X-Title": "Manver AI Interviewer",
+
+    const report = await callWithFallback(apiKey, [
+      {
+        role: "system",
+        content:
+          "You are an expert interviewer creating a comprehensive interview evaluation report.",
       },
-      body: JSON.stringify({
-        model: model,
-        messages: [
-          {
-            role: "system",
-            content:
-              "You are an expert interviewer creating a comprehensive interview evaluation report.",
-          },
-          {
-            role: "user",
-            content: `Generate a detailed interview evaluation report based on:
+      {
+        role: "user",
+        content: `Generate a detailed interview evaluation report based on:
 
 Resume Analysis:
 ${resumeAnalysis}
@@ -307,21 +287,12 @@ Then include:
 7. Detailed Notes
 
 Format as a clear, structured report.`,
-          },
-        ],
-        temperature: 0.7,
-        max_tokens: 2000,
-      }),
-    });
+      },
+    ], { temperature: 0.7, max_tokens: 2000, model });
 
-    if (!response.ok) {
-      throw new Error(`OpenRouter API error: ${response.status}`);
-    }
-
-    const data = await response.json();
     return {
       success: true,
-      report: data.choices[0].message.content,
+      report,
     };
   } catch (error) {
     console.error("Report generation error:", error);
