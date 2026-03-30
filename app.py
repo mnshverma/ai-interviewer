@@ -18,49 +18,78 @@ st.set_page_config(page_title="Manvar AI Interviewer", page_icon="🤖", layout=
 
 st.markdown("""
     <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Outfit:wght@400;700&display=swap');
+    
     :root {
         --color-bg: #0f172a;
         --color-primary: #3b82f6;
-        --color-glass: rgba(30, 41, 59, 0.7);
+        --color-secondary: #1e293b;
+        --color-accent: #60a5fa;
+        --color-glass: rgba(15, 23, 42, 0.6);
         --color-border: rgba(59, 130, 246, 0.2);
     }
     
     .stApp {
-        background: radial-gradient(circle at top right, #1e293b, #0f172a);
+        background: radial-gradient(circle at 0% 0%, #1e293b, #0f172a);
         color: #f1f5f9;
+        font-family: 'Inter', sans-serif;
     }
     
     .glass-card {
         background: var(--color-glass);
-        backdrop-filter: blur(12px);
+        backdrop-filter: blur(20px);
         border: 1px solid var(--color-border);
         border-radius: 1.5rem;
-        padding: 2rem;
-        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
-        margin-bottom: 1.5rem;
+        padding: 2.5rem;
+        box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+        margin-bottom: 2rem;
+        transition: transform 0.3s ease, border-color 0.3s ease;
+    }
+    
+    .glass-card:hover {
+        border-color: var(--color-accent);
+        transform: translateY(-5px);
     }
     
     .stButton > button {
         background: linear-gradient(135deg, #3b82f6, #2563eb);
         color: white;
         border: none;
-        padding: 0.75rem 1.5rem;
-        border-radius: 0.75rem;
-        font-weight: 600;
-        transition: all 0.3s ease;
-        box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.4);
+        padding: 0.8rem 2rem;
+        border-radius: 1rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        width: 100%;
+        box-shadow: 0 8px 15px rgba(59, 130, 246, 0.3);
     }
     
     .stButton > button:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.5);
+        background: linear-gradient(135deg, #60a5fa, #3b82f6);
+        transform: scale(1.02);
+        box-shadow: 0 15px 25px rgba(59, 130, 246, 0.4);
     }
     
     h1, h2, h3 {
+        font-family: 'Outfit', sans-serif !important;
         background: linear-gradient(to right, #60a5fa, #3b82f6);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         font-weight: 800 !important;
+        letter-spacing: -0.5px;
+    }
+    
+    /* Input enhancements */
+    .stFileUploader, .stSelectbox, .stTextArea {
+        background: rgba(30, 41, 59, 0.5) !important;
+        border-radius: 1rem !important;
+        border: 1px solid var(--color-border) !important;
+    }
+    
+    /* Progress bar */
+    .stProgress > div > div > div > div {
+        background: linear-gradient(to right, #3b82f6, #60a5fa) !important;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -126,7 +155,7 @@ def show_setup():
     with col1:
         st.markdown('<div class="glass-card">', unsafe_allow_html=True)
         st.write("### 📄 Step 1: Upload Resume")
-        uploaded_file = st.file_uploader("Choose a PDF Resume", type=['pdf'])
+        uploaded_file = st.file_uploader("Choose a PDF Resume", type=['pdf'], label_visibility="collapsed")
         
         st.write("### ⚙️ Interview Settings")
         model = st.selectbox("AI Model (Free Tier)", [
@@ -134,7 +163,7 @@ def show_setup():
             "minimax/minimax-m2.5:free",
             "z-ai/glm-5:free",
             "corethink:free"
-        ])
+        ], label_visibility="collapsed")
         
         if uploaded_file and st.button("🚀 Start Analysis"):
             with st.spinner("Processing Resume..."):
@@ -154,10 +183,9 @@ def show_setup():
         st.markdown('</div>', unsafe_allow_html=True)
 
     with col2:
-        st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+        st.markdown('<div class="glass-card" style="height: 100%;">', unsafe_allow_html=True)
         st.write("### 📹 Video & Audio Check")
-        # In Streamlit, camera_input is a common way to show the feed
-        st.camera_input("Check your webcam feed")
+        st.camera_input("Check your webcam feed", label_visibility="collapsed")
         st.info("Ensure your microphone is clear for the audio session.")
         st.markdown('</div>', unsafe_allow_html=True)
 
@@ -227,8 +255,10 @@ def show_interview():
         st.markdown('</div>', unsafe_allow_html=True)
 
     with col2:
-        st.markdown('<div class="glass-card" style="height: 400px; display: flex; align-items: center; justify-content: center;">', unsafe_allow_html=True)
+        st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+        st.write("### 🔴 LIVE SESSION FEED")
         st.camera_input("Active Session Feed", label_visibility="collapsed")
+        st.warning("Interview is being proctored for quality assurance.")
         st.markdown('</div>', unsafe_allow_html=True)
 
 def show_report():
