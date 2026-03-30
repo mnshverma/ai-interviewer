@@ -117,68 +117,6 @@ function App() {
     });
   }, []);
 
-  // Handle answer completion
-  const handleAnswerComplete = useCallback(async (answerText) => {
-    if (!interviewConfig || !answerText?.trim()) return;
-
-    addToTranscript('candidate', answerText);
-
-    const currentQuestion = questions[currentQuestionIndex];
-    
-    try {
-      const evaluation = await evaluateAnswer(
-        currentQuestion,
-        answerText,
-        resumeAnalysis,
-        interviewConfig.aiModel
-      );
-
-      if (evaluation.success && evaluation.feedback) {
-        setTranscript(prev => {
-          const updated = [...prev];
-          updated[updated.length - 1].feedback = evaluation.feedback;
-          transcriptRef.current = updated;
-          return updated;
-        });
-      }
-    } catch (err) {
-      console.error('Evaluation error:', err);
-    }
-
-    moveToNextQuestion();
-  }, [interviewConfig, questions, currentQuestionIndex, resumeAnalysis, addToTranscript]);
-
-  // Skip question
-  const handleSkipQuestion = useCallback(() => {
-    addToTranscript('candidate', '(Question skipped)');
-    toast.info('Question skipped');
-    moveToNextQuestion();
-  }, [addToTranscript, moveToNextQuestion]);
-
-  // Move to next question
-  const moveToNextQuestion = useCallback(async () => {
-    const nextIndex = currentQuestionIndex + 1;
-    
-    if (nextIndex < questions.length) {
-      setCurrentQuestionIndex(nextIndex);
-      const nextQuestion = questions[nextIndex];
-      
-      addToTranscript('interviewer', nextQuestion);
-
-      if (interviewConfig?.enableVoice && !interviewConfig?.practiceMode) {
-        setIsAISpeaking(true);
-        try {
-          await speechService.speak(nextQuestion);
-        } catch (err) {
-          console.error('Speech error:', err);
-        }
-        setIsAISpeaking(false);
-      }
-    } else {
-      await completeInterview();
-    }
-  }, [interviewConfig, questions, currentQuestionIndex, addToTranscript]);
-
   // Complete interview
   const completeInterview = useCallback(async () => {
     setInterviewState('completed');
@@ -230,6 +168,68 @@ function App() {
       toast.error('Failed to generate report');
     }
   }, [interviewConfig, resumeAnalysis, addToTranscript, inputData, questions.length]);
+
+  // Move to next question
+  const moveToNextQuestion = useCallback(async () => {
+    const nextIndex = currentQuestionIndex + 1;
+    
+    if (nextIndex < questions.length) {
+      setCurrentQuestionIndex(nextIndex);
+      const nextQuestion = questions[nextIndex];
+      
+      addToTranscript('interviewer', nextQuestion);
+
+      if (interviewConfig?.enableVoice && !interviewConfig?.practiceMode) {
+        setIsAISpeaking(true);
+        try {
+          await speechService.speak(nextQuestion);
+        } catch (err) {
+          console.error('Speech error:', err);
+        }
+        setIsAISpeaking(false);
+      }
+    } else {
+      await completeInterview();
+    }
+  }, [interviewConfig, questions, currentQuestionIndex, addToTranscript, completeInterview]);
+
+  // Handle answer completion
+  const handleAnswerComplete = useCallback(async (answerText) => {
+    if (!interviewConfig || !answerText?.trim()) return;
+
+    addToTranscript('candidate', answerText);
+
+    const currentQuestion = questions[currentQuestionIndex];
+    
+    try {
+      const evaluation = await evaluateAnswer(
+        currentQuestion,
+        answerText,
+        resumeAnalysis,
+        interviewConfig.aiModel
+      );
+
+      if (evaluation.success && evaluation.feedback) {
+        setTranscript(prev => {
+          const updated = [...prev];
+          updated[updated.length - 1].feedback = evaluation.feedback;
+          transcriptRef.current = updated;
+          return updated;
+        });
+      }
+    } catch (err) {
+      console.error('Evaluation error:', err);
+    }
+
+    moveToNextQuestion();
+  }, [interviewConfig, questions, currentQuestionIndex, resumeAnalysis, addToTranscript, moveToNextQuestion]);
+
+  // Skip question
+  const handleSkipQuestion = useCallback(() => {
+    addToTranscript('candidate', '(Question skipped)');
+    toast.info('Question skipped');
+    moveToNextQuestion();
+  }, [addToTranscript, moveToNextQuestion]);
 
   // Handle video recording ready
   const handleRecordingReady = useCallback((blob) => {
