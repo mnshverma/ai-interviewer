@@ -11,6 +11,8 @@ from datetime import datetime
 # --- Setup ---
 load_dotenv()
 LOGO_PATH = "manver-logo.png"
+import base64
+with open(LOGO_PATH, "rb") as f: LOGO_BASE64 = base64.b64encode(f.read()).decode()
 st.set_page_config(page_title="MANVER AI INTERVIEWER", page_icon=LOGO_PATH, layout="wide")
 
 # --- Configuration ---
@@ -230,11 +232,14 @@ def confirm_submission():
         st.rerun()
 
 def show_setup():
-    st.markdown('<div style="text-align: center; margin-top: -1rem;">', unsafe_allow_html=True)
-    st.image(LOGO_PATH, width=150)
-    st.markdown('<h1 style="margin-top: 0.5rem; letter-spacing: 2px;">MANVER AI INTERVIEWER</h1>'
-                '<div style="color: #60a5fa; font-weight: 700; margin-bottom: 2rem; letter-spacing: 1px;">PRECISION SCREENING SYSTEM</div>'
-                '</div>', unsafe_allow_html=True)
+    st.markdown(f"""
+        <div style="text-align: center; margin-top: -1.5rem; padding-bottom: 2rem;">
+            <img src="data:image/png;base64,{LOGO_BASE64}" width="160" style="margin-bottom: 0.5rem; filter: drop-shadow(0 4px 12px rgba(59, 130, 246, 0.4));">
+            <h1 style="margin: 0; padding: 0; letter-spacing: 3px; font-weight: 800; color: #ffffff; line-height: 1.1;">MANVER <span style="color: #60a5fa;">AI INTERVIEWER</span></h1>
+            <p style="margin: 0.5rem 0 0 0; color: #60a5fa; font-size: 1.1rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase;">ADVANCED AI INTERVIEW PLATFORM</p>
+            <div style="width: 100px; height: 3px; background: linear-gradient(90deg, transparent, #3b82f6, transparent); margin: 1.5rem auto 0; border-radius: 10px;"></div>
+        </div>
+    """, unsafe_allow_html=True)
     
     st.markdown("""
         <script>
@@ -367,28 +372,21 @@ def interview_content():
     
     st.progress((q_idx + 1) / total)
     
-    # 📹 Proctoring Camera & Q&A Layout
-    c1, spacer, c2 = st.columns([1, 0.1, 2], gap="small")
+    # 📹 Q&A Left, Proctoring Right [2, 0.1, 1]
+    c_qa, spacer, c_proc = st.columns([2, 0.1, 1], gap="small", vertical_alignment="top")
     
-    with c1:
-        st.markdown('<div class="glass-card" style="padding: 1rem; text-align: center;">', unsafe_allow_html=True)
-        st.write("🎙️ **LIVE PROCTORING**")
-        st.camera_input("Monitoring", key=f"proctor_v3_{q_idx}", label_visibility="collapsed")
-        st.warning("⚠️ Identity verified. Monitoring active.")
-        st.markdown('</div>', unsafe_allow_html=True)
-
-    with c2:
-        st.markdown('<div class="glass-card" style="min-height: 480px; display: flex; flex-direction: column; justify-content: space-between;">', unsafe_allow_html=True)
+    with c_qa:
+        st.markdown('<div class="glass-card" style="min-height: 520px; display: flex; flex-direction: column; justify-content: space-between;">', unsafe_allow_html=True)
         question = st.session_state.questions[q_idx]
-        st.markdown(f'<div style="font-size: 1.5rem; font-weight: 700; color: #60a5fa; margin-bottom: 2rem;">{question}</div>', unsafe_allow_html=True)
+        st.markdown(f'<div style="font-size: 1.6rem; font-weight: 800; color: #60a5fa; margin-bottom: 2rem;">{question}</div>', unsafe_allow_html=True)
         
-        ans = st.text_area("ans_box", value=st.session_state.answers[q_idx], height=220, key=f"ans_ta_{q_idx}", placeholder="Express your answer here...", label_visibility="collapsed")
+        ans = st.text_area("ans_box", value=st.session_state.answers[q_idx], height=260, key=f"ans_ta_{q_idx}", placeholder="Explain your approach here...", label_visibility="collapsed")
         st.session_state.answers[q_idx] = ans
         
         st.write("") # Spacer
-        col_nav1, col_nav2, col_nav3 = st.columns([1, 1, 1])
+        col_nav1, col_nav2, col_nav3 = st.columns([1, 1.2, 1.2])
         with col_nav1:
-            if st.button("⬅️ Previous", disabled=(q_idx == 0), use_container_width=True):
+            if st.button("⬅️ Back", disabled=(q_idx == 0), use_container_width=True):
                 st.session_state.current_q -= 1
                 st.rerun()
         with col_nav2:
@@ -424,24 +422,37 @@ def interview_content():
                     }}
                 </script>
                 <style>
-                #MainMenu, footer, header {visibility: hidden;}
-                button[title="View source"] {display: none;}
-                .custom-footer {
+                #MainMenu {{visibility: hidden;}}
+                footer {{visibility: hidden;}}
+                header {{visibility: hidden;}}
+                button[title="View source"] {{display: none;}}
+                .custom-footer {{
                     position: fixed; left: 0; bottom: 0; width: 100%;
                     background: rgba(15, 23, 42, 0.95); color: #64748b;
-                    text-align: center; padding: 8px; font-size: 0.75rem;
+                    text-align: center; padding: 10px; font-size: 0.8rem;
                     z-index: 9999; border-top: 1px solid rgba(255,255,255,0.05);
-                }
+                }}
                 </style>
             """, unsafe_allow_html=True)
             st.markdown('<div class="custom-footer">© 2026 MANVER AI INTERVIEWER. ALL RIGHTS RESERVED.</div>', unsafe_allow_html=True)
         with col_nav3:
-            label = "Submit Interview ✨" if q_idx + 1 == total else "Next Question ➡️"
+            label = "Finish & Submit ✨" if q_idx + 1 == total else "Next Item ➡️"
             if st.button(label, use_container_width=True, type="primary"):
                 if q_idx + 1 < total:
                     st.session_state.current_q += 1
                     st.rerun()
                 else: confirm_submission()
+        st.markdown('</div>', unsafe_allow_html=True)
+
+    with c_proc:
+        st.markdown('<div class="glass-card" style="padding: 1rem; text-align: center; border-right: 4px solid #3b82f6;">', unsafe_allow_html=True)
+        st.markdown('<div style="color: #60a5fa; font-weight: 700; margin-bottom: 1rem; font-size: 0.9rem;">📹 PROCTORING UNIT</div>', unsafe_allow_html=True)
+        st.camera_input("Monitoring", key=f"proctor_session_9_{q_idx}", label_visibility="collapsed")
+        st.markdown(f"""
+            <div style="background: rgba(16, 185, 129, 0.1); color: #10b981; padding: 10px; border-radius: 8px; margin-top: 1rem; font-size: 0.8rem; font-weight: 600;">
+                🛡️ IDENTITY LOCKED<br>SESSION TRANSMITTING
+            </div>
+        """, unsafe_allow_html=True)
         st.markdown('</div>', unsafe_allow_html=True)
 
 def show_interview():
