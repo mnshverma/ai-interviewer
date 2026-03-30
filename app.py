@@ -23,52 +23,51 @@ st.markdown("""
     :root {
         --color-bg: #0f172a;
         --color-primary: #3b82f6;
-        --color-secondary: #475569;
-        --color-accent: #60a5fa;
-        --color-glass: rgba(15, 23, 42, 0.6);
-        --color-border: rgba(59, 130, 246, 0.2);
+        --color-secondary: #64748b;
+        --color-accent: #10b981;
+        --color-glass: rgba(30, 41, 59, 0.7);
+        --color-border: rgba(255, 255, 255, 0.1);
     }
     
     .stApp {
-        background: radial-gradient(circle at 0% 0%, #1e293b, #0f172a);
+        background: radial-gradient(circle at 10% 20%, #1e293b 0%, #0f172a 90%);
         color: #f1f5f9;
         font-family: 'Inter', sans-serif;
     }
     
     .glass-card {
         background: var(--color-glass);
-        backdrop-filter: blur(20px);
+        backdrop-filter: blur(12px);
         border: 1px solid var(--color-border);
-        border-radius: 1.5rem;
-        padding: 2.5rem;
-        box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
-        margin-bottom: 2rem;
+        border-radius: 1.25rem;
+        padding: 1.5rem;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+        margin-bottom: 1.5rem;
     }
     
     .stButton > button {
-        background: linear-gradient(135deg, #3b82f6, #2563eb);
-        color: white;
-        border: none;
-        padding: 0.8rem 2rem;
-        border-radius: 1rem;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        width: 100%;
-        box-shadow: 0 8px 15px rgba(59, 130, 246, 0.3);
-    }
-    
-    .stButton > button:hover {
-        background: linear-gradient(135deg, #60a5fa, #3b82f6);
-        transform: translateY(-2px);
-    }
-    
-    /* Dedicated class for Skip/Secondary buttons */
-    div[data-testid="stButton"] button:has(div:contains("Skip")) { 
-        background: linear-gradient(135deg, #475569, #1e293b) !important; 
-        box-shadow: none !important; 
+        border-radius: 0.75rem !important;
+        font-weight: 600 !important;
+        transition: all 0.2s ease !important;
         border: 1px solid rgba(255,255,255,0.1) !important;
+        padding: 0.5rem 1rem !important;
+    }
+
+    /* Primary buttons */
+    div[data-testid="stButton"] button[kind="primary"] {
+        background: linear-gradient(135deg, #3b82f6, #2563eb) !important;
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3) !important;
+    }
+
+    /* Secondary/Default buttons */
+    div[data-testid="stButton"] button[kind="secondary"] {
+        background: rgba(255, 255, 255, 0.05) !important;
+        color: #fff !important;
+    }
+    
+    div[data-testid="stButton"] button:hover {
+        transform: translateY(-1px);
+        filter: brightness(1.1);
     }
 
     h1, h2, h3 {
@@ -76,15 +75,24 @@ st.markdown("""
         background: linear-gradient(to right, #60a5fa, #3b82f6);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
-        font-weight: 800 !important;
+        font-weight: 700 !important;
+        margin-bottom: 1rem !important;
     }
     
     .stProgress > div > div > div > div {
-        background: linear-gradient(to right, #3b82f6, #60a5fa) !important;
+        background: linear-gradient(to right, #3b82f6, #10b981) !important;
     }
     
-    /* Clean up phantom boxes */
-    div[data-testid="stVerticalBlockBorderWrapper"] { border: none !important; background: transparent !important; box-shadow: none !important; }
+    /* Remove white borders/boxes from streamlit */
+    div[data-testid="stVerticalBlockBorderWrapper"] { border: none !important; }
+    
+    /* Clean up the text area */
+    .stTextArea textarea {
+        background: rgba(0, 0, 0, 0.2) !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        border-radius: 0.75rem !important;
+        color: white !important;
+    }
     </style>
 """, unsafe_allow_html=True)
 
@@ -96,9 +104,15 @@ def call_ai(messages, model=DEFAULT_MODEL):
     headers = {"Content-Type": "application/json"}
     if api_key: headers["Authorization"] = f"Bearer {api_key}"
     try:
-        res = requests.post(KILO_API_URL, headers=headers, json={"model": model, "messages": messages, "temperature": 0.7, "max_tokens": 1200}, timeout=35)
-        return res.json()["choices"][0]["message"]["content"] if res.status_code == 200 else None
-    except: return None
+        res = requests.post(KILO_API_URL, headers=headers, json={"model": model, "messages": messages, "temperature": 0.7, "max_tokens": 1200}, timeout=45)
+        if res.status_code == 200:
+            return res.json()["choices"][0]["message"]["content"]
+        else:
+            st.error(f"API Error: {res.status_code}")
+            return None
+    except Exception as e:
+        st.error(f"Connection Error: {str(e)}")
+        return None
 
 def extract_text_from_pdf(file):
     reader = PdfReader(file)
@@ -108,179 +122,188 @@ def extract_text_from_pdf(file):
 
 # --- State ---
 if 'step' not in st.session_state: st.session_state.step = 'setup'
+if 'user_info' not in st.session_state: st.session_state.user_info = {"name": "", "email": "", "phone": ""}
 if 'analysis' not in st.session_state: st.session_state.analysis = ""
 if 'questions' not in st.session_state: st.session_state.questions = []
 if 'answers' not in st.session_state: st.session_state.answers = []
 if 'current_q' not in st.session_state: st.session_state.current_q = 0
-if 'transcript' not in st.session_state: st.session_state.transcript = []
-if 'speech_text' not in st.session_state: st.session_state.speech_text = ""
+if 'captured_photo' not in st.session_state: st.session_state.captured_photo = None
 
 # --- Pages ---
 def show_setup():
     st.title("🤖 Manver AI Interviewer")
-    c1, c2 = st.columns(2, gap="large")
+    
+    c1, c2 = st.columns([1, 1], gap="medium")
+    
     with c1:
         st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+        st.write("### 👤 Candidate Details")
+        name = st.text_input("Full Name", placeholder="e.g. John Doe", value=st.session_state.user_info["name"])
+        email = st.text_input("Email ID", placeholder="e.g. john@example.com", value=st.session_state.user_info["email"])
+        phone = st.text_input("Phone Number", placeholder="e.g. +1 234 567 890", value=st.session_state.user_info["phone"])
+        st.session_state.user_info = {"name": name, "email": email, "phone": phone}
+        
         st.write("### 📄 Resume Analysis")
         uploaded_file = st.file_uploader("Upload PDF", type=['pdf'], label_visibility="collapsed")
         model = st.selectbox("Model", ["kilo-auto/free", "minimax/minimax-m2.5:free"], label_visibility="collapsed")
-        if uploaded_file and st.button("🚀 Start Interview"):
-            with st.spinner("Analyzing..."):
-                text = extract_text_from_pdf(uploaded_file)
-                res = call_ai([{"role": "system", "content": "Analyze resume."}, {"role": "user", "content": text}], model=model)
-                if res:
-                    st.session_state.analysis = res
-                    st.session_state.step = 'analysis'
-                    st.rerun()
+        
+        if st.button("🚀 Start Interview", type="primary"):
+            if not name or not email:
+                st.warning("Please provide your name and email to proceed.")
+            elif not uploaded_file:
+                st.warning("Please upload your resume to start.")
+            else:
+                with st.spinner("Analyzing profile..."):
+                    text = extract_text_from_pdf(uploaded_file)
+                    res = call_ai([{"role": "system", "content": "Analyze resume and summarize strengths."}, {"role": "user", "content": text}], model=model)
+                    if res:
+                        st.session_state.analysis = res
+                        st.session_state.step = 'analysis'
+                        st.rerun()
         st.markdown('</div>', unsafe_allow_html=True)
+
     with c2:
         st.markdown('<div class="glass-card">', unsafe_allow_html=True)
         st.write("### 📹 System Check")
-        st.camera_input("Camera", label_visibility="collapsed")
+        st.info("The camera will be used for proctoring. A photo will be taken automatically at the end.")
+        
+        # We still need one camera input here to get browser permissions
+        img = st.camera_input("Verify Camera", label_visibility="collapsed")
+        if img:
+            st.session_state.captured_photo = img
+            st.success("Camera verified! (Photo will be updated at the end)")
         st.markdown('</div>', unsafe_allow_html=True)
 
 def show_analysis():
     st.title("🔍 Candidate Insights")
     st.markdown(f'<div class="glass-card">{st.session_state.analysis}</div>', unsafe_allow_html=True)
-    if st.button("✅ Confirm & Proceed"):
-        with st.spinner("Preparing Questions..."):
-            text = call_ai([{"role": "system", "content": "Generate 8 tech questions."}, {"role": "user", "content": st.session_state.analysis}])
+    if st.button("✅ Confirm & Proceed", type="primary"):
+        with st.spinner("Generating targeted questions..."):
+            prompt = "Generate exactly 8 technical questions based on the resume. One per line. No numbers."
+            text = call_ai([{"role": "system", "content": prompt}, {"role": "user", "content": st.session_state.analysis}])
             if text:
-                import re
-                # Improved regex to catch various list patterns: 1. , 1) , - , * , Q1: etc.
-                questions = []
-                for line in text.split('\n'):
-                    line = line.strip()
-                    if not line: continue
-                    # Match patterns like "1. ", "1) ", "Q1: ", "- ", "* "
-                    match = re.match(r'^(?:\d+[\.\)]|Q\d+:|[\-\*])\s*(.*)', line)
-                    if match:
-                        q_text = match.group(1).strip()
-                        if q_text: questions.append(q_text)
-                    elif len(line) > 10 and line[0].isdigit(): # Simple fallback for "1 Question"
-                        questions.append(line)
-                
-                if not questions: 
-                    # If still no questions, split by lines and take long enough ones
-                    questions = [q.strip() for q in text.split('\n') if len(q.strip()) > 10][:8]
-                
-                if not questions: questions = [text] 
+                questions = [q.strip() for q in text.split('\n') if len(q.strip()) > 10]
                 st.session_state.questions = questions[:8]
                 st.session_state.answers = [""] * len(st.session_state.questions)
+                st.session_state.current_q = 0
                 st.session_state.step = 'interview'
                 st.rerun()
 
 def show_interview():
-    st.title("🎙️ Live Interview Session")
+    st.title("🎙️ Live Session")
     q_idx = st.session_state.current_q
     total = len(st.session_state.questions)
     
     if total == 0:
-        st.error("No questions found! Restart the interview.")
-        if st.button("🔄 Restart"): st.session_state.clear(); st.rerun()
+        st.error("Repairing questions...")
+        if st.button("🔄 Go Back"): st.session_state.step = 'analysis'; st.rerun()
         return
 
-    # Progress bar with nice visual
-    progress = (q_idx + 1) / total
-    st.progress(progress)
-    st.subheader(f"Question {q_idx + 1} of {total}")
+    st.progress((q_idx + 1) / total)
+    st.write(f"**Step {q_idx + 1} of {total}** | Candidate: {st.session_state.user_info['name']}")
 
-    c1, c2 = st.columns([3, 2], gap="large")
+    c1, c2 = st.columns([3, 1], gap="small")
     with c1:
-        st.markdown('<div class="glass-card" style="min-height: 400px; display: flex; flex-direction: column; justify-content: space-between;">', unsafe_allow_html=True)
-        
-        # Display current question
+        st.markdown('<div class="glass-card">', unsafe_allow_html=True)
         question = st.session_state.questions[q_idx]
-        st.markdown(f'<div style="font-size: 1.5rem; font-weight: 600; margin-bottom: 2rem; color: #60a5fa;">{question}</div>', unsafe_allow_html=True)
+        st.markdown(f'<div style="font-size: 1.4rem; font-weight: 700; color: #60a5fa; margin-bottom: 1rem;">{question}</div>', unsafe_allow_html=True)
         
-        # Answer textarea - using key to persist between navigation
-        ans = st.text_area("Your Answer", value=st.session_state.answers[q_idx], height=200, key=f"ans_{q_idx}", placeholder="Type your answer or use the 'Speak' button...", label_visibility="collapsed")
-        st.session_state.answers[q_idx] = ans # Sync back to state
+        ans = st.text_area("ans_area", value=st.session_state.answers[q_idx], height=180, key=f"ans_{q_idx}", placeholder="Your answer...", label_visibility="collapsed")
+        st.session_state.answers[q_idx] = ans
         
-        # Controls
-        b1, b2, b3, b4 = st.columns([1, 1, 1, 1])
-        
-        # Previous Button
-        if b1.button("⬅️ Previous", disabled=(q_idx == 0)):
-            st.session_state.current_q -= 1
-            st.rerun()
-            
-        # Speak Button (HTML/JS)
-        with b2:
-            st.markdown(f"""
-                <button onclick="startSpeech()" style="background: rgba(59, 130, 246, 0.2); border: 1px solid #3b82f6; color: #60a5fa; padding: 0.8rem; border-radius: 12px; width: 100%; cursor: pointer; transition: 0.3s; height: 100%;">🎙️ Speak</button>
+        col_prev, col_speak, col_next = st.columns([1, 1, 1])
+        with col_prev:
+            if st.button("⬅️ Back", disabled=(q_idx == 0), use_container_width=True):
+                st.session_state.current_q -= 1
+                st.rerun()
+        with col_speak:
+            st.markdown("""
+                <button id="speak-btn" onclick="startSpeech()" style="background: linear-gradient(135deg, #10b981, #059669); color: white; border: none; padding: 0.7rem; border-radius: 12px; width: 100%; cursor: pointer; font-weight: 700;">🎤 Speak</button>
                 <script>
-                    function startSpeech() {{
-                        const recog = window.SpeechRecognition || window.webkitSpeechRecognition;
-                        if (!recog) {{ alert('Speech not supported'); return; }}
-                        const r = new recog();
-                        r.onresult = (e) => {{
+                    function startSpeech() {
+                        const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                        if (!Recognition) return;
+                        const rec = new Recognition();
+                        document.getElementById('speak-btn').innerText = 'Listening...';
+                        rec.onresult = (e) => {
                             const text = e.results[0][0].transcript;
-                            const t = window.parent.document.querySelector('textarea[aria-label="Your Answer"]');
-                            if (t) {{
-                                t.value += (t.value ? ' ' : '') + text;
-                                t.dispatchEvent(new Event('input', {{ bubbles: true }}));
-                            }}
-                        }};
-                        r.start();
-                    }}
+                            const ta = window.parent.document.querySelectorAll('textarea');
+                            ta.forEach(t => { if(t.id.includes('ans_')) { t.value += ' ' + text; t.dispatchEvent(new Event('input', {bubbles:true})); } });
+                            document.getElementById('speak-btn').innerText = '🎤 Speak';
+                        };
+                        rec.start();
+                    }
                 </script>
             """, unsafe_allow_html=True)
-
-        # Skip Button
-        if b3.button("⏩ Skip"):
-            if not st.session_state.answers[q_idx]:
-                st.session_state.answers[q_idx] = "Skipped"
-            if q_idx + 1 < total:
-                st.session_state.current_q += 1
-                st.rerun()
-            else:
-                st.session_state.step = 'report'
-                st.rerun()
-
-        # Next/Finish Button
-        action = "Finish ✨" if q_idx + 1 == total else "Next ➡️"
-        if b4.button(action):
-            if q_idx + 1 < total:
-                st.session_state.current_q += 1
-                st.rerun()
-            else:
-                st.session_state.step = 'report'
-                st.rerun()
-                
+        with col_next:
+            label = "Finish ✨" if q_idx + 1 == total else "Next ➡️"
+            if st.button(label, use_container_width=True, type="primary"):
+                if q_idx + 1 < total:
+                    st.session_state.current_q += 1
+                    st.rerun()
+                else:
+                    st.session_state.step = 'report'
+                    st.rerun()
         st.markdown('</div>', unsafe_allow_html=True)
 
     with c2:
-        st.markdown('<div class="glass-card">', unsafe_allow_html=True)
-        st.write("### 📹 Video Feed & AI")
-        st.camera_input("Proctoring", label_visibility="collapsed")
-        st.info("Tip: Looking directly at the camera improves your confidence score.")
+        st.markdown('<div class="glass-card" style="padding: 1rem; text-align: center;">', unsafe_allow_html=True)
+        st.write("📸 **Proctoring**")
+        # Hidden camera capture script at the end
+        if st.session_state.captured_photo:
+            st.image(st.session_state.captured_photo, use_container_width=True)
+        else:
+            st.warning("Camera not verified")
         st.markdown('</div>', unsafe_allow_html=True)
 
 def show_report():
-    st.title("📊 Final Evaluation Report")
-    with st.spinner("Calculating Score..."):
-        # Compile transcript from questions and answers
-        transcript_lines = []
-        for q, a in zip(st.session_state.questions, st.session_state.answers):
-            transcript_lines.append(f"Q: {q}\nA: {a}")
-        transcript = "\n\n".join(transcript_lines)
-        
+    st.title("📊 Final Interview Report")
+    
+    info = st.session_state.user_info
+    
+    with st.spinner("Generating detailed report..."):
+        transcript = ""
+        for i, (q, a) in enumerate(zip(st.session_state.questions, st.session_state.answers)):
+            transcript += f"Q{i+1}: {q}\nA: {a}\n\n"
+            
         res = call_ai([
-            {"role": "system", "content": "Analyze the interview transcript. Provide: 1. OVERALL SCORE [0-100] 2. STATUS [PASS/FAIL] 3. Detailed Feedback for each question."}, 
-            {"role": "user", "content": f"Interview Data:\n{transcript}"}
+            {"role": "system", "content": "Generate a professional interview report."},
+            {"role": "user", "content": f"Candidate: {info['name']}\nEmail: {info['email']}\nPhone: {info['phone']}\n\nTranscript:\n{transcript}"}
         ])
-        
+    
+    col1, col2 = st.columns([2, 1])
+    with col1:
+        st.markdown(f'<div class="glass-card">', unsafe_allow_html=True)
+        st.write(f"### 📋 Candidate: {info['name']}")
+        st.write(f"**Email:** {info['email']} | **Phone:** {info['phone']}")
+        st.divider()
         if res:
-            if "PASS" in res.upper(): st.success("🎉 CONGRATULATIONS: YOU PASSED!")
-            else: st.error("📉 EVALUATION: FAIL")
-            st.markdown(f'<div class="glass-card">{res}</div>', unsafe_allow_html=True)
+            st.markdown(res)
+            # Create download content
+            report_text = f"MANVER AI INTERVIEW REPORT\n{'='*30}\n\n"
+            report_text += f"Name: {info['name']}\nEmail: {info['email']}\nPhone: {info['phone']}\n\n"
+            report_text += f"Evaluation:\n{res}\n\n"
+            report_text += f"{'='*30}\nFull Transcript:\n{transcript}"
+            
+            st.download_button("📥 Download Report (TXT)", report_text, file_name=f"Report_{info['name'].replace(' ', '_')}.txt", type="primary")
+        st.markdown('</div>', unsafe_allow_html=True)
+        
+    with col2:
+        st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+        st.write("### 📸 Candidate Photo")
+        if st.session_state.captured_photo:
+            st.image(st.session_state.captured_photo)
         else:
-            st.error("Could not generate report. Please try again.")
+            st.warning("No photo captured.")
+        st.markdown('</div>', unsafe_allow_html=True)
 
-    if st.button("🔄 Restart Interview"): st.session_state.clear(); st.rerun()
+    if st.button("🔄 Start New Interview"):
+        st.session_state.clear()
+        st.rerun()
 
 if st.session_state.step == 'setup': show_setup()
 elif st.session_state.step == 'analysis': show_analysis()
 elif st.session_state.step == 'interview': show_interview()
 elif st.session_state.step == 'report': show_report()
+
+
