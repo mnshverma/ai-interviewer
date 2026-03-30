@@ -10,7 +10,7 @@ from datetime import datetime
 
 # --- Setup ---
 load_dotenv()
-LOGO_PATH = r"C:\Users\manis\.gemini\antigravity\brain\9fffa986-16bd-4018-96bf-58065fd829a7\app_logo_final_1774884863862.png"
+LOGO_PATH = "manver-logo.png"
 st.set_page_config(page_title="MANVER AI INTERVIEWER", page_icon=LOGO_PATH, layout="wide")
 
 # --- Configuration ---
