@@ -1,6 +1,6 @@
 # 🤖 Kilo AI Model Selector Guide
 
-The Manvar AI Interviewer is optimized for the **Kilo.ai Gateway**. This guide will help you choose the best model for your interview.
+The Manver AI Interviewer is optimized for the **Kilo.ai Gateway**. This guide will help you choose the best model for your interview.
 
 ## ⭐ Kilo AI Free Tier Models
 These models are 100% free and don't require an active subscription to start.

@@ -1,6 +1,6 @@
 # 🏗️ AI Interviewer Architecture (Python)
 
-The Manvar AI Interviewer is now a **Python 3.x** application built with **Streamlit**. It uses a single-process server model for real-time AI interviewing.
+The Manver AI Interviewer is now a **Python 3.x** application built with **Streamlit**. It uses a single-process server model for real-time AI interviewing.
 
 ## 🧱 Component Overview
 

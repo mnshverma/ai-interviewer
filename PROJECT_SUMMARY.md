@@ -1,7 +1,7 @@
-# 🎯 Manvar AI Interviewer - Project Summary
+# 🎯 Manver AI Interviewer - Project Summary
 
 ## 🏙️ Project Overview
-Manvar AI Interviewer is a modern AI-powered platform that automates the recruitment process. It uses the **Kilo.ai Gateway** to connect with state-of-the-art AI models, offering a professional, glassmorphism-themed interviewing experience.
+Manver AI Interviewer is a modern AI-powered platform that automates the recruitment process. It uses the **Kilo.ai Gateway** to connect with state-of-the-art AI models, offering a professional, glassmorphism-themed interviewing experience.
 
 ## 🚀 Key Transitions
 - **Legacy**: React + Vite + Node.js (with CORS fetch issues).

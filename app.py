@@ -14,7 +14,7 @@ KILO_API_URL = "https://api.kilo.ai/api/gateway/chat/completions"
 DEFAULT_MODEL = "kilo-auto/free"
 
 # --- Styling (Glassmorphism) ---
-st.set_page_config(page_title="Manvar AI Interviewer", page_icon="🤖", layout="wide")
+st.set_page_config(page_title="Manver AI Interviewer", page_icon="🤖", layout="wide")
 
 st.markdown("""
     <style>
@@ -112,7 +112,7 @@ for key in ['step', 'analysis', 'questions', 'current_q', 'transcript', 'speech_
 
 # --- Pages ---
 def show_setup():
-    st.title("🤖 Manvar AI Interviewer")
+    st.title("🤖 Manver AI Interviewer")
     c1, c2 = st.columns(2, gap="large")
     with c1:
         st.markdown('<div class="glass-card">', unsafe_allow_html=True)

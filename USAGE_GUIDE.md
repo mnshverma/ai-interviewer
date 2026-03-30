@@ -1,6 +1,6 @@
 # 📘 AI Interviewer Usage Guide (Python)
 
-This guide shows you how to use and deploy the Manvar AI Interviewer.
+This guide shows you how to use and deploy the Manver AI Interviewer.
 
 ## 🚀 Setting Up Locally
 
