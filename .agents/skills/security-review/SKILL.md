@@ -1,83 +1,68 @@
 ---
 name: security-review
-description: Perform a security review of the AI Interviewer codebase
+description: Perform a security review of the AI Interviewer Python codebase
 ---
 
-# Security Review Skill
+# Security Review Skill (Python)
 
-This skill performs a security audit of the AI Interviewer application.
+This skill performs a security audit of the Python-native AI Interviewer application based on Streamlit.
 
 ## Review Steps
 
 ### 1. API Key Exposure Check
 
-Search for any hardcoded API keys or secrets:
+Search for any hardcoded API keys or secrets in `app.py`:
 ```bash
 # Search for potential API key patterns
-grep -rn "sk-or-v1" src/ --include="*.js" --include="*.jsx"
-grep -rn "api_key\|apiKey\|API_KEY" src/ --include="*.js" --include="*.jsx"
+grep -rn "ki-*" app.py
+grep -rn "api_key\|apiKey\|API_KEY" app.py
 ```
 
 Verify:
-- [ ] No API keys in source code
+- [ ] No API keys in source code (must use `os.getenv` or `st.secrets`)
 - [ ] `.env` is listed in `.gitignore`
-- [ ] API key accessed only via `import.meta.env.VITE_OPENROUTER_API_KEY`
-- [ ] No `console.log` containing API key values
+- [ ] API key is not logged to the Streamlit UI using `st.write` or `st.code`
+- [ ] Omit `VITE_KILO_API_KEY` from public logs
 
-### 2. Data Flow Audit
+### 2. Streamlit Security (XSS/CSRF)
 
-Check what data leaves the browser:
-- [ ] Only resume text and answers sent to OpenRouter API
-- [ ] No analytics or tracking scripts
-- [ ] No external CDN requests for user data
-- [ ] Video recordings stay local (never uploaded)
+Check how user data is handled in the UI:
+- [ ] Use `st.markdown(..., unsafe_allow_html=True)` only for styling
+- [ ] No direct user input passed to `unsafe_allow_html=True`
+- [ ] Resume text and answer text are sanitized by Streamlit (default)
+- [ ] PDF parsing happens on the server side (no browser data leaks)
 
-Review `src/utils/openRouterAPI.js`:
-- [ ] API endpoint is only `https://openrouter.ai/api/v1/chat/completions`
-- [ ] No other external API calls
-- [ ] Request headers don't leak sensitive info
+### 3. Data Flow Audit
 
-### 3. Input Validation
+Check what data leaves the server (Python process):
+- [ ] Only resume text and session transcripts sent to Kilo AI Gateway
+- [ ] No external 3rd-party tracking scripts
+- [ ] No tracking pixels or analytics in custom CSS markdown
+- [ ] Webcam stream stays local to the browser components (standard `st.camera_input`)
 
-Check for injection vulnerabilities:
-- [ ] No `eval()` or `new Function()` usage
-- [ ] No `innerHTML` with user/AI content (use React JSX)
-- [ ] No `dangerouslySetInnerHTML` without sanitization
-- [ ] File upload validates type and size
+### 4. Dependency Audit (Python)
 
-Search for dangerous patterns:
+Use `pip-audit` or similar tools:
 ```bash
-grep -rn "eval\|innerHTML\|dangerouslySetInnerHTML" src/ --include="*.js" --include="*.jsx"
+# Verify if any library has known vulnerabilities
+pip-audit -r requirements.txt
 ```
 
-### 4. Browser Permission Review
+Check specifically:
+- `PyPDF2` (ensure version is up to date)
+- `streamlit` (check for known security advisories)
+- `requests` (verify SSL verification is NOT disabled)
 
-- [ ] Camera/mic requested only when user initiates interview
-- [ ] Permissions not requested on page load
-- [ ] Streams properly stopped on cleanup (no orphan streams)
-- [ ] MediaRecorder stopped when interview ends
+### 5. Input Validation
 
-### 5. localStorage Review
-
-- [ ] No unencrypted sensitive data stored
-- [ ] API key storage has user consent
-- [ ] localStorage reads have try/catch with fallbacks
-- [ ] No PII stored without explicit user action
-
-### 6. Dependency Audit
-
-```bash
-npm audit
-```
-
-Check for known vulnerabilities in:
-- `pdfjs-dist`
-- `react` / `react-dom`
-- Vite and build tooling
+Check for injection vulnerabilities in Python:
+- [ ] No usage of `eval()` or `exec()` on user strings
+- [ ] Prompt construction uses f-strings with sanitized context (no prompt injection potential)
+- [ ] File upload validates PDF headers before process
 
 ## Output
 
 After completing the review, generate a report with:
-1. **Critical** — Must fix immediately (key exposure, injection)
-2. **Warning** — Should fix soon (missing validation, cleanup)
-3. **Info** — Best practice suggestions
+1. **Critical** — Must fix immediately (hardcoded keys, exec() usage)
+2. **Warning** — Should fix soon (missing validation in PDF parser)
+3. **Info** — Best practice suggestions (XSS hardening in custom CSS)

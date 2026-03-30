@@ -2,61 +2,60 @@
 description: How to review code changes in the AI Interviewer project
 ---
 
-# Code Review Workflow
+# Review Workflow (Python)
 
-## Step 1: Understand the Change
+Follow these steps to perform a code review on the Python-native AI Interviewer.
 
-1. Check what files were modified:
+## Prerequisites
+
+- [ ] Python 3.9+
+- [ ] streamlit installed (`pip install streamlit`)
+- [ ] PyPDF2 and requests installed
+
+## Step 1: Quality Check
+
+1. Check Python syntax and style (if available):
    ```bash
-   git diff --stat
+   flake8 app.py
    ```
-2. Read the full diff:
+2. Verify all `import` statements are correct and in alphabetical order.
+3. Check for any commented-out code that should be removed.
+4. Ensure all global constant values (`KILO_API_URL`, `DEFAULT_MODEL`) are at the top of the file.
+
+## Step 2: Logic Audit
+
+Check the core AI functions:
+- [ ] `call_ai`: Ensure it handles non-200 responses and timeouts correctly.
+- [ ] `extract_text_from_pdf`: Ensure it iterates through all pages and handles errors.
+- [ ] `session_state`: Verify it's correctly used to manage step-based routing.
+- [ ] `prompt_engineering`: Review the system and user messages for clarity and role-playing.
+
+## Step 3: Security Review
+
+1. Key exposure check:
    ```bash
-   git diff
+   grep "ki-" app.py
    ```
-3. Understand the intent — what problem does this change solve?
+2. User input check:
+   - [ ] No `eval()` or `exec()` usage.
+   - [ ] Prompt construction uses f-strings with contextually sanitized variables.
+   - [ ] File uploads only accept `.pdf`.
 
-## Step 2: Review Checklist
+## Step 4: UI/UX Flow
 
-### Functional Correctness
-- [ ] Does the change work as intended?
-- [ ] Are edge cases handled (null, empty, error states)?
-- [ ] Does the interview state machine remain consistent?
-- [ ] Are API calls properly error-handled with user-friendly messages?
+Run the app locally to test the flow:
+```bash
+streamlit run app.py
+```
+- [ ] **Home**: Resume upload is functional.
+- [ ] **Analysis**: Text extraction is accurate and summary is displayed.
+- [ ] **Questions**: 8 questions are generated from the analysis.
+- [ ] **Interview**: User can provide answers and move to the next question.
+- [ ] **Report**: Final summary is generated based on the session transcript.
 
-### Code Quality (see `.agents/rules/code-style.md`)
-- [ ] Follows React functional component patterns
-- [ ] Uses `useState` / `useCallback` / `useEffect` correctly
-- [ ] No unnecessary re-renders introduced
-- [ ] CSS uses existing design tokens (custom properties) from `index.css`
-- [ ] No inline styles — all styling in CSS
-- [ ] Component files are focused and single-responsibility
+## Final Approval
 
-### Security (see `.agents/rules/security.md`)
-- [ ] No API keys hardcoded or logged
-- [ ] No sensitive data exposed in UI or console
-- [ ] `.env` variables accessed only via `import.meta.env`
-
-### Error Handling (see `.agents/rules/error-handling.md`)
-- [ ] All async operations have try/catch
-- [ ] User sees meaningful error messages (not technical stack traces)
-- [ ] Graceful degradation (no camera? → show message, continue)
-
-### Performance
-- [ ] No large re-renders on every keystroke
-- [ ] Blob URLs properly revoked when no longer needed
-- [ ] Media streams stopped on cleanup
-- [ ] PDF worker loaded lazily
-
-## Step 3: Test the Change
-
-1. Start dev server and manually test the affected feature
-2. Test on Chrome (primary) and at least one other browser
-3. Check console for warnings or errors
-4. Verify mobile responsiveness if UI was changed
-
-## Step 4: Approve or Request Changes
-
-- **Approve**: If all checklist items pass
-- **Request Changes**: Comment on specific lines with issues
-- **Commit convention**: `feat:`, `fix:`, `refactor:`, `style:`, `docs:`
+Once all steps are verified:
+1. Merge the PR or finalize the commit.
+2. Tag the version (e.g., `v2.0.0-python`).
+3. Deploy to production using the `/deploy` workflow.

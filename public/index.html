@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manvar AI Interviewer | Vercel Edition</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap');
+        
+        :root {
+            --bg-color: #0f172a;
+            --primary-color: #3b82f6;
+            --accent-color: #60a5fa;
+            --glass-bg: rgba(30, 41, 59, 0.7);
+            --glass-border: rgba(59, 130, 246, 0.2);
+            --text-main: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --radius: 1.5rem;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        
+        body {
+            background: radial-gradient(circle at top right, #1e293b, #0f172a);
+            min-height: 100vh;
+            color: var(--text-main);
+            overflow-x: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius);
+            padding: 2.5rem;
+            width: 100%;
+            max-width: 1000px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: linear-gradient(to right, #60a5fa, #3b82f6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+
+        .subtitle { color: var(--text-secondary); margin-bottom: 2rem; }
+
+        .flex-container { display: flex; gap: 2rem; }
+        .col { flex: 1; min-width: 0; }
+
+        .input-box {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--glass-border);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        label { display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--accent-color); }
+        
+        input, select, textarea {
+            width: 100%;
+            background: rgba(30, 41, 59, 1);
+            border: 1px solid var(--glass-border);
+            border-radius: 0.75rem;
+            padding: 1rem;
+            color: white;
+            font-size: 1rem;
+            outline: none;
+            transition: var(--transition);
+        }
+        
+        input:focus { border-color: var(--primary-color); box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15); }
+
+        .btn {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: var(--transition);
+            width: 100%;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.4);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 20px 25px -5px rgba(59, 130, 246, 0.5);
+        }
+
+        .btn:disabled { background: #475569; transform: none; box-shadow: none; cursor: not-allowed; }
+
+        #video-container {
+            background: black;
+            border-radius: 1rem;
+            aspect-ratio: 16/9;
+            overflow: hidden;
+            position: relative;
+            border: 2px solid var(--glass-border);
+        }
+
+        video { width: 100%; height: 100%; object-fit: cover; }
+
+        .step-content { display: none; }
+        .step-active { display: block; animation: fadeIn 0.4s ease-out; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .progress-bar {
+            height: 6px;
+            background: rgba(30, 41, 59, 1);
+            border-radius: 3px;
+            margin-bottom: 2rem;
+            overflow: hidden;
+        }
+        .progress-fill { height: 100%; background: var(--primary-color); transition: width 0.4s ease; width: 0%; }
+
+        #analysis-text { line-height: 1.6; color: var(--text-secondary); white-space: pre-line; }
+
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 2rem;
+            background: rgba(59, 130, 246, 0.1);
+            color: var(--accent-color);
+            font-size: 0.8rem;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="glass-card" id="app">
+        <!-- Step 1: Init -->
+        <div id="step-init" class="step-content step-active">
+            <h1>🤖 Manvar AI Interviewer</h1>
+            <p class="subtitle">AI-Powered Recruitment | Vercel Python Backend</p>
+            
+            <div class="flex-container">
+                <div class="col">
+                    <div class="input-box">
+                        <label>📄 Upload PDF Resume</label>
+                        <input type="file" id="resume-upload" accept=".pdf">
+                        <small style="color: var(--text-secondary); display:block; margin-top:0.5rem;">PDF text extraction will be handled by the server (No CORS issues).</small>
+                    </div>
+                    
+                    <div class="input-box">
+                        <label>🤖 Choose AI Model</label>
+                        <select id="model-select">
+                            <option value="kilo-auto/free">⭐ Kilo Auto Free (Recommended)</option>
+                            <option value="minimax/minimax-m2.5:free">⚡ MiniMax M2.5</option>
+                            <option value="z-ai/glm-5:free">🔷 Z.AI GLM 5</option>
+                        </select>
+                    </div>
+                    
+                    <button class="btn" id="btn-start" onclick="startProcess()">🚀 Analyze & Start</button>
+                </div>
+                
+                <div class="col">
+                    <label>📹 Camera Preview</label>
+                    <div id="video-container">
+                        <video id="webcam" autoplay muted playsinline></video>
+                    </div>
+                    <p style="font-size: 0.8rem; margin-top:1rem; color: var(--text-secondary);">Real-time video verification ensures a high-trust interview experience.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 2: Analysis -->
+        <div id="step-analysis" class="step-content">
+            <span class="badge">ANALYSIS COMPLETE</span>
+            <h1>🔍 Candidate Insight</h1>
+            <div class="input-box" id="analysis-box">
+                <div id="analysis-text">AI is thinking...</div>
+            </div>
+            <button class="btn" onclick="beginInterview()">✅ Start Living Interview</button>
+        </div>
+
+        <!-- Step 3: Interview -->
+        <div id="step-interview" class="step-content">
+            <div class="progress-bar"><div class="progress-fill" id="interview-progress"></div></div>
+            <div class="flex-container">
+                <div class="col">
+                    <h3 style="margin-bottom:1rem; color: var(--accent-color)" id="q-header">Question 1 of 8</h3>
+                    <h2 style="margin-bottom:1.5rem;" id="q-text">Why are you a good fit for this role?</h2>
+                    
+                    <textarea id="answer-box" rows="5" placeholder="Type your answer here..."></textarea>
+                    
+                    <div style="display:flex; gap:1rem; margin-top:2rem;">
+                        <button class="btn" onclick="submitAnswer()">➡️ Next Question</button>
+                        <button class="btn" style="background: rgba(30, 41, 59, 1);" onclick="skipQuestion()">⏩ Skip</button>
+                    </div>
+                </div>
+                <div class="col">
+                    <div id="video-container" style="height: 300px;">
+                        <video id="webcam-live" autoplay muted playsinline></video>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 4: Report -->
+        <div id="step-report" class="step-content">
+            <h1>📊 Evaluation Report</h1>
+            <div class="input-box" id="report-text" style="white-space: pre-line; line-height: 1.6;">AI is generating final hiring recommendation...</div>
+            <button class="btn" onclick="location.reload()">🔄 New Interview</button>
+        </div>
+    </div>
+
+    <script>
+        let currentState = {
+            resumeText: "",
+            analysis: "",
+            questions: [],
+            currentQ: 0,
+            transcript: [],
+            model: "kilo-auto/free"
+        };
+
+        // Camera Management
+        async function setupCamera(id) {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+                document.getElementById(id).srcObject = stream;
+            } catch (err) {
+                console.error("Camera error:", err);
+            }
+        }
+        setupCamera('webcam');
+
+        // Navigation
+        function showStep(id) {
+            document.querySelectorAll('.step-content').forEach(s => s.classList.remove('step-active'));
+            document.getElementById(id).classList.add('step-active');
+        }
+
+        // Logic
+        async function startProcess() {
+            const btn = document.getElementById('btn-start');
+            const file = document.getElementById('resume-upload').files[0];
+            if (!file) return alert("Please upload a resume first!");
+
+            btn.disabled = true;
+            btn.innerText = "PARSING PDF...";
+            currentState.model = document.getElementById('model-select').value;
+
+            try {
+                // 1. Parse PDF
+                const formData = new FormData();
+                formData.append('file', file);
+                const parseRes = await fetch('/api/parse-pdf', { method: 'POST', body: formData });
+                const parseData = await parseRes.json();
+                currentState.resumeText = parseData.text;
+
+                // 2. Generate Analysis
+                btn.innerText = "AI ANALYZING...";
+                const chatRes = await fetch('/api/ai-chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        model: currentState.model,
+                        messages: [
+                            { role: "system", content: "You are a senior technical recruiter. Extract skills and seniority from resumes." },
+                            { role: "user", content: "Analyze this resume:\n\n" + currentState.resumeText }
+                        ]
+                    })
+                });
+                const chatData = await chatRes.json();
+                currentState.analysis = chatData.choices[0].message.content;
+
+                document.getElementById('analysis-text').innerText = currentState.analysis;
+                showStep('step-analysis');
+            } catch (err) {
+                alert("Error: " + err.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "🚀 Analyze & Start";
+            }
+        }
+
+        async function beginInterview() {
+            showStep('step-interview');
+            setupCamera('webcam-live');
+            
+            // Generate Questions
+            const chatRes = await fetch('/api/ai-chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    model: currentState.model,
+                    messages: [
+                        { role: "system", content: "Generate 8 progressive technical interview questions as a numbered list." },
+                        { role: "user", content: "Analysis info:\n" + currentState.analysis }
+                    ]
+                })
+            });
+            const chatData = await chatRes.json();
+            const text = chatData.choices[0].message.content;
+            
+            // Simplistic extraction
+            currentState.questions = text.split('\n')
+                .filter(l => /^\d+\./.test(l.trim()))
+                .map(l => l.replace(/^\d+\.\s*/, "").trim());
+            
+            updateQuestion();
+        }
+
+        function updateQuestion() {
+            const index = currentState.currentQ;
+            const total = currentState.questions.length;
+            document.getElementById('q-header').innerText = `Question ${index + 1} of ${total}`;
+            document.getElementById('q-text').innerText = currentState.questions[index];
+            document.getElementById('interview-progress').style.width = ((index / total) * 100) + "%";
+            document.getElementById('answer-box').value = "";
+        }
+
+        function submitAnswer() {
+            const answer = document.getElementById('answer-box').value;
+            if (!answer.trim()) return alert("Please type an answer!");
+            
+            currentState.transcript.push({ q: currentState.questions[currentState.currentQ], a: answer });
+            nextStep();
+        }
+
+        function skipQuestion() {
+            currentState.transcript.push({ q: currentState.questions[currentState.currentQ], a: "(Skipped)" });
+            nextStep();
+        }
+
+        function nextStep() {
+            if (currentState.currentQ + 1 < currentState.questions.length) {
+                currentState.currentQ++;
+                updateQuestion();
+            } else {
+                generateReport();
+            }
+        }
+
+        async function generateReport() {
+            showStep('step-report');
+            const transcriptText = currentState.transcript.map(t => `Q: ${t.q}\nA: ${t.a}`).join("\n\n");
+            
+            const chatRes = await fetch('/api/ai-chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    model: currentState.model,
+                    messages: [
+                        { role: "system", content: "Generators detailed hiring report (Scores 1-10, strengths, verdict) based on transcript." },
+                        { role: "user", content: "Transcript:\n" + transcriptText }
+                    ]
+                })
+            });
+            const chatData = await chatRes.json();
+            document.getElementById('report-text').innerText = chatData.choices[0].message.content;
+        }
+    </script>
+</body>
+</html>

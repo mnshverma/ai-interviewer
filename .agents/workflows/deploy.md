@@ -1,73 +1,57 @@
 ---
-description: How to deploy the AI Interviewer application to Vercel
+description: How to deploy the Python/Streamlit AI Interviewer
 ---
 
-# Deploy AI Interviewer
+# Deploy Workflow (Python)
 
-## Pre-Deployment Checklist
+Follow these steps to deploy your AI Interviewer as a Python-native application.
 
-1. **Ensure build succeeds locally:**
+## Prerequisites
+
+- Python 3.9+
+- A GitHub account
+- A Kilo.ai API Key (optional for free tier)
+
+## Step 1: Pre-Flight
+
+Ensure all dependencies are in `requirements.txt`:
+```bash
+pip freeze > requirements.txt
+```
+
+## Step 2: Push to Git
+
+1. Initialize git (if not already):
    ```bash
-   npm run build
+   git init
    ```
-   Verify no errors and `dist/` folder is created.
-
-2. **Verify environment variables:**
-   - `VITE_OPENROUTER_API_KEY` must be set in Vercel dashboard (not committed to git)
-   - Check `.env.example` for all required variables
-
-3. **Run lint:**
+2. Check your `.gitignore`:
    ```bash
-   npm run lint
+   # Ensure .env, venv/, and __pycache__/ are listed
+   cat .gitignore
    ```
-   Fix any warnings/errors before deploying.
+3. Commit and push:
+   ```bash
+   git add .
+   git commit -m "Initial commit for Streamlit version"
+   git push origin main
+   ```
 
-## Deployment Steps
+## Step 3: Streamlit Cloud (Fastest)
 
-### Option A: Vercel CLI
+1. Go to [share.streamlit.io](https://share.streamlit.io/).
+2. Click "New App" and select your repository.
+3. Choose `app.py` as the main file.
+4. **Important**: Go to "Advanced Settings" -> "Secrets" and add:
+   ```toml
+   VITE_KILO_API_KEY = "your_key_here"
+   ```
+5. Click **Deploy!**
 
-```bash
-# Install Vercel CLI (if not installed)
-npm i -g vercel
+## Step 4: Verification
 
-# Deploy to preview
-vercel
-
-# Deploy to production
-vercel --prod
-```
-
-### Option B: Git Push (auto-deploy)
-
-```bash
-git add .
-git commit -m "feat: <description>"
-git push origin main
-```
-Vercel auto-deploys on push to `main` branch.
-
-## Post-Deployment Verification
-
-1. Open the deployed URL
-2. Verify resume upload works (PDF + TXT)
-3. Test API key input and interview start flow
-4. Check camera/microphone permissions prompt
-5. Verify all CSS/fonts load correctly
-
-## Rollback
-
-```bash
-# List recent deployments
-vercel ls
-
-# Roll back to previous deployment
-vercel rollback
-```
-
-## Vercel Configuration
-
-The `vercel.json` at project root handles:
-- Build command: `npm run build`
-- Output directory: `dist`
-- SPA rewrites: all routes → `/index.html`
-- Framework: Vite
+Once the URL is live:
+1. Verify the "Upload Resume" button is interactive.
+2. Ensure the "Start Analysis" step works (needs a valid API key or fallback).
+3. Test the "Live Interview" video feed.
+4. Check if the final report generates and shows properly.

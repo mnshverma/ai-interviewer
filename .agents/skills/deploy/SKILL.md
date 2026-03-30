@@ -1,69 +1,64 @@
 ---
 name: deploy
-description: Deploy the AI Interviewer to Vercel with pre-flight checks
+description: Deploy the Python/Streamlit AI Interviewer to Streamlit Cloud
 ---
 
-# Deploy Skill
+# Deploy Skill (Python)
 
-This skill handles deploying the AI Interviewer application to Vercel.
+This skill handles deploying the Python-native AI Interviewer application to Streamlit Cloud or Render.
 
 ## Pre-Flight Checks
 
 Before deploying, always run these checks:
 
-### 1. Lint Check
+### 1. Dependency Check
+Ensure all used libraries are in `requirements.txt`:
 ```bash
-npm run lint
+# Verify if streamlit, PyPDF2, requests are present
+cat requirements.txt
 ```
-If there are errors, fix them before proceeding.
 
-### 2. Build Check
+### 2. Local Run Check
+Test the app locally to ensure no runtime errors:
 ```bash
-npm run build
+streamlit run app.py
 ```
-Verify the build succeeds and `dist/` is created without errors.
+Verify the following steps:
+- Resume upload works
+- Analysis begins correctly
+- Interview progress tracks as expected
 
 ### 3. Environment Check
-Ensure `VITE_OPENROUTER_API_KEY` is configured in Vercel dashboard:
-- Go to Vercel project settings → Environment Variables
-- Verify the API key is set for Production, Preview, and Development
+Ensure your secret keys are NOT committed to Git.
+- Open `.env` and verify it's ignored by `.gitignore`.
+- Prepare your `VITE_KILO_API_KEY` for the hosting dashboard.
 
-## Deploy Commands
+## Deploy Commands (Streamlit Cloud)
 
-### Production Deploy
-```bash
-vercel --prod
-```
+1.  Push your code to **GitHub**.
+2.  Connect your repository to [Streamlit Cloud](https://share.streamlit.io/).
+3.  In "Advanced Settings" → "Secrets", add:
+    ```toml
+    VITE_KILO_API_KEY = "your_key_here"
+    ```
+4.  Deploy!
 
-### Preview Deploy
-```bash
-vercel
-```
+## Deploy Commands (Render/Heroku)
+
+1.  Use a `Procfile`:
+    ```
+    web: streamlit run app.py --server.port $PORT
+    ```
+2.  Add environment variables in the dashboard:
+    - `VITE_KILO_API_KEY`
 
 ## Post-Deploy Verification
 
 After deployment, verify these features work on the live URL:
-1. Page loads without console errors
-2. Resume upload (PDF drag-and-drop)
-3. API key input accepts key
-4. Camera/mic permission prompts appear
-5. CSS/fonts render correctly (glassmorphism effects, Inter font)
-6. All buttons and dropdowns are interactive
+1. Page loads without "Connection Error"
+2. Resume upload handles PDF files
+3. Camera feed appears during "Live Interview"
+4. Final report generates and displays correctly
 
 ## Rollback Procedure
-```bash
-vercel ls                # List deployments
-vercel rollback          # Roll back to previous
-```
-
-## Configuration Reference
-
-The deployment is configured by `vercel.json`:
-```json
-{
-  "buildCommand": "npm run build",
-  "outputDirectory": "dist",
-  "framework": "vite",
-  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
-}
-```
+Revert the last commit on GitHub or redeploy from a previous stable tag/branch on the Streamlit dashboard.
