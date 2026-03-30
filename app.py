@@ -12,6 +12,10 @@ from datetime import datetime
 load_dotenv()
 st.set_page_config(page_title="Manver AI Interviewer", page_icon="🤖", layout="wide")
 
+# --- Configuration ---
+KILO_API_URL = "https://api.kilo.ai/api/gateway/chat/completions"
+DEFAULT_MODEL = "kilo-auto/free"
+
 # --- Global Header ---
 def render_header():
     if 'user_info' not in st.session_state or not st.session_state.user_info.get("name"): return
