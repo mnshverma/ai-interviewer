@@ -78,6 +78,6 @@ async def ai_chat(req: ChatRequest):
     except Exception as e:
         return {"error": str(e)}
 
-# Vercel expects a module-level 'app' object
-# We rename it locally to avoid confusion, but Vercel needs it as the handler
+# Vercel expects a module-level 'app' or 'handler' object
 handler = app
+app = app
