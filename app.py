@@ -10,7 +10,8 @@ from datetime import datetime
 
 # --- Setup ---
 load_dotenv()
-st.set_page_config(page_title="Manver AI Interviewer", page_icon="🤖", layout="wide")
+LOGO_PATH = r"C:\Users\manis\.gemini\antigravity\brain\9fffa986-16bd-4018-96bf-58065fd829a7\app_logo_final_1774884863862.png"
+st.set_page_config(page_title="MANVER AI INTERVIEWER", page_icon=LOGO_PATH, layout="wide")
 
 # --- Configuration ---
 KILO_API_URL = "https://api.kilo.ai/api/gateway/chat/completions"
@@ -20,29 +21,32 @@ DEFAULT_MODEL = "kilo-auto/free"
 def render_header():
     if 'user_info' not in st.session_state or not st.session_state.user_info.get("name"): return
     
-    st.markdown('<div class="glass-card" style="margin-bottom: 2rem; padding: 1rem;">', unsafe_allow_html=True)
-    h_c1, h_c2, h_c3 = st.columns([1, 4, 2])
+    st.markdown('<div class="glass-card" style="margin-bottom: 2rem; padding: 1.2rem; border-left: 5px solid #3b82f6;">', unsafe_allow_html=True)
+    h_c1, h_c2, h_c3, h_c4 = st.columns([1, 1, 4, 3], gap="small")
     
     with h_c1:
+        st.image(LOGO_PATH, width=90)
+        
+    with h_c2:
         if st.session_state.persistent_photo:
             st.image(st.session_state.persistent_photo, width=100)
             
-    with h_c2:
+    with h_c3:
         info = st.session_state.user_info
         st.markdown(f"""
-            <div style="padding-top: 10px;">
-                <h2 style="margin:0; color:#3b82f6; text-transform: uppercase;">{info['name']}</h2>
-                <p style="margin:0; color:#94a3b8; font-family:monospace; font-size: 1.1rem;">CANDIDATE ID: {info['id']}</p>
-                <div style="margin-top:5px; font-size:0.85rem; color:#64748b;">🛡️ IDENTITY VERIFIED | 🎤 AUDIO CHECK: OK</div>
+            <div style="padding-top: 5px;">
+                <h2 style="margin:0; color:#eff6ff; text-transform: uppercase; font-size: 1.6rem; letter-spacing: 0.5px;">{info['name']}</h2>
+                <div style="margin:0; color:#60a5fa; font-family:monospace; font-weight:700; font-size: 1rem;">ID: {info['id']}</div>
+                <div style="margin-top:8px; font-size:0.75rem; color:#10b981; font-weight:600; letter-spacing: 1px;">🛡️ MANVER IDENTITY PROTOCOL ACTIVE</div>
             </div>
         """, unsafe_allow_html=True)
         
-    with h_c3:
+    with h_c4:
         st.markdown(f"""
             <div style="text-align: right; padding-top: 5px;">
-                <div style="color: #60a5fa; font-weight: 700; font-size: 1.2rem;">📅 {st.session_state.interview_time.split(' ')[0]}</div>
-                <div style="color: #94a3b8; font-weight: 600; font-size: 1.1rem;">⏱️ {st.session_state.interview_time.split(' ')[1]}</div>
-                <div style="margin-top: 10px; font-size: 0.75rem; background: rgba(16, 185, 129, 0.1); color: #10b981; padding: 4px 8px; border-radius: 6px; display: inline-block;">LIVE SESSION ACTIVE</div>
+                <div style="color: #60a5fa; font-weight: 700; font-size: 1.1rem; margin-bottom: 2px;">📅 {st.session_state.interview_time.split(' ')[0]}</div>
+                <div style="color: #94a3b8; font-weight: 600; font-size: 1rem;">⏱️ {st.session_state.interview_time.split(' ')[1]}</div>
+                <div style="margin-top: 10px; font-size: 0.7rem; color: #4ade80; border: 1px solid #10b981; padding: 3px 10px; border-radius: 20px; display: inline-block;">📡 LIVE TRANSMISSION</div>
             </div>
         """, unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
@@ -56,56 +60,50 @@ def create_pdf_report(info, evaluation, transcript, photo_bytes=None):
     decision_color = (16, 185, 129) if is_pass else (239, 68, 68)
     decision_text = "FINAL RESULT: PASS" if is_pass else "FINAL RESULT: FAIL"
 
-    # 🖼️ Page Border
-    pdf.set_line_width(0.5)
+    pdf.set_line_width(0.3)
     pdf.rect(5, 5, 200, 287)
     
-    # Header Background
     pdf.set_fill_color(15, 23, 42)
     pdf.rect(5, 5, 200, 45, 'F')
     
-    # Photo Border & Image
+    try: pdf.image(LOGO_PATH, 10, 10, 35, 35)
+    except: pass
+
     if photo_bytes:
         import tempfile
         with tempfile.NamedTemporaryFile(delete=False, suffix=".png") as tmp:
             tmp.write(photo_bytes.getvalue())
             tmp_path = tmp.name
         try:
-            pdf.set_fill_color(255, 255, 255)
-            pdf.rect(10, 10, 32, 32, 'F')
-            pdf.image(tmp_path, 11, 11, 30, 30)
+            pdf.image(tmp_path, 165, 10, 32, 32)
             os.unlink(tmp_path)
         except: pass
 
-    # Title & Info in Header
-    pdf.set_xy(48, 12)
+    pdf.set_xy(50, 15)
     pdf.set_font('Arial', 'B', 18)
     pdf.set_text_color(255, 255, 255)
     pdf.cell(100, 10, info.get('name', 'N/A').upper(), 0, 1)
     
-    pdf.set_xy(48, 22)
+    pdf.set_xy(50, 25)
     pdf.set_font('Arial', '', 10)
     pdf.set_text_color(148, 163, 184)
     pdf.cell(100, 6, f"ID: {info.get('id', 'N/A')} | EMAIL: {info.get('email', 'N/A')}", 0, 1)
     
-    pdf.set_xy(48, 28)
+    pdf.set_xy(50, 32)
     pdf.cell(100, 6, f"TIME: {st.session_state.interview_time}", 0, 1)
 
-    # Status Badge below header
     pdf.set_fill_color(*decision_color)
-    pdf.rect(5, 50, 200, 15, 'F')
+    pdf.rect(5, 50, 200, 12, 'F')
     pdf.set_xy(5, 50)
-    pdf.set_font('Arial', 'B', 14)
+    pdf.set_font('Arial', 'B', 13)
     pdf.set_text_color(255, 255, 255)
-    pdf.cell(200, 15, decision_text, 0, 1, 'C')
+    pdf.cell(200, 12, decision_text, 0, 1, 'C')
 
-    # Main Content
     pdf.set_xy(10, 75)
     pdf.set_font('Arial', 'B', 14)
     pdf.set_text_color(15, 23, 42)
     pdf.cell(0, 10, 'SCREENING PERFORMANCE & EVALUATION', 'B', 1)
     pdf.ln(5)
-    
     pdf.set_font('Arial', '', 11)
     pdf.set_text_color(51, 65, 85)
     pdf.multi_cell(0, 7, str(evaluation).encode('latin-1', 'replace').decode('latin-1'))
@@ -115,7 +113,6 @@ def create_pdf_report(info, evaluation, transcript, photo_bytes=None):
     pdf.set_text_color(15, 23, 42)
     pdf.cell(0, 10, 'FULL INTERVIEW TRANSCRIPT', 'B', 1)
     pdf.ln(5)
-    
     pdf.set_font('Arial', 'I', 10)
     pdf.set_text_color(71, 85, 105)
     pdf.multi_cell(0, 6, str(transcript).encode('latin-1', 'replace').decode('latin-1'))
@@ -128,8 +125,6 @@ def create_pdf_report(info, evaluation, transcript, photo_bytes=None):
     return pdf.output(dest='S').encode('latin-1')
 
 # --- Styling (Glassmorphism) ---
-st.set_page_config(page_title="Manver AI Interviewer", page_icon="🤖", layout="wide")
-
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Outfit:wght@400;700&display=swap');
@@ -235,66 +230,47 @@ def confirm_submission():
         st.rerun()
 
 def show_setup():
-    st.markdown('<div style="text-align: center; margin-bottom: 2rem;">'
-                '<h1>🤖 MANVER AI INTERVIEW</h1>'
-                '<p style="color: #94a3b8; font-size: 1.1rem;">Professional Automated Screening System</p>'
+    st.markdown('<div style="text-align: center; margin-top: -1rem;">', unsafe_allow_html=True)
+    st.image(LOGO_PATH, width=150)
+    st.markdown('<h1 style="margin-top: 0.5rem; letter-spacing: 2px;">MANVER AI INTERVIEWER</h1>'
+                '<div style="color: #60a5fa; font-weight: 700; margin-bottom: 2rem; letter-spacing: 1px;">PRECISION SCREENING SYSTEM</div>'
                 '</div>', unsafe_allow_html=True)
     
-    # 🎤 Microphone Verification Logic (JS-to-Python Bridge)
-    # We use a hidden input and a button to confirm the mic works
-    mic_ready = st.checkbox("mic_verified", key="mic_verified", label_visibility="collapsed")
-    
-    st.markdown(f"""
+    st.markdown("""
         <script>
         // 1. Enter Navigation
-        function setupEnterNavigation() {{
+        function setupEnterNavigation() {
             const inputs = window.parent.document.querySelectorAll('input[type="text"]');
-            inputs.forEach((input, index) => {{
-                input.addEventListener('keydown', (e) => {{
-                    if (e.key === 'Enter') {{
+            inputs.forEach((input, index) => {
+                input.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') {
                         e.preventDefault();
                         const next = inputs[index + 1];
-                        if (next) {{ next.focus(); }} else {{
+                        if (next) { next.focus(); } else {
                             input.blur();
-                            setTimeout(() => {{
+                            setTimeout(() => {
                                 const btn = window.parent.document.querySelector('button[kind="primary"]');
                                 if (btn) btn.click();
-                            }}, 100);
-                        }}
-                    }}
-                }});
-            }});
-        }}
+                            }, 100);
+                        }
+                    }
+                });
+            });
+        }
 
-        // 2. Hardware Permission Check (Manual Trigger)
-        async function runManualMicCheck() {{
-            const statusEl = window.parent.document.getElementById('mic-status-text');
-            const checkBtn = window.parent.document.getElementById('mic-check-btn');
-            statusEl.innerHTML = '🕒 Requesting Access...';
-            statusEl.style.color = '#facc15';
-            
-            try {{
-                const stream = await navigator.mediaDevices.getUserMedia({{ audio: true }});
-                stream.getTracks().forEach(track => track.stop());
-                
-                statusEl.innerHTML = '✅ MICROPHONE READY';
-                statusEl.style.color = '#10b981';
-                checkBtn.style.display = 'none';
-                
-                // Signal back to Streamlit (Hidden checkbox click simulation)
-                const cb = window.parent.document.querySelector('input[aria-label="mic_verified"]');
-                if (cb) {{ cb.click(); }}
-            }} catch (err) {{
-                statusEl.innerHTML = '❌ MICROPHONE BLOCKED | ' + err.message;
-                statusEl.style.color = '#ef4444';
-                alert('Microphone permission denied. Please enable it in your browser settings to proceed.');
-            }}
-        }}
+        function initListeners() {
+            const speakBtn = window.parent.document.getElementById('speak-btn');
+            if (speakBtn) {
+                speakBtn.onclick = null;
+                speakBtn.addEventListener('click', startSpeech);
+            }
+        }
 
-        if (!window.enterNavSetup) {{ 
+        if (!window.enterNavSetup) { 
             setTimeout(setupEnterNavigation, 1000); 
+            setInterval(initListeners, 2000);
             window.enterNavSetup = true; 
-        }}
+        }
         </script>
     """, unsafe_allow_html=True)
     
@@ -321,9 +297,9 @@ def show_setup():
             elif not uploaded_file:
                 st.error("📄 Please upload your resume.")
             elif not st.session_state.persistent_photo:
-                st.error("📸 Identity verification required. Use the capture tool on the right.")
-            elif not st.session_state.mic_verified:
-                st.error("🎤 Hardware Error: You must verify your microphone before proceeding.")
+                st.error("📸 Identity verification required. Capture your photo on the right.")
+            elif 'mic_test_recording' not in st.session_state or st.session_state.mic_test_recording is None:
+                st.error("🎤 Hardware Error: You must record a short test audio block to verify your microphone.")
             else:
                 st.session_state.user_info = {"name": v_name, "id": v_id, "email": st.session_state.reg_email, "phone": st.session_state.reg_phone}
                 from datetime import datetime
@@ -339,20 +315,20 @@ def show_setup():
 
     with c2:
         st.markdown('<div class="glass-card" style="text-align: center;">', unsafe_allow_html=True)
-        st.write("### 📸 Identity & Hardware Check")
+        st.write("### 🎙️ Hardware & Identity Check")
         
-        # 🎤 Microphone Interface
-        st.markdown(f"""
-            <div style="background: rgba(15, 23, 42, 0.4); border-radius: 12px; padding: 1.2rem; margin-bottom: 2rem; border: 1px solid rgba(255,255,255,0.05); text-align: left;">
-                <div id="mic-status-text" style="font-weight: 700; color: #facc15; margin-bottom: 0.8rem;">🎧 MICROPHONE VERIFICATION</div>
-                <button id="mic-check-btn" onclick="runManualMicCheck()" style="background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; border: none; padding: 0.5rem 1rem; border-radius: 8px; cursor: pointer; font-weight: 600;">Run Audio Test</button>
-            </div>
-        """, unsafe_allow_html=True)
+        # 🎤 Native Microphone Check (100% Reliability for permissions)
+        st.info("🎤 **Step 1: Verify Microphone**")
+        st.write("Record a quick 1-second audio clip to unlock the session.")
+        mic_test = st.audio_input("Test Recording", key="mic_test_recording", label_visibility="collapsed")
+        if mic_test:
+            st.success("✅ Microphone Verified Successfully!")
         
-        st.warning("👤 **IDENTITY CAPTURE REQUIRED**")
+        st.divider()
+        
+        st.info("👤 **Step 2: Capture Identity**")
         st.write("Click the camera icon below to manually capture your photo.")
         
-        # Camera Check (Native)
         def sync_photo():
             if st.session_state.setup_cam is None: st.session_state.persistent_photo = None
             else: st.session_state.persistent_photo = st.session_state.setup_cam
@@ -417,14 +393,13 @@ def interview_content():
                 st.rerun()
         with col_nav2:
             st.markdown(f"""
-                <button id="speak-btn" onclick="startSpeech()" style="background: linear-gradient(135deg, #10b981, #059669); color: white; border: none; padding: 0.75rem; border-radius: 12px; width: 100%; cursor: pointer; font-weight: 700; transition: all 0.2s; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);">🎤 Voice Answer</button>
+                <button id="speak-btn" style="background: linear-gradient(135deg, #10b981, #059669); color: white; border: none; padding: 0.75rem; border-radius: 12px; width: 100%; cursor: pointer; font-weight: 700; transition: all 0.2s; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);">🎤 Voice Answer</button>
                 <script>
                     function startSpeech() {{
                         const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-                        if (!Recognition) {{ alert('Speech Recognition not supported in this browser.'); return; }}
                         const rec = new Recognition();
                         const btn = document.getElementById('speak-btn');
-                        btn.style.background = '#ef4444'; btn.innerText = 'Listening...';
+                        if (btn) {{ btn.style.background = '#ef4444'; btn.innerText = 'Listening...'; }}
                         rec.onresult = (e) => {{
                             const transcript = e.results[0][0].transcript;
                             const findAndFill = (root) => {{
@@ -442,9 +417,9 @@ def interview_content():
                                 return false;
                             }};
                             findAndFill(document); findAndFill(window.parent.document);
-                            btn.style.background = 'linear-gradient(135deg, #10b981, #059669)'; btn.innerText = '🎤 Voice Answer';
+                            if (btn) {{ btn.style.background = 'linear-gradient(135deg, #10b981, #059669)'; btn.innerText = '🎤 Voice Answer'; }}
                         }};
-                        rec.onerror = () => {{ btn.style.background = 'linear-gradient(135deg, #10b981, #059669)'; btn.innerText = '🎤 Voice Answer'; }};
+                        rec.onerror = () => {{ if (btn) {{ btn.style.background = 'linear-gradient(135deg, #10b981, #059669)'; btn.innerText = '🎤 Voice Answer'; }} }};
                         rec.start();
                     }}
                 </script>
