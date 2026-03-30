@@ -153,7 +153,7 @@ function App() {
     addToTranscript('candidate', '(Question skipped)');
     toast.info('Question skipped');
     moveToNextQuestion();
-  }, [addToTranscript]);
+  }, [addToTranscript, moveToNextQuestion]);
 
   // Move to next question
   const moveToNextQuestion = useCallback(async () => {

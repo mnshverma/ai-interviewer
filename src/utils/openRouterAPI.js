@@ -1,24 +1,24 @@
-const OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions";
+const KILO_API_URL = "https://api.kilo.ai/api/gateway/chat/completions";
 
-// Default model: OpenRouter's free auto-router picks the best available free model
-const DEFAULT_MODEL = 'openrouter/free';
+// Default model: Let Kilo auto-route to the best free model
+const DEFAULT_MODEL = 'kilo-auto/free';
 
-// Fallback models if the primary fails (402/429 errors)
+// Fallback models (official Kilo free apis)
 const FREE_FALLBACK_MODELS = [
-  'openrouter/free',
-  'meta-llama/llama-3.3-70b-instruct:free',
-  'meta-llama/llama-3.1-8b-instruct:free',
-  'google/gemma-2-9b-it:free',
-  'microsoft/phi-3-medium-128k-instruct:free',
+  'minimax/minimax-m2.5:free',
+  'z-ai/glm-5:free',
+  'corethink:free',
+  'giga-potato',
+  'arcee-ai/trinity-large-preview:free'
 ];
 
 // Get API key from environment variable
 const getApiKey = () => {
-  const apiKey = import.meta.env.VITE_OPENROUTER_API_KEY;
-  if (!apiKey) {
-    throw new Error('OpenRouter API key not configured. Please set VITE_OPENROUTER_API_KEY in environment variables.');
+  const key = import.meta.env.VITE_KILO_API_KEY;
+  if (!key) {
+    console.error('Missing VITE_KILO_API_KEY in environment variables');
   }
-  return apiKey;
+  return key;
 };
 
 // Helper: make an API call with automatic fallback on 402/429
@@ -32,7 +32,7 @@ const callWithFallback = async (apiKey, messages, options = {}) => {
 
   for (const currentModel of modelsToTry) {
     try {
-      const response = await fetch(OPENROUTER_API_URL, {
+      const response = await fetch(KILO_API_URL, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${apiKey}`,
@@ -56,7 +56,7 @@ const callWithFallback = async (apiKey, messages, options = {}) => {
       }
 
       if (!response.ok) {
-        throw new Error(`OpenRouter API error: ${response.status}`);
+        throw new Error(`Kilo API error: ${response.status}`);
       }
 
       const data = await response.json();

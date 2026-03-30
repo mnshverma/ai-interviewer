@@ -3,37 +3,37 @@
    ============================================ */
 
 :root {
-  /* Blue Palette */
-  --blue-50: #eff6ff;
-  --blue-100: #dbeafe;
-  --blue-200: #bfdbfe;
-  --blue-300: #93c5fd;
-  --blue-400: #60a5fa;
-  --blue-500: #3b82f6;
-  --blue-600: #2563eb;
-  --blue-700: #1d4ed8;
-  --blue-800: #1e40af;
-  --blue-900: #1e3a8a;
-  --blue-950: #0f1d4a;
+  /* Slate & Core Blue Palette */
+  --blue-50: #f8fafc;
+  --blue-100: #f1f5f9;
+  --blue-200: #e2e8f0;
+  --blue-300: #cbd5e1;
+  --blue-400: #94a3b8;
+  --blue-500: #64748b;
+  --blue-600: #475569;
+  --blue-700: #334155;
+  --blue-800: #1e293b;
+  --blue-900: #0f172a;
+  --blue-950: #020617;
 
   /* Core Colors */
   --color-primary: #3b82f6;
   --color-primary-light: #60a5fa;
   --color-primary-dark: #2563eb;
-  --color-secondary: #6366f1;
+  --color-secondary: #8b5cf6;
   --color-accent: #0ea5e9;
-  --color-success: #22c55e;
+  --color-success: #10b981;
   --color-warning: #f59e0b;
   --color-danger: #ef4444;
   
-  /* Background — Deep Blue Base */
-  --color-bg: #0b1120;
+  /* Background — Elegant Dark Slate */
+  --color-bg: #030712;
   --color-bg-secondary: #111827;
-  --color-bg-tertiary: #1e293b;
-  --color-bg-card: rgba(15, 23, 42, 0.92);
+  --color-bg-tertiary: #1f2937;
+  --color-bg-card: rgba(17, 24, 39, 0.75);
   
-  /* Text — White Palette */
-  --color-text: #f1f5f9;
+  /* Text */
+  --color-text: #f8fafc;
   --color-text-secondary: #94a3b8;
   --color-text-tertiary: #64748b;
   
@@ -64,13 +64,13 @@
   --radius-2xl: 1.5rem;
   --radius-full: 9999px;
   
-  /* Shadows — Blue Tinted */
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.1);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.15);
+  /* Soft Shadows */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
   --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
-  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.25);
-  --shadow-glow: 0 0 25px rgba(59, 130, 246, 0.35);
-  --shadow-glow-accent: 0 0 25px rgba(99, 102, 241, 0.3);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
+  --shadow-glow: 0 0 15px rgba(59, 130, 246, 0.15);
+  --shadow-glow-accent: 0 0 15px rgba(139, 92, 246, 0.15);
 }
 
 * {
@@ -104,59 +104,41 @@ body {
   width: 100%;
   height: 100%;
   z-index: 0;
-  background: linear-gradient(135deg, 
-    #0b1120 0%,
-    #111d3a 40%,
-    #15274f 70%,
-    #0f1d4a 100%
-  );
-  animation: gradientShift 20s ease infinite;
+  background: var(--color-bg);
 }
 
 .animated-bg::before {
   content: '';
   position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background: radial-gradient(circle, 
-    rgba(59, 130, 246, 0.08) 0%,
-    transparent 70%
+  top: -25%;
+  left: -25%;
+  width: 150%;
+  height: 150%;
+  background: radial-gradient(circle at center, 
+    rgba(59, 130, 246, 0.05) 0%,
+    transparent 50%
   );
-  animation: rotate 30s linear infinite;
+  animation: float 25s ease-in-out infinite alternate;
 }
 
 .animated-bg::after {
   content: '';
   position: absolute;
-  bottom: -50%;
-  right: -50%;
-  width: 200%;
-  height: 200%;
-  background: radial-gradient(circle, 
-    rgba(99, 102, 241, 0.06) 0%,
-    transparent 70%
+  bottom: -25%;
+  right: -25%;
+  width: 150%;
+  height: 150%;
+  background: radial-gradient(circle at center, 
+    rgba(139, 92, 246, 0.04) 0%,
+    transparent 50%
   );
-  animation: rotate 40s linear infinite reverse;
+  animation: float 30s ease-in-out infinite alternate-reverse;
 }
 
-@keyframes gradientShift {
-  0%, 100% {
-    background: linear-gradient(135deg, 
-      #0b1120 0%, #111d3a 40%, #15274f 70%, #0f1d4a 100%
-    );
-  }
-  50% {
-    background: linear-gradient(135deg, 
-      #0f1629 0%, #152040 40%, #1a2d5c 70%, #111d3a 100%
-    );
-  }
-}
-
-@keyframes rotate {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+@keyframes float {
+  0% { transform: translateY(0) translateX(0) scale(1); }
+  50% { transform: translateY(-3%) translateX(2%) scale(1.05); }
+  100% { transform: translateY(2%) translateX(-1%) scale(0.95); }
 }
 
 /* ============================================
@@ -242,43 +224,22 @@ body {
    ============================================ */
 
 .card {
-  background: linear-gradient(135deg,
-    rgba(15, 23, 42, 0.95) 0%,
-    rgba(17, 24, 39, 0.92) 100%
-  );
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(59, 130, 246, 0.15);
+  background: rgba(17, 24, 39, 0.65);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: var(--radius-2xl);
   padding: var(--space-2xl);
   box-shadow: var(--shadow-xl);
-  transition: all 0.3s ease;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   overflow: hidden;
 }
 
-.card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg,
-    transparent,
-    rgba(59, 130, 246, 0.08),
-    transparent
-  );
-  transition: left 0.5s ease;
-}
-
-.card:hover::before {
-  left: 100%;
-}
-
 .card:hover {
-  transform: translateY(-4px);
-  box-shadow: var(--shadow-xl), var(--shadow-glow);
-  border-color: rgba(59, 130, 246, 0.3);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-xl), 0 10px 40px -10px rgba(0, 0, 0, 0.5);
+  border-color: rgba(255, 255, 255, 0.12);
 }
 
 /* ============================================
@@ -375,11 +336,9 @@ body {
 .input-group label {
   display: block;
   margin-bottom: var(--space-sm);
-  font-weight: 600;
-  color: var(--color-primary-light);
+  font-weight: 500;
+  color: var(--color-text-secondary);
   font-size: var(--font-size-sm);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
 }
 
 .input,
@@ -387,8 +346,8 @@ select,
 textarea {
   width: 100%;
   padding: var(--space-md) var(--space-lg);
-  background: rgba(30, 41, 59, 0.8);
-  border: 2px solid rgba(59, 130, 246, 0.2);
+  background: rgba(15, 23, 42, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: var(--radius-lg);
   color: var(--color-text);
   font-size: var(--font-size-base);
@@ -398,34 +357,33 @@ textarea {
 
 /* Selects — solid dark background for readable dropdown options */
 select {
-  background: #1e293b;
+  background: #0f172a;
   cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 1rem center;
+  background-size: 1em;
+  padding-right: 2.5rem;
 }
 
 select option {
-  background: #1e293b;
+  background: #0f172a;
   color: #f1f5f9;
   padding: 8px 12px;
-  font-family: var(--font-family);
-}
-
-select option:hover,
-select option:checked {
-  background: #334155;
-  color: #60a5fa;
 }
 
 .input:focus,
 select:focus,
 textarea:focus {
   outline: none;
-  border-color: var(--color-primary);
-  background: rgba(30, 41, 59, 0.95);
-  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15), var(--shadow-glow);
+  border-color: var(--color-primary-light);
+  background: rgba(15, 23, 42, 0.8);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
 }
 
 select:focus {
-  background: #1e293b;
+  background: #0f172a;
 }
 
 textarea {

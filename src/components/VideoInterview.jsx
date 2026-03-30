@@ -21,6 +21,13 @@ const VideoInterview = ({
   const [timeRemaining, setTimeRemaining] = useState(timeLimit);
   const [isRecording, setIsRecording] = useState(false);
   const videoRef = useRef(null);
+  
+  // Connect stream to video element when ready
+  useEffect(() => {
+    if (videoRef.current && stream && videoRef.current.srcObject !== stream) {
+      videoRef.current.srcObject = stream;
+    }
+  }, [stream]);
   const recognitionRef = useRef(null);
   const silenceTimerRef = useRef(null);
   const currentAnswerRef = useRef('');
@@ -185,8 +192,11 @@ const VideoInterview = ({
 
   const startCamera = async () => {
     try {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        throw new Error('Webcam API is not supported in this browser context (requires localhost or HTTPS).');
+      }
       const mediaStream = await navigator.mediaDevices.getUserMedia({
-        video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: 'user' },
+        video: true, // More compatible fallback than strict resolution constraints
         audio: true
       });
       setStream(mediaStream);

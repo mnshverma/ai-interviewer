@@ -3,7 +3,7 @@ import { useToast } from './Toast';
 
 const InterviewSettings = ({ onStartInterview, hasData }) => {
   const [interviewType, setInterviewType] = useState('technical');
-  const [aiModel, setAiModel] = useState('openrouter/free');
+  const [aiModel, setAiModel] = useState('kilo-auto/free');
   const [enableVoice, setEnableVoice] = useState(true);
   const [practiceMode, setPracticeMode] = useState(false);
   const [timeLimit, setTimeLimit] = useState(120); // seconds per question, 0 = unlimited
@@ -146,28 +146,31 @@ const InterviewSettings = ({ onStartInterview, hasData }) => {
         </select>
       </div>
 
-      {/* AI Model */}
+      {/* AI Model (Kilo.ai Free APIs) */}
       <div className="input-group">
-        <label htmlFor="ai-model">
-          <span style={{ fontSize: 'var(--font-size-lg)' }}>🤖</span> AI Model (100% Free)
+        <label htmlFor="ai-model" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div>
+            <span style={{ fontSize: 'var(--font-size-lg)', marginRight: 'var(--space-xs)' }}>🤖</span> 
+            AI Model <span style={{ color: 'var(--color-success)', fontWeight: 'bold' }}>(Kilo.ai Free)</span>
+          </div>
           <a
-            href="https://openrouter.ai/models?max_price=0"
+            href="https://kilo.ai"
             target="_blank"
             rel="noopener noreferrer"
             style={{ 
-              marginLeft: 'var(--space-sm)', 
-              color: 'var(--color-primary)',
+              color: 'var(--color-primary-light)',
               fontSize: 'var(--font-size-xs)',
               textDecoration: 'none',
-              padding: 'var(--space-xs) var(--space-sm)',
-              background: 'rgba(56, 239, 125, 0.1)',
-              borderRadius: 'var(--radius-md)',
-              transition: 'all 0.3s ease'
+              padding: '4px 8px',
+              border: '1px solid rgba(59, 130, 246, 0.3)',
+              borderRadius: 'var(--radius-full)',
+              transition: 'all 0.2s ease',
+              backgroundColor: 'rgba(59, 130, 246, 0.05)'
             }}
-            onMouseEnter={(e) => e.target.style.background = 'rgba(56, 239, 125, 0.2)'}
-            onMouseLeave={(e) => e.target.style.background = 'rgba(56, 239, 125, 0.1)'}
+            onMouseEnter={(e) => e.target.style.backgroundColor = 'rgba(59, 130, 246, 0.15)'}
+            onMouseLeave={(e) => e.target.style.backgroundColor = 'rgba(59, 130, 246, 0.05)'}
           >
-            🔍 View All
+            Powered by Kilo.ai
           </a>
         </label>
         <select
@@ -175,18 +178,18 @@ const InterviewSettings = ({ onStartInterview, hasData }) => {
           className="input"
           value={aiModel}
           onChange={(e) => setAiModel(e.target.value)}
-          style={{ cursor: 'pointer' }}
+          style={{ cursor: 'pointer', marginTop: 'var(--space-sm)' }}
         >
-          <option value="openrouter/free">⭐ Auto-Select Best Free Model (Recommended)</option>
-          <option value="meta-llama/llama-3.3-70b-instruct:free">🦙 Meta LLaMA 3.3 70B</option>
-          <option value="meta-llama/llama-3.1-8b-instruct:free">🦙 Meta LLaMA 3.1 8B (Fast)</option>
-          <option value="google/gemma-2-9b-it:free">🔷 Google Gemma 2 9B</option>
-          <option value="microsoft/phi-3-medium-128k-instruct:free">📘 Microsoft Phi 3 Medium</option>
-          <option value="qwen/qwen-2.5-7b-instruct:free">🎯 Qwen 2.5 7B</option>
+          <option value="kilo-auto/free">⭐ Kilo Auto Free (Recommended)</option>
+          <option value="minimax/minimax-m2.5:free">⚡ MiniMax M2.5</option>
+          <option value="z-ai/glm-5:free">🔷 Z.AI GLM 5</option>
+          <option value="corethink:free">🧠 Corethink</option>
+          <option value="giga-potato">🥔 Giga Potato</option>
+          <option value="arcee-ai/trinity-large-preview:free">🎯 Arcee AI Trinity Large</option>
         </select>
-        <small className="text-tertiary" style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-xs)' }}>
-          <span style={{ fontSize: 'var(--font-size-lg)' }}>✅</span>
-          All models are completely free with NO credits required
+        <small className="text-secondary" style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-xs)', marginTop: '8px' }}>
+          <span style={{ color: 'var(--color-success)' }}>✓</span>
+          Listing only 100% free models provided by Kilo.ai
         </small>
       </div>
 
