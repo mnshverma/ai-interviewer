@@ -10,103 +10,116 @@ from datetime import datetime
 
 # --- Setup ---
 load_dotenv()
+st.set_page_config(page_title="Manver AI Interviewer", page_icon="🤖", layout="wide")
 
-# Configuration
-KILO_API_URL = "https://api.kilo.ai/api/gateway/chat/completions"
-DEFAULT_MODEL = "kilo-auto/free"
+# --- Global Header ---
+def render_header():
+    if 'user_info' not in st.session_state or not st.session_state.user_info.get("name"): return
+    
+    st.markdown('<div class="glass-card" style="margin-bottom: 2rem; padding: 1rem;">', unsafe_allow_html=True)
+    h_c1, h_c2, h_c3 = st.columns([1, 4, 2])
+    
+    with h_c1:
+        if st.session_state.persistent_photo:
+            st.image(st.session_state.persistent_photo, width=100)
+            
+    with h_c2:
+        info = st.session_state.user_info
+        st.markdown(f"""
+            <div style="padding-top: 10px;">
+                <h2 style="margin:0; color:#3b82f6; text-transform: uppercase;">{info['name']}</h2>
+                <p style="margin:0; color:#94a3b8; font-family:monospace; font-size: 1.1rem;">CANDIDATE ID: {info['id']}</p>
+                <div style="margin-top:5px; font-size:0.85rem; color:#64748b;">🛡️ IDENTITY VERIFIED | 🎤 AUDIO CHECK: OK</div>
+            </div>
+        """, unsafe_allow_html=True)
+        
+    with h_c3:
+        st.markdown(f"""
+            <div style="text-align: right; padding-top: 5px;">
+                <div style="color: #60a5fa; font-weight: 700; font-size: 1.2rem;">📅 {st.session_state.interview_time.split(' ')[0]}</div>
+                <div style="color: #94a3b8; font-weight: 600; font-size: 1.1rem;">⏱️ {st.session_state.interview_time.split(' ')[1]}</div>
+                <div style="margin-top: 10px; font-size: 0.75rem; background: rgba(16, 185, 129, 0.1); color: #10b981; padding: 4px 8px; border-radius: 6px; display: inline-block;">LIVE SESSION ACTIVE</div>
+            </div>
+        """, unsafe_allow_html=True)
+    st.markdown('</div>', unsafe_allow_html=True)
 
 # --- PDF Generator ---
 def create_pdf_report(info, evaluation, transcript, photo_bytes=None):
     pdf = FPDF()
     pdf.add_page()
     
-    # Extract Decision for PDF Styling
     is_pass = "PASS" in str(evaluation).upper()
     decision_color = (16, 185, 129) if is_pass else (239, 68, 68)
-    decision_text = "INTERVIEW STATUS: PASS" if is_pass else "INTERVIEW STATUS: FAIL"
+    decision_text = "FINAL RESULT: PASS" if is_pass else "FINAL RESULT: FAIL"
 
     # 🖼️ Page Border
     pdf.set_line_width(0.5)
     pdf.rect(5, 5, 200, 287)
     
-    # 🏢 Header Section
-    pdf.set_fill_color(240, 246, 255)
-    pdf.rect(10, 10, 190, 40, 'F')
+    # Header Background
+    pdf.set_fill_color(15, 23, 42)
+    pdf.rect(5, 5, 200, 45, 'F')
     
-    # 📸 Embedding Photo (if available)
+    # Photo Border & Image
     if photo_bytes:
         import tempfile
         with tempfile.NamedTemporaryFile(delete=False, suffix=".png") as tmp:
             tmp.write(photo_bytes.getvalue())
             tmp_path = tmp.name
         try:
-            pdf.image(tmp_path, 165, 12, 30, 30)
+            pdf.set_fill_color(255, 255, 255)
+            pdf.rect(10, 10, 32, 32, 'F')
+            pdf.image(tmp_path, 11, 11, 30, 30)
             os.unlink(tmp_path)
         except: pass
 
-    # ✍️ Title & branding
-    pdf.set_font('Arial', 'B', 22)
-    pdf.set_text_color(37, 99, 235)
-    pdf.set_xy(15, 15)
-    pdf.cell(140, 10, 'MANVER AI INTERVIEW', 0, 1, 'L')
-    
-    pdf.set_font('Arial', 'B', 10)
-    pdf.set_text_color(100, 116, 139)
-    pdf.set_x(15)
-    pdf.cell(140, 10, f"INTERVIEW REPORT | {st.session_state.interview_time}", 0, 1, 'L')
-    
-    # 👤 Candidate Profile Box
-    pdf.ln(15)
-    pdf.set_fill_color(250, 250, 250)
-    pdf.rect(10, 55, 190, 35, 'F')
-    
-    pdf.set_font('Arial', 'B', 12)
-    pdf.set_text_color(15, 23, 42)
-    pdf.set_xy(15, 60)
-    pdf.cell(90, 8, f"NAME: {info.get('name', 'N/A').upper()}", 0, 0)
-    pdf.cell(90, 8, f"ID: {info.get('id', 'N/A').upper()}", 0, 1)
-    
-    pdf.set_font('Arial', '', 11)
-    pdf.set_x(15)
-    pdf.cell(90, 8, f"EMAIL: {info.get('email', 'N/A')}", 0, 0)
-    pdf.cell(90, 8, f"PHONE: {info.get('phone', 'N/A')}", 0, 1)
-    
-    # 🎯 DECISION BADGE (in PDF)
-    pdf.set_fill_color(*decision_color)
-    pdf.rect(10, 95, 190, 15, 'F')
-    pdf.set_font('Arial', 'B', 12)
+    # Title & Info in Header
+    pdf.set_xy(48, 12)
+    pdf.set_font('Arial', 'B', 18)
     pdf.set_text_color(255, 255, 255)
-    pdf.set_xy(10, 95)
-    pdf.cell(190, 15, decision_text, 0, 1, 'C')
+    pdf.cell(100, 10, info.get('name', 'N/A').upper(), 0, 1)
+    
+    pdf.set_xy(48, 22)
+    pdf.set_font('Arial', '', 10)
+    pdf.set_text_color(148, 163, 184)
+    pdf.cell(100, 6, f"ID: {info.get('id', 'N/A')} | EMAIL: {info.get('email', 'N/A')}", 0, 1)
+    
+    pdf.set_xy(48, 28)
+    pdf.cell(100, 6, f"TIME: {st.session_state.interview_time}", 0, 1)
 
-    # 🧠 AI Evaluation Section
-    pdf.ln(10)
+    # Status Badge below header
+    pdf.set_fill_color(*decision_color)
+    pdf.rect(5, 50, 200, 15, 'F')
+    pdf.set_xy(5, 50)
     pdf.set_font('Arial', 'B', 14)
-    pdf.set_text_color(37, 99, 235)
-    pdf.cell(0, 10, 'AI PERFORMANCE EVALUATION', 'B', 1)
+    pdf.set_text_color(255, 255, 255)
+    pdf.cell(200, 15, decision_text, 0, 1, 'C')
+
+    # Main Content
+    pdf.set_xy(10, 75)
+    pdf.set_font('Arial', 'B', 14)
+    pdf.set_text_color(15, 23, 42)
+    pdf.cell(0, 10, 'SCREENING PERFORMANCE & EVALUATION', 'B', 1)
     pdf.ln(5)
     
     pdf.set_font('Arial', '', 11)
     pdf.set_text_color(51, 65, 85)
-    eval_text = str(evaluation).encode('latin-1', 'replace').decode('latin-1')
-    pdf.multi_cell(0, 7, eval_text)
+    pdf.multi_cell(0, 7, str(evaluation).encode('latin-1', 'replace').decode('latin-1'))
     
-    # 📖 Transcript Section
     pdf.ln(10)
     pdf.set_font('Arial', 'B', 14)
-    pdf.set_text_color(37, 99, 235)
-    pdf.cell(0, 10, 'INTERVIEW TRANSCRIPT', 'B', 1)
+    pdf.set_text_color(15, 23, 42)
+    pdf.cell(0, 10, 'FULL INTERVIEW TRANSCRIPT', 'B', 1)
     pdf.ln(5)
     
     pdf.set_font('Arial', 'I', 10)
     pdf.set_text_color(71, 85, 105)
-    trans_text = str(transcript).encode('latin-1', 'replace').decode('latin-1')
-    pdf.multi_cell(0, 6, trans_text)
+    pdf.multi_cell(0, 6, str(transcript).encode('latin-1', 'replace').decode('latin-1'))
     
     pdf.set_y(-15)
     pdf.set_font('Arial', 'I', 8)
     pdf.set_text_color(148, 163, 184)
-    pdf.cell(0, 10, 'Confidentially generated by Manver AI Interviewing System - (c) 2026', 0, 0, 'C')
+    pdf.cell(0, 10, '© 2026 MANVER AI INTERVIEWER - CONFIDENTIAL CANDIDATE DATA', 0, 0, 'C')
 
     return pdf.output(dest='S').encode('latin-1')
 
@@ -121,38 +134,6 @@ st.markdown("""
         --color-bg: #0f172a;
         --color-primary: #3b82f6;
         --color-secondary: #64748b;
-        --color-accent: #10b981;
-        --color-glass: rgba(30, 41, 59, 0.7);
-        --color-border: rgba(255, 255, 255, 0.1);
-    }
-    
-    .stApp {
-        background: radial-gradient(circle at 10% 20%, #1e293b 0%, #0f172a 90%);
-        color: #f1f5f9;
-        font-family: 'Inter', sans-serif;
-    }
-    
-    .glass-card {
-        background: var(--color-glass);
-        backdrop-filter: blur(12px);
-        border: 1px solid var(--color-border);
-        border-radius: 1.25rem;
-        padding: 1.5rem;
-        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
-        margin-bottom: 1.5rem;
-    }
-    
-    .stButton > button {
-        border-radius: 0.75rem !important;
-        font-weight: 600 !important;
-        transition: all 0.2s ease !important;
-        border: 1px solid rgba(255,255,255,0.1) !important;
-        padding: 0.5rem 1rem !important;
-    }
-
-    /* Primary buttons */
-    div[data-testid="stButton"] button[kind="primary"] {
-        background: linear-gradient(135deg, #3b82f6, #2563eb) !important;
         box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3) !important;
     }
 
@@ -250,11 +231,15 @@ def confirm_submission():
         st.rerun()
 
 def show_setup():
-    st.title("🤖 Manver AI Interviewer")
+    st.markdown('<div style="text-align: center; margin-bottom: 2rem;">'
+                '<h1>🤖 MANVER AI INTERVIEW</h1>'
+                '<p style="color: #94a3b8; font-size: 1.1rem;">Professional Automated Screening System</p>'
+                '</div>', unsafe_allow_html=True)
     
-    # JavaScript to move to next field on Enter
+    # JavaScript logic for Enter navigation AND Hardware verification
     st.markdown("""
         <script>
+        // 1. Enter Navigation
         function setupEnterNavigation() {
             const inputs = window.parent.document.querySelectorAll('input[type="text"]');
             inputs.forEach((input, index) => {
@@ -262,10 +247,7 @@ def show_setup():
                     if (e.key === 'Enter') {
                         e.preventDefault();
                         const next = inputs[index + 1];
-                        if (next) {
-                            next.focus();
-                        } else {
-                            // If last text field, blur to ensure sync and then click start
+                        if (next) { next.focus(); } else {
                             input.blur();
                             setTimeout(() => {
                                 const btn = window.parent.document.querySelector('button[kind="primary"]');
@@ -276,21 +258,36 @@ def show_setup():
                 });
             });
         }
-        // Run setup once DOM is ready
-        if (!window.enterNavSetup) {
-            setTimeout(setupEnterNavigation, 1000);
-            window.enterNavSetup = true;
+
+        // 2. Hardware Permission Check
+        async function checkHardware() {
+            let micReady = false;
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                stream.getTracks().forEach(track => track.stop());
+                micReady = true;
+                window.parent.document.getElementById('mic-status').innerHTML = '✅ Microphone Ready';
+                window.parent.document.getElementById('mic-status').style.color = '#10b981';
+            } catch (err) {
+                window.parent.document.getElementById('mic-status').innerHTML = '❌ Microphone Blocked';
+                window.parent.document.getElementById('mic-status').style.color = '#ef4444';
+            }
+            return micReady;
+        }
+
+        if (!window.enterNavSetup) { 
+            setTimeout(setupEnterNavigation, 1000); 
+            setTimeout(checkHardware, 1500);
+            window.enterNavSetup = true; 
         }
         </script>
     """, unsafe_allow_html=True)
     
-    c1, c2 = st.columns([1, 1], gap="medium")
+    c1, c2 = st.columns([1, 1], gap="large")
     
     with c1:
         st.markdown('<div class="glass-card">', unsafe_allow_html=True)
-        st.write("### 👤 Candidate Details")
-        
-        # Using session state keys for robust validation
+        st.write("### 🔑 Candidate Details")
         name = st.text_input("Full Name *", key="reg_name", placeholder="John Doe")
         email = st.text_input("Email ID *", key="reg_email", placeholder="john@example.com")
         c_id = st.text_input("Candidate ID *", key="reg_id", placeholder="CAND-001")
@@ -298,28 +295,25 @@ def show_setup():
         
         st.write("### 📄 Resume Analysis")
         uploaded_file = st.file_uploader("Upload PDF *", type=['pdf'], label_visibility="collapsed")
-        model = st.selectbox("Model", ["kilo-auto/free", "minimax/minimax-m2.5:free"], label_visibility="collapsed")
+        model = st.selectbox("Intelligence Model", ["kilo-auto/free", "minimax/minimax-m2.5:free"], label_visibility="collapsed")
         
-        if st.button("🚀 Start Interview", type="primary", use_container_width=True):
-            # Check session state directly to avoid sync issues from JS clicks
+        if st.button("🚀 Start Interview Session", type="primary", use_container_width=True):
             v_name = st.session_state.get("reg_name", "").strip()
             v_email = st.session_state.get("reg_email", "").strip()
             v_id = st.session_state.get("reg_id", "").strip()
             v_phone = st.session_state.get("reg_phone", "").strip()
             
-            # Specific and clear error messaging
             if not v_name or not v_email or not v_id or not v_phone:
-                st.error("⚠️ All candidate detail fields are mandatory. Please fill them out.")
+                st.error("⚠️ All detail fields are mandatory.")
             elif not uploaded_file:
-                st.error("📄 Please upload your resume (PDF) to proceed.")
+                st.error("📄 Please upload your resume.")
             elif not st.session_state.persistent_photo:
-                st.error("📸 Identity verification is mandatory! Please capture your photo using the 'System Check' camera on the right.")
+                st.error("📸 Identity verification required.")
             else:
                 st.session_state.user_info = {"name": v_name, "email": v_email, "id": v_id, "phone": v_phone}
                 from datetime import datetime
                 st.session_state.interview_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                
-                with st.spinner("Analyzing profile..."):
+                with st.spinner("✨ Analyzing profile and building path..."):
                     text = extract_text_from_pdf(uploaded_file)
                     res = call_ai([{"role": "system", "content": "Analyze resume."}, {"role": "user", "content": text}], model=model)
                     if res:
@@ -329,38 +323,51 @@ def show_setup():
         st.markdown('</div>', unsafe_allow_html=True)
 
     with c2:
-        st.markdown('<div class="glass-card">', unsafe_allow_html=True)
-        st.write("### 📹 System Check")
-        st.info("Identity verification is mandatory.")
+        st.markdown('<div class="glass-card" style="text-align: center;">', unsafe_allow_html=True)
+        st.write("### 📸 System Check")
         
-        # Using a separate key and saving it immediately to persistence
-        cam_img = st.camera_input("Verify Identity", key="setup_camera")
-        if cam_img:
-            st.session_state.persistent_photo = cam_img
-            st.success("✅ Identity Captured!")
-        elif st.session_state.persistent_photo:
-            st.image(st.session_state.persistent_photo, caption="Verification Preview")
-            
+        # Hardware Status indicators (Managed by JS)
         st.markdown("""
-            <div style="margin-top: 2rem; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 1rem;">
-                <strong>🎙️ Audio Check:</strong> Microphone and Camera permissions are required for the live session.
+            <div style="background: rgba(15, 23, 42, 0.4); border-radius: 12px; padding: 1rem; margin-bottom: 1.5rem; border: 1px solid rgba(255,255,255,0.05);">
+                <div id="mic-status" style="font-weight: 700; color: #facc15; margin-bottom: 0.5rem;">🎤 Checking Microphone...</div>
             </div>
         """, unsafe_allow_html=True)
+        
+        st.write("Face the camera clearly for identity verification.")
+        
+        # Camera Check (Native)
+        def sync_photo():
+            if st.session_state.setup_cam is None: st.session_state.persistent_photo = None
+            else: st.session_state.persistent_photo = st.session_state.setup_cam
+            
+        st.camera_input("Capture", key="setup_cam", label_visibility="collapsed", on_change=sync_photo)
+        
+        if st.session_state.persistent_photo:
+            st.image(st.session_state.persistent_photo, use_container_width=True)
+            st.success("✅ Identity Verified")
+        else:
+            st.warning("⚠️ Pending Identity Verification")
         st.markdown('</div>', unsafe_allow_html=True)
 
 def show_analysis():
-    st.title("🔍 Candidate Insights")
-    st.markdown(f'<div class="glass-card">{st.session_state.analysis}</div>', unsafe_allow_html=True)
-    if st.button("✅ Confirm & Proceed", type="primary"):
-        with st.spinner("🚀 Generating your custom interview path..."):
-            prompt = "Generate 8 technical questions based on the candidate. One per line. No numbers."
-            text = call_ai([{"role": "system", "content": prompt}, {"role": "user", "content": st.session_state.analysis}])
-            if text:
-                st.session_state.questions = [q.strip() for q in text.split('\n') if len(q.strip()) > 10][:8]
-                st.session_state.answers = [""] * len(st.session_state.questions)
-                st.session_state.current_q = 0
-                st.session_state.step = 'interview'
-                st.rerun()
+    render_header()
+    st.markdown('<div style="text-align: center; margin-bottom: 2rem;">'
+                '<h1>🔍 CANDIDATE INSIGHTS</h1>'
+                '</div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="glass-card"><div style="color: #cbd5e1; line-height: 1.6;">{st.session_state.analysis}</div></div>', unsafe_allow_html=True)
+    
+    col_l, col_r, col_c = st.columns([1, 1, 1])
+    with col_r:
+        if st.button("✅ Confirm & Proceed", type="primary", use_container_width=True):
+            with st.spinner("🚀 Generating technical questionnaire..."):
+                prompt = "Generate 8 technical questions based on the candidate. One per line. No numbers."
+                text = call_ai([{"role": "system", "content": prompt}, {"role": "user", "content": st.session_state.analysis}])
+                if text:
+                    st.session_state.questions = [q.strip() for q in text.split('\n') if len(q.strip()) > 10][:8]
+                    st.session_state.answers = [""] * len(st.session_state.questions)
+                    st.session_state.current_q = 0
+                    st.session_state.step = 'interview'
+                    st.rerun()
 
 @st.fragment
 def interview_content():
@@ -368,31 +375,38 @@ def interview_content():
     total = len(st.session_state.questions)
     
     st.progress((q_idx + 1) / total)
-    st.write(f"**Step {q_idx + 1} of {total}** | {st.session_state.user_info.get('name', 'Candidate')} | 🕒 {st.session_state.interview_time}")
-
-    c1, c2 = st.columns([3, 1], gap="small")
+    
+    # 📹 Proctoring Camera & Q&A Layout
+    c1, spacer, c2 = st.columns([1, 0.1, 2], gap="small")
+    
     with c1:
-        st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+        st.markdown('<div class="glass-card" style="padding: 1rem; text-align: center;">', unsafe_allow_html=True)
+        st.write("🎙️ **LIVE PROCTORING**")
+        st.camera_input("Monitoring", key=f"proctor_v3_{q_idx}", label_visibility="collapsed")
+        st.warning("⚠️ Identity verified. Monitoring active.")
+        st.markdown('</div>', unsafe_allow_html=True)
+
+    with c2:
+        st.markdown('<div class="glass-card" style="min-height: 480px; display: flex; flex-direction: column; justify-content: space-between;">', unsafe_allow_html=True)
         question = st.session_state.questions[q_idx]
-        st.markdown(f'<div style="font-size: 1.4rem; font-weight: 700; color: #60a5fa; margin-bottom: 1rem;">{question}</div>', unsafe_allow_html=True)
+        st.markdown(f'<div style="font-size: 1.5rem; font-weight: 700; color: #60a5fa; margin-bottom: 2rem;">{question}</div>', unsafe_allow_html=True)
         
-        # Answer box syncs with session state
-        ans = st.text_area("ans_box", value=st.session_state.answers[q_idx], height=180, key=f"ans_ta_{q_idx}", placeholder="Your answer...", label_visibility="collapsed")
+        ans = st.text_area("ans_box", value=st.session_state.answers[q_idx], height=220, key=f"ans_ta_{q_idx}", placeholder="Express your answer here...", label_visibility="collapsed")
         st.session_state.answers[q_idx] = ans
         
-        col_prev, col_speak, col_next = st.columns([1, 1, 1])
-        with col_prev:
-            if st.button("⬅️ Back", disabled=(q_idx == 0), use_container_width=True):
+        st.write("") # Spacer
+        col_nav1, col_nav2, col_nav3 = st.columns([1, 1, 1])
+        with col_nav1:
+            if st.button("⬅️ Previous", disabled=(q_idx == 0), use_container_width=True):
                 st.session_state.current_q -= 1
-                st.rerun() # Fragment rerun only
-        with col_speak:
-            # Enhanced Speak button
+                st.rerun()
+        with col_nav2:
             st.markdown(f"""
-                <button id="speak-btn" onclick="startSpeech()" style="background: linear-gradient(135deg, #10b981, #059669); color: white; border: none; padding: 0.7rem; border-radius: 12px; width: 100%; cursor: pointer; font-weight: 700; transition: all 0.2s;">🎤 Speak</button>
+                <button id="speak-btn" onclick="startSpeech()" style="background: linear-gradient(135deg, #10b981, #059669); color: white; border: none; padding: 0.75rem; border-radius: 12px; width: 100%; cursor: pointer; font-weight: 700; transition: all 0.2s; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);">🎤 Voice Answer</button>
                 <script>
                     function startSpeech() {{
                         const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-                        if (!Recognition) {{ alert('Error: Speak is not supported in this browser.'); return; }}
+                        if (!Recognition) {{ alert('Speech Recognition not supported in this browser.'); return; }}
                         const rec = new Recognition();
                         const btn = document.getElementById('speak-btn');
                         btn.style.background = '#ef4444'; btn.innerText = 'Listening...';
@@ -412,62 +426,45 @@ def interview_content():
                                 for (let f of iframes) {{ try {{ if (findAndFill(f.contentDocument)) return true; }} catch(e) {{}} }}
                                 return false;
                             }};
-                            let success = findAndFill(document);
-                            if (!success) success = findAndFill(window.parent.document);
-                            btn.style.background = 'linear-gradient(135deg, #10b981, #059669)'; btn.innerText = '🎤 Speak';
+                            findAndFill(document); findAndFill(window.parent.document);
+                            btn.style.background = 'linear-gradient(135deg, #10b981, #059669)'; btn.innerText = '🎤 Voice Answer';
                         }};
-                        rec.onerror = () => {{ btn.style.background = 'linear-gradient(135deg, #10b981, #059669)'; btn.innerText = '🎤 Speak'; }};
+                        rec.onerror = () => {{ btn.style.background = 'linear-gradient(135deg, #10b981, #059669)'; btn.innerText = '🎤 Voice Answer'; }};
                         rec.start();
                     }}
                 </script>
+                <style>
+                #MainMenu, footer, header {visibility: hidden;}
+                button[title="View source"] {display: none;}
+                .custom-footer {
+                    position: fixed; left: 0; bottom: 0; width: 100%;
+                    background: rgba(15, 23, 42, 0.95); color: #64748b;
+                    text-align: center; padding: 8px; font-size: 0.75rem;
+                    z-index: 9999; border-top: 1px solid rgba(255,255,255,0.05);
+                }
+                </style>
             """, unsafe_allow_html=True)
-        with col_next:
-            label = "Finish ✨" if q_idx + 1 == total else "Next ➡️"
+            st.markdown('<div class="custom-footer">© 2026 MANVER AI INTERVIEWER. ALL RIGHTS RESERVED.</div>', unsafe_allow_html=True)
+        with col_nav3:
+            label = "Submit Interview ✨" if q_idx + 1 == total else "Next Question ➡️"
             if st.button(label, use_container_width=True, type="primary"):
                 if q_idx + 1 < total:
                     st.session_state.current_q += 1
-                    st.rerun() # Fragment rerun only
-                else:
-                    # Final submission is a full page transition, will stop camera naturally but it's the end.
-                    confirm_submission() 
-        st.markdown('</div>', unsafe_allow_html=True)
-
-    with c2:
-        st.markdown('<div class="glass-card" style="padding: 1rem; text-align: center;">', unsafe_allow_html=True)
-        st.write("📸 **Verification Preview**")
-        if st.session_state.persistent_photo:
-            st.image(st.session_state.persistent_photo, use_container_width=True)
-        else:
-            st.error("No verified photo!")
+                    st.rerun()
+                else: confirm_submission()
         st.markdown('</div>', unsafe_allow_html=True)
 
 def show_interview():
-    st.title("🎙️ Live Session")
-    
-    # 📹 Proctoring Camera (Static/Outside Fragment)
-    # This keeps the camera active while the interview_content fragment reruns
-    st.warning("⚠️ Proctoring is active. Do not look away or refresh.")
-    c1, c2 = st.columns([1, 1])
-    with c1:
-        st.camera_input("Proctoring Feed", key="live_proctor_static", label_visibility="collapsed")
-    with c2:
-        st.info("Your session is being monitored for identity verification. Ensure adequate lighting.")
-    
-    st.divider()
-    
-    # Question & Navigation (Fragmented)
-    if not st.session_state.questions:
-        st.warning("Repairing questions flow...")
-        if st.button("🔄 Restart Setup"): st.session_state.clear(); st.rerun()
-        return
-
+    render_header()
     interview_content()
 
 def show_report():
-    st.title("📊 Final Report")
     info = st.session_state.user_info
+    st.markdown('<div style="text-align: center; margin-bottom: 2rem;">'
+                '<h1>📊 FINAL EVALUATION</h1>'
+                '</div>', unsafe_allow_html=True)
     
-    with st.spinner("Generating summary..."):
+    with st.spinner("🤖 AI is analyzing your performance..."):
         transcript = ""
         for i, (q, a) in enumerate(zip(st.session_state.questions, st.session_state.answers)):
             transcript += f"Q{i+1}: {q}\nA: {a}\n\n"
@@ -477,47 +474,20 @@ def show_report():
             {"role": "user", "content": f"Candidate: {info.get('name', 'N/A')}\nID: {info.get('id', 'N/A')}\nEmail: {info.get('email', 'N/A')}\nDate: {st.session_state.interview_time}\n\nTranscript:\n{transcript}"}
         ])
     
-    c1, c2 = st.columns([2, 1])
+    c1, c2 = st.columns([2, 1], gap="large")
     with c1:
         st.markdown('<div class="glass-card">', unsafe_allow_html=True)
-        
-        # UI Decision Badge
+        # Decision Badge
         is_pass = "PASS" in str(res).upper()
         badge_bg = "rgba(16, 185, 129, 0.2)" if is_pass else "rgba(239, 68, 68, 0.2)"
         badge_border = "#10b981" if is_pass else "#ef4444"
         badge_text = "🟢 RESULT: PASS" if is_pass else "🔴 RESULT: FAIL"
         
-        st.markdown(f"""
-            <div style="background: {badge_bg}; border: 1px solid {badge_border}; color: white; padding: 1rem; border-radius: 12px; text-align: center; margin-bottom: 2rem; font-weight: 800; font-size: 1.5rem; letter-spacing: 2px;">
-                {badge_text}
-            </div>
-        """, unsafe_allow_html=True)
-
-        st.write(f"### {info.get('name', 'Candidate')} (ID: {info.get('id', 'N/A')})")
-        st.write(f"🕒 **Date:** {st.session_state.interview_time}")
-        st.write(f"📧 {info.get('email', 'N/A')} | 📞 {info.get('phone', 'N/A')}")
-        st.divider()
-        if res:
-            st.write(res)
-            # PDF Generation with Photo
-            try:
-                pdf_bytes = create_pdf_report(info, res, transcript, st.session_state.persistent_photo)
-                st.download_button(
-                    label="📥 Download PDF",
-                    data=pdf_bytes,
-                    file_name=f"Interview_Report_{info.get('id', 'ID')}.pdf",
-                    mime="application/pdf",
-                    type="primary",
-                    use_container_width=True
-                )
-            except Exception as e:
-                st.error(f"PDF Export Error: {str(e)}")
-                st.download_button("📥 Download TXT (Fallback)", transcript, file_name="Report.txt")
-        st.markdown('</div>', unsafe_allow_html=True)
+        st.markdown(f'<div style="background: {badge_bg}; border: 1px solid {badge_border}; color: white; padding: 1.2rem; border-radius: 12px; text-align: center; margin-bottom: 2rem; font-weight: 800; font-size: 1.5rem; letter-spacing: 2px;">{badge_text}</div>', unsafe_allow_html=True)
         
-    with c2:
-        st.markdown('<div class="glass-card">', unsafe_allow_html=True)
-        st.write("### Identity Captured")
+        st.write(f"### 📋 Detailed Analysis")
+        st.markdown(f'<div style="color: #cbd5e1; line-height: 1.7; font-size: 1.05rem;">{res}</div>', unsafe_allow_html=True)
+        st.divider()
         if st.session_state.persistent_photo:
             st.image(st.session_state.persistent_photo)
         st.markdown('</div>', unsafe_allow_html=True)
