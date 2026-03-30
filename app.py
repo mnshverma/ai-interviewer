@@ -5,6 +5,8 @@ import json
 from PyPDF2 import PdfReader
 from dotenv import load_dotenv
 import time
+from fpdf import FPDF
+from datetime import datetime
 
 # --- Setup ---
 load_dotenv()
@@ -12,6 +14,41 @@ load_dotenv()
 # Configuration
 KILO_API_URL = "https://api.kilo.ai/api/gateway/chat/completions"
 DEFAULT_MODEL = "kilo-auto/free"
+
+# --- PDF Generator ---
+def create_pdf_report(info, evaluation, transcript):
+    pdf = FPDF()
+    pdf.add_page()
+    
+    # Title
+    pdf.set_font('Arial', 'B', 20)
+    pdf.set_text_color(37, 99, 235)
+    pdf.cell(0, 15, 'MANVER AI INTERVIEW REPORT', 0, 1, 'C')
+    pdf.ln(5)
+    
+    # Metadata
+    pdf.set_font('Arial', '', 12)
+    pdf.set_text_color(0, 0, 0)
+    pdf.cell(0, 10, f"Date: {st.session_state.interview_time}", 0, 1)
+    pdf.cell(0, 10, f"Candidate: {info.get('name', 'N/A')}", 0, 1)
+    pdf.cell(0, 10, f"ID: {info.get('id', 'N/A')}", 0, 1)
+    pdf.cell(0, 10, f"Email: {info.get('email', 'N/A')}", 0, 1)
+    pdf.ln(10)
+    
+    # Sections
+    pdf.set_font('Arial', 'B', 14)
+    pdf.cell(0, 10, 'AI EVALUATION', 0, 1)
+    pdf.set_font('Arial', '', 11)
+    # Using multi_cell to handle wrapping text
+    pdf.multi_cell(0, 7, str(evaluation).encode('latin-1', 'replace').decode('latin-1'))
+    pdf.ln(10)
+    
+    pdf.set_font('Arial', 'B', 14)
+    pdf.cell(0, 10, 'INTERVIEW TRANSCRIPT', 0, 1)
+    pdf.set_font('Arial', '', 10)
+    pdf.multi_cell(0, 6, str(transcript).encode('latin-1', 'replace').decode('latin-1'))
+    
+    return pdf.output(dest='S').encode('latin-1')
 
 # --- Styling (Glassmorphism) ---
 st.set_page_config(page_title="Manver AI Interviewer", page_icon="🤖", layout="wide")
@@ -337,8 +374,20 @@ def show_report():
         st.divider()
         if res:
             st.write(res)
-            report_text = f"MANVER AI INTERVIEW REPORT\nDate: {st.session_state.interview_time}\nCandidate: {info.get('name', 'N/A')}\nID: {info.get('id', 'N/A')}\nEvaluation:\n{res}\n\nTranscript:\n{transcript}"
-            st.download_button("📥 Download PDF/TXT", report_text, file_name=f"Report_{info.get('id', 'ID')}.txt", type="primary")
+            # PDF Generation
+            try:
+                pdf_bytes = create_pdf_report(info, res, transcript)
+                st.download_button(
+                    label="📥 Download PDF",
+                    data=pdf_bytes,
+                    file_name=f"Interview_Report_{info.get('id', 'ID')}.pdf",
+                    mime="application/pdf",
+                    type="primary",
+                    use_container_width=True
+                )
+            except Exception as e:
+                st.error(f"PDF Export Error: {str(e)}")
+                st.download_button("📥 Download TXT (Fallback)", transcript, file_name="Report.txt")
         st.markdown('</div>', unsafe_allow_html=True)
         
     with c2:
