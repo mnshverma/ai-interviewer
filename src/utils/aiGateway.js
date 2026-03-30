@@ -1,4 +1,6 @@
-const KILO_API_URL = "https://api.kilo.ai/api/gateway/chat/completions";
+// In development, we use a Vite proxy to bypass CORS (configured in vite.config.js)
+// In production, we would use the direct URL: "https://api.kilo.ai/api/gateway/chat/completions"
+const KILO_API_URL = "/api/kilo-gateway/chat/completions";
 
 // Default model: Let Kilo auto-route to the best free model
 const DEFAULT_MODEL = 'kilo-auto/free';

@@ -7,4 +7,14 @@ export default defineConfig({
   optimizeDeps: {
     include: ['pdfjs-dist'],
   },
+  server: {
+    proxy: {
+      '/api/kilo-gateway': {
+        target: 'https://api.kilo.ai/api/gateway',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/kilo-gateway/, ''),
+        secure: true
+      }
+    }
+  }
 })
