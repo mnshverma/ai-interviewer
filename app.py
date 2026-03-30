@@ -240,50 +240,61 @@ def show_setup():
                 '<p style="color: #94a3b8; font-size: 1.1rem;">Professional Automated Screening System</p>'
                 '</div>', unsafe_allow_html=True)
     
-    # JavaScript logic for Enter navigation AND Hardware verification
-    st.markdown("""
+    # 🎤 Microphone Verification Logic (JS-to-Python Bridge)
+    # We use a hidden input and a button to confirm the mic works
+    mic_ready = st.checkbox("mic_verified", key="mic_verified", label_visibility="collapsed")
+    
+    st.markdown(f"""
         <script>
         // 1. Enter Navigation
-        function setupEnterNavigation() {
+        function setupEnterNavigation() {{
             const inputs = window.parent.document.querySelectorAll('input[type="text"]');
-            inputs.forEach((input, index) => {
-                input.addEventListener('keydown', (e) => {
-                    if (e.key === 'Enter') {
+            inputs.forEach((input, index) => {{
+                input.addEventListener('keydown', (e) => {{
+                    if (e.key === 'Enter') {{
                         e.preventDefault();
                         const next = inputs[index + 1];
-                        if (next) { next.focus(); } else {
+                        if (next) {{ next.focus(); }} else {{
                             input.blur();
-                            setTimeout(() => {
+                            setTimeout(() => {{
                                 const btn = window.parent.document.querySelector('button[kind="primary"]');
                                 if (btn) btn.click();
-                            }, 100);
-                        }
-                    }
-                });
-            });
-        }
+                            }}, 100);
+                        }}
+                    }}
+                }});
+            }});
+        }}
 
-        // 2. Hardware Permission Check
-        async function checkHardware() {
-            let micReady = false;
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        // 2. Hardware Permission Check (Manual Trigger)
+        async function runManualMicCheck() {{
+            const statusEl = window.parent.document.getElementById('mic-status-text');
+            const checkBtn = window.parent.document.getElementById('mic-check-btn');
+            statusEl.innerHTML = '🕒 Requesting Access...';
+            statusEl.style.color = '#facc15';
+            
+            try {{
+                const stream = await navigator.mediaDevices.getUserMedia({{ audio: true }});
                 stream.getTracks().forEach(track => track.stop());
-                micReady = true;
-                window.parent.document.getElementById('mic-status').innerHTML = '✅ Microphone Ready';
-                window.parent.document.getElementById('mic-status').style.color = '#10b981';
-            } catch (err) {
-                window.parent.document.getElementById('mic-status').innerHTML = '❌ Microphone Blocked';
-                window.parent.document.getElementById('mic-status').style.color = '#ef4444';
-            }
-            return micReady;
-        }
+                
+                statusEl.innerHTML = '✅ MICROPHONE READY';
+                statusEl.style.color = '#10b981';
+                checkBtn.style.display = 'none';
+                
+                // Signal back to Streamlit (Hidden checkbox click simulation)
+                const cb = window.parent.document.querySelector('input[aria-label="mic_verified"]');
+                if (cb) {{ cb.click(); }}
+            }} catch (err) {{
+                statusEl.innerHTML = '❌ MICROPHONE BLOCKED | ' + err.message;
+                statusEl.style.color = '#ef4444';
+                alert('Microphone permission denied. Please enable it in your browser settings to proceed.');
+            }}
+        }}
 
-        if (!window.enterNavSetup) { 
+        if (!window.enterNavSetup) {{ 
             setTimeout(setupEnterNavigation, 1000); 
-            setTimeout(checkHardware, 1500);
             window.enterNavSetup = true; 
-        }
+        }}
         </script>
     """, unsafe_allow_html=True)
     
@@ -292,10 +303,10 @@ def show_setup():
     with c1:
         st.markdown('<div class="glass-card">', unsafe_allow_html=True)
         st.write("### 🔑 Candidate Details")
-        name = st.text_input("Full Name *", key="reg_name", placeholder="John Doe")
-        email = st.text_input("Email ID *", key="reg_email", placeholder="john@example.com")
-        c_id = st.text_input("Candidate ID *", key="reg_id", placeholder="CAND-001")
-        phone = st.text_input("Phone Number *", key="reg_phone", placeholder="+91 XXXX XXXX")
+        st.text_input("Full Name *", key="reg_name", placeholder="John Doe")
+        st.text_input("Email ID *", key="reg_email", placeholder="john@example.com")
+        st.text_input("Candidate ID *", key="reg_id", placeholder="CAND-001")
+        st.text_input("Phone Number *", key="reg_phone", placeholder="+91 XXXX XXXX")
         
         st.write("### 📄 Resume Analysis")
         uploaded_file = st.file_uploader("Upload PDF *", type=['pdf'], label_visibility="collapsed")
@@ -303,18 +314,18 @@ def show_setup():
         
         if st.button("🚀 Start Interview Session", type="primary", use_container_width=True):
             v_name = st.session_state.get("reg_name", "").strip()
-            v_email = st.session_state.get("reg_email", "").strip()
             v_id = st.session_state.get("reg_id", "").strip()
-            v_phone = st.session_state.get("reg_phone", "").strip()
             
-            if not v_name or not v_email or not v_id or not v_phone:
+            if not v_name or not v_id:
                 st.error("⚠️ All detail fields are mandatory.")
             elif not uploaded_file:
                 st.error("📄 Please upload your resume.")
             elif not st.session_state.persistent_photo:
-                st.error("📸 Identity verification required.")
+                st.error("📸 Identity verification required. Use the capture tool on the right.")
+            elif not st.session_state.mic_verified:
+                st.error("🎤 Hardware Error: You must verify your microphone before proceeding.")
             else:
-                st.session_state.user_info = {"name": v_name, "email": v_email, "id": v_id, "phone": v_phone}
+                st.session_state.user_info = {"name": v_name, "id": v_id, "email": st.session_state.reg_email, "phone": st.session_state.reg_phone}
                 from datetime import datetime
                 st.session_state.interview_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                 with st.spinner("✨ Analyzing profile and building path..."):
@@ -328,29 +339,29 @@ def show_setup():
 
     with c2:
         st.markdown('<div class="glass-card" style="text-align: center;">', unsafe_allow_html=True)
-        st.write("### 📸 System Check")
+        st.write("### 📸 Identity & Hardware Check")
         
-        # Hardware Status indicators (Managed by JS)
-        st.markdown("""
-            <div style="background: rgba(15, 23, 42, 0.4); border-radius: 12px; padding: 1rem; margin-bottom: 1.5rem; border: 1px solid rgba(255,255,255,0.05);">
-                <div id="mic-status" style="font-weight: 700; color: #facc15; margin-bottom: 0.5rem;">🎤 Checking Microphone...</div>
+        # 🎤 Microphone Interface
+        st.markdown(f"""
+            <div style="background: rgba(15, 23, 42, 0.4); border-radius: 12px; padding: 1.2rem; margin-bottom: 2rem; border: 1px solid rgba(255,255,255,0.05); text-align: left;">
+                <div id="mic-status-text" style="font-weight: 700; color: #facc15; margin-bottom: 0.8rem;">🎧 MICROPHONE VERIFICATION</div>
+                <button id="mic-check-btn" onclick="runManualMicCheck()" style="background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; border: none; padding: 0.5rem 1rem; border-radius: 8px; cursor: pointer; font-weight: 600;">Run Audio Test</button>
             </div>
         """, unsafe_allow_html=True)
         
-        st.write("Face the camera clearly for identity verification.")
+        st.warning("👤 **IDENTITY CAPTURE REQUIRED**")
+        st.write("Click the camera icon below to manually capture your photo.")
         
         # Camera Check (Native)
         def sync_photo():
             if st.session_state.setup_cam is None: st.session_state.persistent_photo = None
             else: st.session_state.persistent_photo = st.session_state.setup_cam
             
-        st.camera_input("Capture", key="setup_cam", label_visibility="collapsed", on_change=sync_photo)
+        st.camera_input("Verify Photo", key="setup_cam", label_visibility="collapsed", on_change=sync_photo)
         
         if st.session_state.persistent_photo:
-            st.image(st.session_state.persistent_photo, use_container_width=True)
-            st.success("✅ Identity Verified")
-        else:
-            st.warning("⚠️ Pending Identity Verification")
+            st.image(st.session_state.persistent_photo, width=150)
+            st.success("✅ Photo Verified")
         st.markdown('</div>', unsafe_allow_html=True)
 
 def show_analysis():
