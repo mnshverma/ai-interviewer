@@ -10,10 +10,11 @@ export default defineConfig({
   server: {
     proxy: {
       '/api/kilo-gateway': {
-        target: 'https://api.kilo.ai/api/gateway',
+        target: 'https://api.kilo.ai',
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api\/kilo-gateway/, ''),
-        secure: true
+        rewrite: (path) => path.replace(/^\/api\/kilo-gateway/, '/api/gateway'),
+        secure: false,
+        xfwd: false
       }
     }
   }
