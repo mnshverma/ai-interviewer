@@ -6,7 +6,7 @@ import TranscriptPanel from './components/TranscriptPanel';
 import FinalReport from './components/FinalReport';
 import InterviewHistory, { saveInterviewSession } from './components/InterviewHistory';
 import { useToast } from './components/Toast';
-import { analyzeResume, analyzeJobDescription, generateInterviewQuestions, evaluateAnswer, generateFinalReport } from './utils/openRouterAPI';
+import { analyzeResume, analyzeJobDescription, generateInterviewQuestions, evaluateAnswer, generateFinalReport } from './utils/aiGateway';
 import { speechService } from './utils/speechService';
 import './index.css';
 

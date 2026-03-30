@@ -40,11 +40,15 @@ const VideoInterview = ({
   }, [currentAnswer]);
 
   useEffect(() => {
-    if (isActive && !practiceMode) {
-      startCamera();
-      initializeSpeechRecognition();
-    } else if (isActive && practiceMode) {
-      setSpeechSupported(false);
+    if (isActive) {
+      if (!practiceMode) {
+        startCamera();
+        initializeSpeechRecognition();
+      } else {
+        // In practice mode, we still show the camera but might disable auto-speech
+        startCamera();
+        setSpeechSupported(false);
+      }
     }
 
     return () => {
@@ -370,10 +374,18 @@ const VideoInterview = ({
         <div className="flex items-center justify-center" style={{ height: '100%', padding: 'var(--space-xl)' }}>
           <div className="text-center">
             <div style={{ fontSize: 'var(--font-size-4xl)', marginBottom: 'var(--space-md)' }}>📹</div>
-            <h3 className="mb-md">Camera & Microphone Required</h3>
+            <h3 className="mb-md">Camera & Microphone Access Needed</h3>
             <p className="text-secondary">{error}</p>
+            <div className="flex gap-sm justify-center mt-lg">
+              <button className="btn btn-primary" onClick={startCamera}>
+                🔄 Retry Access
+              </button>
+              <button className="btn btn-secondary" onClick={() => setError('')}>
+                ⌨️ Continue with Text Only
+              </button>
+            </div>
             <p className="text-tertiary mt-md" style={{ fontSize: 'var(--font-size-sm)' }}>
-              Please enable camera and microphone permissions in your browser settings
+              Note: Camera requires an HTTPS connection or localhost.
             </p>
           </div>
         </div>
