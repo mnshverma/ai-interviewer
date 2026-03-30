@@ -141,7 +141,9 @@ def show_analysis():
         with st.spinner("Preparing Questions..."):
             text = call_ai([{"role": "system", "content": "Generate 8 tech questions."}, {"role": "user", "content": st.session_state.analysis}])
             if text:
-                st.session_state.questions = [q.split('.',1)[1].strip() if '.' in q else q for q in text.split('\n') if q.strip() and (q[0].isdigit() or q[1].isdigit())][:8]
+                questions = [q.split('.',1)[1].strip() if '.' in q else q for q in text.split('\n') if q.strip() and (q[0].isdigit() or (len(q) > 1 and q[1].isdigit()))]
+                if not questions: questions = [text] # Fallback to using the whole text as one question if parsing fails
+                st.session_state.questions = questions[:8]
                 st.session_state.step = 'interview'
                 st.rerun()
 
