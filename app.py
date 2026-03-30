@@ -122,12 +122,20 @@ def extract_text_from_pdf(file):
 
 # --- State ---
 if 'step' not in st.session_state: st.session_state.step = 'setup'
-if 'user_info' not in st.session_state: st.session_state.user_info = {"name": "", "email": "", "phone": "", "id": ""}
+# Ensure user_info exists and has all required keys (fixing potential old session issues)
+if 'user_info' not in st.session_state:
+    st.session_state.user_info = {"name": "", "email": "", "phone": "", "id": ""}
+else:
+    for key in ["name", "email", "phone", "id"]:
+        if key not in st.session_state.user_info:
+            st.session_state.user_info[key] = ""
+
 if 'analysis' not in st.session_state: st.session_state.analysis = ""
 if 'questions' not in st.session_state: st.session_state.questions = []
 if 'answers' not in st.session_state: st.session_state.answers = []
 if 'current_q' not in st.session_state: st.session_state.current_q = 0
 if 'persistent_photo' not in st.session_state: st.session_state.persistent_photo = None
+if 'interview_time' not in st.session_state: st.session_state.interview_time = None
 
 # --- Pages ---
 @st.dialog("Submit Interview?")
@@ -165,6 +173,9 @@ def show_setup():
                 st.error("Identity verification required! Please capture your photo on the right.")
             else:
                 st.session_state.user_info = {"name": name, "email": email, "id": c_id, "phone": phone}
+                from datetime import datetime
+                st.session_state.interview_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                
                 with st.spinner("Analyzing profile..."):
                     text = extract_text_from_pdf(uploaded_file)
                     res = call_ai([{"role": "system", "content": "Analyze resume."}, {"role": "user", "content": text}], model=model)
@@ -215,11 +226,11 @@ def show_interview():
     
     if total == 0:
         st.warning("Repairing questions flow...")
-        if st.button("🔄 Restart Setup"): st.session_state.step = 'setup'; st.rerun()
+        if st.button("🔄 Restart Setup"): st.session_state.clear(); st.rerun()
         return
 
     st.progress((q_idx + 1) / total)
-    st.write(f"**Step {q_idx + 1} of {total}** | {st.session_state.user_info['name']}")
+    st.write(f"**Step {q_idx + 1} of {total}** | {st.session_state.user_info.get('name', 'Candidate')} | 🕒 {st.session_state.interview_time}")
 
     c1, c2 = st.columns([3, 1], gap="small")
     with c1:
@@ -291,11 +302,16 @@ def show_interview():
 
     with c2:
         st.markdown('<div class="glass-card" style="padding: 1rem; text-align: center;">', unsafe_allow_html=True)
-        st.write("📸 **Verified**")
-        if st.session_state.persistent_photo:
+        st.write("📸 **Live Proctoring**")
+        # Added camera input back to ensure live feed and refresh the photo
+        live_img = st.camera_input("Proctoring Cam", key=f"live_cam_{q_idx}", label_visibility="collapsed")
+        if live_img:
+            st.session_state.persistent_photo = live_img
+            st.success("Snapshot taken!")
+        elif st.session_state.persistent_photo:
             st.image(st.session_state.persistent_photo, use_container_width=True)
         else:
-            st.error("Photo Lost! Restart Setup.")
+            st.error("No verified photo!")
         st.markdown('</div>', unsafe_allow_html=True)
 
 def show_report():
@@ -305,28 +321,29 @@ def show_report():
     with st.spinner("Generating summary..."):
         transcript = ""
         for i, (q, a) in enumerate(zip(st.session_state.questions, st.session_state.answers)):
-            transcript += f"Q{i+1}: {q}\\nA: {a}\\n\\n"
+            transcript += f"Q{i+1}: {q}\nA: {a}\n\n"
             
         res = call_ai([
             {"role": "system", "content": "Create report for Interview."},
-            {"role": "user", "content": f"Candidate: {info['name']}\\nID: {info['id']}\\nEmail: {info['email']}\\n\\nTranscript:\\n{transcript}"}
+            {"role": "user", "content": f"Candidate: {info.get('name', 'N/A')}\nID: {info.get('id', 'N/A')}\nEmail: {info.get('email', 'N/A')}\nDate: {st.session_state.interview_time}\n\nTranscript:\n{transcript}"}
         ])
     
     c1, c2 = st.columns([2, 1])
     with c1:
         st.markdown('<div class="glass-card">', unsafe_allow_html=True)
-        st.write(f"### {info['name']} (ID: {info['id']})")
-        st.write(f"📧 {info['email']} | 📞 {info['phone']}")
+        st.write(f"### {info.get('name', 'Candidate')} (ID: {info.get('id', 'N/A')})")
+        st.write(f"🕒 **Date:** {st.session_state.interview_time}")
+        st.write(f"📧 {info.get('email', 'N/A')} | 📞 {info.get('phone', 'N/A')}")
         st.divider()
         if res:
             st.write(res)
-            report_text = f"Candidate: {info['name']}\\nID: {info['id']}\\nEvaluation:\\n{res}\\n\\nTranscript:\\n{transcript}"
-            st.download_button("📥 Download PDF/TXT", report_text, file_name=f"Report_{info['id']}.txt", type="primary")
+            report_text = f"MANVER AI INTERVIEW REPORT\nDate: {st.session_state.interview_time}\nCandidate: {info.get('name', 'N/A')}\nID: {info.get('id', 'N/A')}\nEvaluation:\n{res}\n\nTranscript:\n{transcript}"
+            st.download_button("📥 Download PDF/TXT", report_text, file_name=f"Report_{info.get('id', 'ID')}.txt", type="primary")
         st.markdown('</div>', unsafe_allow_html=True)
         
     with c2:
         st.markdown('<div class="glass-card">', unsafe_allow_html=True)
-        st.write("### Identity")
+        st.write("### Identity Captured")
         if st.session_state.persistent_photo:
             st.image(st.session_state.persistent_photo)
         st.markdown('</div>', unsafe_allow_html=True)
@@ -337,6 +354,8 @@ if st.session_state.step == 'setup': show_setup()
 elif st.session_state.step == 'analysis': show_analysis()
 elif st.session_state.step == 'interview': show_interview()
 elif st.session_state.step == 'report': show_report()
+
+
 
 
 
