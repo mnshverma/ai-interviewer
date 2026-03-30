@@ -108,10 +108,10 @@ def call_ai(messages, model=DEFAULT_MODEL):
         if res.status_code == 200:
             return res.json()["choices"][0]["message"]["content"]
         else:
-            st.error(f"API Error: {res.status_code}")
+            st.error(f"API Error: {res.status_code} - See details in console")
             return None
     except Exception as e:
-        st.error(f"Connection Error: {str(e)}")
+        st.error(f"Network Error: {str(e)}")
         return None
 
 def extract_text_from_pdf(file):
@@ -122,14 +122,24 @@ def extract_text_from_pdf(file):
 
 # --- State ---
 if 'step' not in st.session_state: st.session_state.step = 'setup'
-if 'user_info' not in st.session_state: st.session_state.user_info = {"name": "", "email": "", "phone": ""}
+if 'user_info' not in st.session_state: st.session_state.user_info = {"name": "", "email": "", "phone": "", "id": ""}
 if 'analysis' not in st.session_state: st.session_state.analysis = ""
 if 'questions' not in st.session_state: st.session_state.questions = []
 if 'answers' not in st.session_state: st.session_state.answers = []
 if 'current_q' not in st.session_state: st.session_state.current_q = 0
-if 'captured_photo' not in st.session_state: st.session_state.captured_photo = None
+if 'persistent_photo' not in st.session_state: st.session_state.persistent_photo = None
 
 # --- Pages ---
+@st.dialog("Submit Interview?")
+def confirm_submission():
+    st.write("Are you sure you want to complete the interview? You won't be able to change your answers after this.")
+    c1, c2 = st.columns(2)
+    if c1.button("✅ Yes, Submit", use_container_width=True, type="primary"):
+        st.session_state.step = 'report'
+        st.rerun()
+    if c2.button("❌ No, Go Back", use_container_width=True):
+        st.rerun()
+
 def show_setup():
     st.title("🤖 Manver AI Interviewer")
     
@@ -138,24 +148,26 @@ def show_setup():
     with c1:
         st.markdown('<div class="glass-card">', unsafe_allow_html=True)
         st.write("### 👤 Candidate Details")
-        name = st.text_input("Full Name", placeholder="e.g. John Doe", value=st.session_state.user_info["name"])
-        email = st.text_input("Email ID", placeholder="e.g. john@example.com", value=st.session_state.user_info["email"])
-        phone = st.text_input("Phone Number", placeholder="e.g. +1 234 567 890", value=st.session_state.user_info["phone"])
-        st.session_state.user_info = {"name": name, "email": email, "phone": phone}
+        
+        name = st.text_input("Full Name *", key="reg_name", placeholder="John Doe")
+        email = st.text_input("Email ID *", key="reg_email", placeholder="john@example.com")
+        c_id = st.text_input("Candidate ID *", key="reg_id", placeholder="CAND-001")
+        phone = st.text_input("Phone Number *", key="reg_phone", placeholder="+91 XXXX XXXX")
         
         st.write("### 📄 Resume Analysis")
-        uploaded_file = st.file_uploader("Upload PDF", type=['pdf'], label_visibility="collapsed")
+        uploaded_file = st.file_uploader("Upload PDF *", type=['pdf'], label_visibility="collapsed")
         model = st.selectbox("Model", ["kilo-auto/free", "minimax/minimax-m2.5:free"], label_visibility="collapsed")
         
-        if st.button("🚀 Start Interview", type="primary"):
-            if not name or not email:
-                st.warning("Please provide your name and email to proceed.")
-            elif not uploaded_file:
-                st.warning("Please upload your resume to start.")
+        if st.button("🚀 Start Interview", type="primary", use_container_width=True):
+            if not name.strip() or not email.strip() or not c_id.strip() or not phone.strip() or not uploaded_file:
+                st.error("Please fill all fields and upload your resume.")
+            elif not st.session_state.persistent_photo:
+                st.error("Identity verification required! Please capture your photo on the right.")
             else:
+                st.session_state.user_info = {"name": name, "email": email, "id": c_id, "phone": phone}
                 with st.spinner("Analyzing profile..."):
                     text = extract_text_from_pdf(uploaded_file)
-                    res = call_ai([{"role": "system", "content": "Analyze resume and summarize strengths."}, {"role": "user", "content": text}], model=model)
+                    res = call_ai([{"role": "system", "content": "Analyze resume."}, {"role": "user", "content": text}], model=model)
                     if res:
                         st.session_state.analysis = res
                         st.session_state.step = 'analysis'
@@ -165,25 +177,32 @@ def show_setup():
     with c2:
         st.markdown('<div class="glass-card">', unsafe_allow_html=True)
         st.write("### 📹 System Check")
-        st.info("The camera will be used for proctoring. A photo will be taken automatically at the end.")
+        st.info("Identity verification is mandatory.")
         
-        # We still need one camera input here to get browser permissions
-        img = st.camera_input("Verify Camera", label_visibility="collapsed")
-        if img:
-            st.session_state.captured_photo = img
-            st.success("Camera verified! (Photo will be updated at the end)")
+        # Using a separate key and saving it immediately to persistence
+        cam_img = st.camera_input("Verify Identity", key="setup_camera")
+        if cam_img:
+            st.session_state.persistent_photo = cam_img
+            st.success("✅ Identity Captured!")
+        elif st.session_state.persistent_photo:
+            st.image(st.session_state.persistent_photo, caption="Verification Preview")
+            
+        st.markdown("""
+            <div style="margin-top: 2rem; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 1rem;">
+                <strong>🎙️ Audio Check:</strong> Microphone and Camera permissions are required for the live session.
+            </div>
+        """, unsafe_allow_html=True)
         st.markdown('</div>', unsafe_allow_html=True)
 
 def show_analysis():
     st.title("🔍 Candidate Insights")
     st.markdown(f'<div class="glass-card">{st.session_state.analysis}</div>', unsafe_allow_html=True)
     if st.button("✅ Confirm & Proceed", type="primary"):
-        with st.spinner("Generating targeted questions..."):
-            prompt = "Generate exactly 8 technical questions based on the resume. One per line. No numbers."
+        with st.spinner("Generating questions..."):
+            prompt = "Generate 8 technical questions based on the candidate. One per line. No numbers."
             text = call_ai([{"role": "system", "content": prompt}, {"role": "user", "content": st.session_state.analysis}])
             if text:
-                questions = [q.strip() for q in text.split('\n') if len(q.strip()) > 10]
-                st.session_state.questions = questions[:8]
+                st.session_state.questions = [q.strip() for q in text.split('\n') if len(q.strip()) > 10][:8]
                 st.session_state.answers = [""] * len(st.session_state.questions)
                 st.session_state.current_q = 0
                 st.session_state.step = 'interview'
@@ -195,12 +214,12 @@ def show_interview():
     total = len(st.session_state.questions)
     
     if total == 0:
-        st.error("Repairing questions...")
-        if st.button("🔄 Go Back"): st.session_state.step = 'analysis'; st.rerun()
+        st.warning("Repairing questions flow...")
+        if st.button("🔄 Restart Setup"): st.session_state.step = 'setup'; st.rerun()
         return
 
     st.progress((q_idx + 1) / total)
-    st.write(f"**Step {q_idx + 1} of {total}** | Candidate: {st.session_state.user_info['name']}")
+    st.write(f"**Step {q_idx + 1} of {total}** | {st.session_state.user_info['name']}")
 
     c1, c2 = st.columns([3, 1], gap="small")
     with c1:
@@ -208,7 +227,8 @@ def show_interview():
         question = st.session_state.questions[q_idx]
         st.markdown(f'<div style="font-size: 1.4rem; font-weight: 700; color: #60a5fa; margin-bottom: 1rem;">{question}</div>', unsafe_allow_html=True)
         
-        ans = st.text_area("ans_area", value=st.session_state.answers[q_idx], height=180, key=f"ans_{q_idx}", placeholder="Your answer...", label_visibility="collapsed")
+        # Correctly keyed text area
+        ans = st.text_area("ans_box", value=st.session_state.answers[q_idx], height=180, key=f"ans_ta_{q_idx}", placeholder="Your answer...", label_visibility="collapsed")
         st.session_state.answers[q_idx] = ans
         
         col_prev, col_speak, col_next = st.columns([1, 1, 1])
@@ -217,22 +237,46 @@ def show_interview():
                 st.session_state.current_q -= 1
                 st.rerun()
         with col_speak:
-            st.markdown("""
+            # More robust Speak button with broader JS search
+            st.markdown(f"""
                 <button id="speak-btn" onclick="startSpeech()" style="background: linear-gradient(135deg, #10b981, #059669); color: white; border: none; padding: 0.7rem; border-radius: 12px; width: 100%; cursor: pointer; font-weight: 700;">🎤 Speak</button>
                 <script>
-                    function startSpeech() {
+                    function startSpeech() {{
                         const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-                        if (!Recognition) return;
+                        if (!Recognition) {{ alert('Speech not supported in this browser.'); return; }}
                         const rec = new Recognition();
-                        document.getElementById('speak-btn').innerText = 'Listening...';
-                        rec.onresult = (e) => {
-                            const text = e.results[0][0].transcript;
-                            const ta = window.parent.document.querySelectorAll('textarea');
-                            ta.forEach(t => { if(t.id.includes('ans_')) { t.value += ' ' + text; t.dispatchEvent(new Event('input', {bubbles:true})); } });
-                            document.getElementById('speak-btn').innerText = '🎤 Speak';
-                        };
+                        const btn = document.getElementById('speak-btn');
+                        btn.style.background = '#ef4444';
+                        btn.innerText = 'Listening...';
+                        
+                        rec.onresult = (e) => {{
+                            const transcript = e.results[0][0].transcript;
+                            // Search both current and parent documents to overcome iframe isolation
+                            const docs = [document, window.parent.document];
+                            let found = false;
+                            for (let doc of docs) {{
+                                try {{
+                                    const textareas = doc.querySelectorAll('textarea');
+                                    for (let t of textareas) {{
+                                        if (t.id && t.id.includes('ans_ta_')) {{
+                                            t.value += (t.value ? ' ' : '') + transcript;
+                                            t.dispatchEvent(new Event('input', {{ bubbles: true }}));
+                                            found = true;
+                                            break;
+                                        }}
+                                    }}
+                                }} catch (e) {{ console.log('Iframe access restriction:', e); }}
+                                if (found) break;
+                            }}
+                            btn.style.background = 'linear-gradient(135deg, #10b981, #059669)';
+                            btn.innerText = '🎤 Speak';
+                        }};
+                        rec.onerror = () => {{
+                            btn.style.background = 'linear-gradient(135deg, #10b981, #059669)';
+                            btn.innerText = '🎤 Speak';
+                        }};
                         rec.start();
-                    }
+                    }}
                 </script>
             """, unsafe_allow_html=True)
         with col_next:
@@ -242,68 +286,57 @@ def show_interview():
                     st.session_state.current_q += 1
                     st.rerun()
                 else:
-                    st.session_state.step = 'report'
-                    st.rerun()
+                    confirm_submission() # Trigger st.dialog
         st.markdown('</div>', unsafe_allow_html=True)
 
     with c2:
         st.markdown('<div class="glass-card" style="padding: 1rem; text-align: center;">', unsafe_allow_html=True)
-        st.write("📸 **Proctoring**")
-        # Hidden camera capture script at the end
-        if st.session_state.captured_photo:
-            st.image(st.session_state.captured_photo, use_container_width=True)
+        st.write("📸 **Verified**")
+        if st.session_state.persistent_photo:
+            st.image(st.session_state.persistent_photo, use_container_width=True)
         else:
-            st.warning("Camera not verified")
+            st.error("Photo Lost! Restart Setup.")
         st.markdown('</div>', unsafe_allow_html=True)
 
 def show_report():
-    st.title("📊 Final Interview Report")
-    
+    st.title("📊 Final Report")
     info = st.session_state.user_info
     
-    with st.spinner("Generating detailed report..."):
+    with st.spinner("Generating summary..."):
         transcript = ""
         for i, (q, a) in enumerate(zip(st.session_state.questions, st.session_state.answers)):
-            transcript += f"Q{i+1}: {q}\nA: {a}\n\n"
+            transcript += f"Q{i+1}: {q}\\nA: {a}\\n\\n"
             
         res = call_ai([
-            {"role": "system", "content": "Generate a professional interview report."},
-            {"role": "user", "content": f"Candidate: {info['name']}\nEmail: {info['email']}\nPhone: {info['phone']}\n\nTranscript:\n{transcript}"}
+            {"role": "system", "content": "Create report for Interview."},
+            {"role": "user", "content": f"Candidate: {info['name']}\\nID: {info['id']}\\nEmail: {info['email']}\\n\\nTranscript:\\n{transcript}"}
         ])
     
-    col1, col2 = st.columns([2, 1])
-    with col1:
-        st.markdown(f'<div class="glass-card">', unsafe_allow_html=True)
-        st.write(f"### 📋 Candidate: {info['name']}")
-        st.write(f"**Email:** {info['email']} | **Phone:** {info['phone']}")
+    c1, c2 = st.columns([2, 1])
+    with c1:
+        st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+        st.write(f"### {info['name']} (ID: {info['id']})")
+        st.write(f"📧 {info['email']} | 📞 {info['phone']}")
         st.divider()
         if res:
-            st.markdown(res)
-            # Create download content
-            report_text = f"MANVER AI INTERVIEW REPORT\n{'='*30}\n\n"
-            report_text += f"Name: {info['name']}\nEmail: {info['email']}\nPhone: {info['phone']}\n\n"
-            report_text += f"Evaluation:\n{res}\n\n"
-            report_text += f"{'='*30}\nFull Transcript:\n{transcript}"
-            
-            st.download_button("📥 Download Report (TXT)", report_text, file_name=f"Report_{info['name'].replace(' ', '_')}.txt", type="primary")
+            st.write(res)
+            report_text = f"Candidate: {info['name']}\\nID: {info['id']}\\nEvaluation:\\n{res}\\n\\nTranscript:\\n{transcript}"
+            st.download_button("📥 Download PDF/TXT", report_text, file_name=f"Report_{info['id']}.txt", type="primary")
         st.markdown('</div>', unsafe_allow_html=True)
         
-    with col2:
+    with c2:
         st.markdown('<div class="glass-card">', unsafe_allow_html=True)
-        st.write("### 📸 Candidate Photo")
-        if st.session_state.captured_photo:
-            st.image(st.session_state.captured_photo)
-        else:
-            st.warning("No photo captured.")
+        st.write("### Identity")
+        if st.session_state.persistent_photo:
+            st.image(st.session_state.persistent_photo)
         st.markdown('</div>', unsafe_allow_html=True)
 
-    if st.button("🔄 Start New Interview"):
-        st.session_state.clear()
-        st.rerun()
+    if st.button("🔄 Start New"): st.session_state.clear(); st.rerun()
 
 if st.session_state.step == 'setup': show_setup()
 elif st.session_state.step == 'analysis': show_analysis()
 elif st.session_state.step == 'interview': show_interview()
 elif st.session_state.step == 'report': show_report()
+
 
 
