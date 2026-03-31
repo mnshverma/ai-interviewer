@@ -126,6 +126,45 @@ st.markdown("""
         transition: all 0.2s ease !important;
     }
 
+    .stSelectbox > label {
+        color: var(--text-secondary) !important;
+        font-weight: 500 !important;
+        margin-bottom: 0.5rem !important;
+    }
+
+    .stSelectbox [data-baseweb="select"] > div {
+        background: rgba(0, 0, 0, 0.3) !important;
+        border: 1px solid var(--border-color) !important;
+        border-radius: 10px !important;
+    }
+
+    .stSelectbox [data-baseweb="popover"] {
+        background: var(--bg-card) !important;
+        border: 1px solid var(--border-color) !important;
+        border-radius: 10px !important;
+    }
+
+    .stSelectbox [role="option"] {
+        color: var(--text-primary) !important;
+        padding: 0.75rem 1rem !important;
+    }
+
+    .stSelectbox [role="option"]:hover {
+        background: rgba(59, 130, 246, 0.15) !important;
+    }
+
+    .stSelectbox [aria-selected="true"] {
+        background: rgba(59, 130, 246, 0.2) !important;
+    }
+
+    .stSelectbox svg {
+        fill: var(--text-secondary) !important;
+    }
+
+    .stSelectbox [data-baseweb="icon"] {
+        fill: var(--text-secondary) !important;
+    }
+
     .stTextInput > div > div > input:focus,
     .stTextArea > div > div > textarea:focus,
     .stSelectbox > div > div > div:focus-within {
@@ -723,14 +762,20 @@ def show_setup():
             model = st.selectbox(
                 "Intelligence Model",
                 ["kilo-auto/free", "minimax/minimax-m2.5:free"],
-                label_visibility="collapsed"
+                label_visibility="visible",
+                help="Select the AI model to use for interview"
             )
             
             if st.button("🚀 Start Interview Session", type="primary", use_container_width=True):
-                v_name = st.session_state.get("reg_name", "").strip()
-                v_id = st.session_state.get("reg_id", "").strip()
-                v_email = st.session_state.get("reg_email", "").strip()
-                v_phone = st.session_state.get("reg_phone", "").strip()
+                v_name = st.session_state.get("reg_name", "")
+                v_id = st.session_state.get("reg_id", "")
+                v_email = st.session_state.get("reg_email", "")
+                v_phone = st.session_state.get("reg_phone", "")
+                
+                v_name = v_name.strip() if isinstance(v_name, str) else ""
+                v_id = v_id.strip() if isinstance(v_id, str) else ""
+                v_email = v_email.strip() if isinstance(v_email, str) else ""
+                v_phone = str(v_phone).strip() if v_phone else ""
                 
                 if not v_name or not v_id or not v_email or not v_phone:
                     st.error("⚠️ All detail fields are mandatory.")
