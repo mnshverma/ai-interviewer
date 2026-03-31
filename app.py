@@ -23,32 +23,32 @@ DEFAULT_MODEL = "kilo-auto/free"
 def render_header():
     if 'user_info' not in st.session_state or not st.session_state.user_info.get("name"): return
     
-    st.markdown('<div class="glass-card" style="margin-bottom: 2rem; padding: 1.2rem; border-left: 5px solid #3b82f6;">', unsafe_allow_html=True)
+    st.markdown('<div class="glass-card" style="margin-bottom: 2rem; padding: 0.8rem; border-left: 5px solid #3b82f6;">', unsafe_allow_html=True)
     h_c1, h_c2, h_c3, h_c4 = st.columns([1, 1, 4, 3], gap="small")
     
     with h_c1:
-        st.image(LOGO_PATH, width=90)
+        st.image(LOGO_PATH, width=70) # Slightly smaller
         
     with h_c2:
         if st.session_state.persistent_photo:
-            st.image(st.session_state.persistent_photo, width=100)
+            st.image(st.session_state.persistent_photo, width=75) # Slightly smaller
             
     with h_c3:
         info = st.session_state.user_info
         st.markdown(f"""
-            <div style="padding-top: 5px;">
-                <h2 style="margin:0; color:#eff6ff; text-transform: uppercase; font-size: 1.6rem; letter-spacing: 0.5px;">{info['name']}</h2>
-                <div style="margin:0; color:#60a5fa; font-family:monospace; font-weight:700; font-size: 1rem;">ID: {info['id']}</div>
-                <div style="margin-top:8px; font-size:0.75rem; color:#10b981; font-weight:600; letter-spacing: 1px;">🛡️ MANVER IDENTITY PROTOCOL ACTIVE</div>
+            <div style="padding-top: 0px;">
+                <h3 style="margin:0; color:#eff6ff; text-transform: uppercase; font-size: 1.2rem; letter-spacing: 0.5px;">{info['name']}</h3>
+                <div style="margin:0; color:#60a5fa; font-family:monospace; font-weight:700; font-size: 0.85rem;">ID: {info['id']}</div>
+                <div style="margin-top:4px; font-size:0.65rem; color:#10b981; font-weight:600; letter-spacing: 1px;">🛡️ IDENTITY VERIFIED</div>
             </div>
         """, unsafe_allow_html=True)
         
     with h_c4:
         st.markdown(f"""
-            <div style="text-align: right; padding-top: 5px;">
-                <div style="color: #60a5fa; font-weight: 700; font-size: 1.1rem; margin-bottom: 2px;">📅 {st.session_state.interview_time.split(' ')[0]}</div>
-                <div style="color: #94a3b8; font-weight: 600; font-size: 1rem;">⏱️ {st.session_state.interview_time.split(' ')[1]}</div>
-                <div style="margin-top: 10px; font-size: 0.7rem; color: #4ade80; border: 1px solid #10b981; padding: 3px 10px; border-radius: 20px; display: inline-block;">📡 LIVE TRANSMISSION</div>
+            <div style="text-align: right; padding-top: 0px;">
+                <div style="color: #60a5fa; font-weight: 700; font-size: 0.9rem; margin-bottom: 2px;">📅 {st.session_state.interview_time.split(' ')[0]}</div>
+                <div style="color: #94a3b8; font-weight: 600; font-size: 0.8rem;">⏱️ {st.session_state.interview_time.split(' ')[1]}</div>
+                <div style="margin-top: 5px; font-size: 0.6rem; color: #4ade80; border: 1px solid #10b981; padding: 2px 8px; border-radius: 20px; display: inline-block;">📡 LIVE</div>
             </div>
         """, unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
@@ -162,6 +162,14 @@ st.markdown("""
         background: linear-gradient(to right, #3b82f6, #10b981) !important;
     }
     
+    /* Mobile Responsiveness */
+    @media (max-width: 768px) {
+        .glass-card { padding: 1rem !important; }
+        h1 { font-size: 1.8rem !important; }
+        h2 { font-size: 1.4rem !important; }
+        div[data-testid="column"] { width: 100% !important; flex: 1 1 100% !important; min-width: 100% !important; }
+    }
+
     /* Remove white borders/boxes from streamlit */
     div[data-testid="stVerticalBlockBorderWrapper"] { border: none !important; }
     
@@ -171,6 +179,17 @@ st.markdown("""
         border: 1px solid rgba(255, 255, 255, 0.1) !important;
         border-radius: 0.75rem !important;
         color: white !important;
+    }
+    
+    .glass-card {
+        background: rgba(255, 255, 255, 0.03);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 1rem;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
     }
     </style>
 """, unsafe_allow_html=True)
@@ -233,12 +252,14 @@ def confirm_submission():
 
 def show_setup():
     st.markdown(f"""
-        <div style="text-align: center; margin-top: -1.5rem; padding-bottom: 2rem;">
-            <img src="data:image/png;base64,{LOGO_BASE64}" width="160" style="margin-bottom: 0.5rem; filter: drop-shadow(0 4px 12px rgba(59, 130, 246, 0.4));">
-            <h1 style="margin: 0; padding: 0; letter-spacing: 3px; font-weight: 800; color: #ffffff; line-height: 1.1;">MANVER <span style="color: #60a5fa;">AI INTERVIEWER</span></h1>
-            <p style="margin: 0.5rem 0 0 0; color: #60a5fa; font-size: 1.1rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase;">ADVANCED AI INTERVIEW PLATFORM</p>
-            <div style="width: 100px; height: 3px; background: linear-gradient(90deg, transparent, #3b82f6, transparent); margin: 1.5rem auto 0; border-radius: 10px;"></div>
+        <div style="display: flex; align-items: center; justify-content: center; gap: 1.5rem; margin-top: -1.5rem; padding-bottom: 2rem; flex-wrap: wrap;">
+            <img src="data:image/png;base64,{LOGO_BASE64}" width="100" style="filter: drop-shadow(0 4px 12px rgba(59, 130, 246, 0.4));">
+            <div style="text-align: left;">
+                <h1 style="margin: 0; padding: 0; letter-spacing: 2px; font-weight: 800; color: #ffffff; line-height: 1.1; font-size: 2.2rem;">MANVER <span style="color: #60a5fa;">AI INTERVIEWER</span></h1>
+                <p style="margin: 0.2rem 0 0 0; color: #60a5fa; font-size: 0.9rem; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase;">ADVANCED AI INTERVIEW PLATFORM</p>
+            </div>
         </div>
+        <div style="width: 100%; max-width: 600px; height: 2px; background: linear-gradient(90deg, transparent, #3b82f6, transparent); margin: 0 auto 1.5rem; border-radius: 10px;"></div>
     """, unsafe_allow_html=True)
     
     st.markdown("""
@@ -289,8 +310,18 @@ def show_setup():
         st.text_input("Candidate ID *", key="reg_id", placeholder="CAND-001")
         st.text_input("Phone Number *", key="reg_phone", placeholder="+91 XXXX XXXX")
         
-        st.write("### 📄 Resume Analysis")
-        uploaded_file = st.file_uploader("Upload PDF *", type=['pdf'], label_visibility="collapsed")
+        st.write("### 📄 Assessment Basis")
+        input_type = st.radio("Choose Input Type:", ["Upload Resume (PDF)", "Paste Job Description (JD)"], horizontal=True, label_visibility="collapsed")
+        
+        uploaded_file = None
+        jd_text = ""
+        
+        if input_type == "Upload Resume (PDF)":
+            uploaded_file = st.file_uploader("Upload PDF *", type=['pdf'], label_visibility="collapsed")
+        else:
+            jd_text = st.text_area("Paste Job Description (JD) *", height=150, placeholder="Example: Senior Software Engineer with 5+ years experience in Python...", label_visibility="collapsed")
+        
+        st.write("### 🧠 Intelligence Model")
         model = st.selectbox("Intelligence Model", ["kilo-auto/free", "minimax/minimax-m2.5:free"], label_visibility="collapsed")
         
         if st.button("🚀 Start Interview Session", type="primary", use_container_width=True):
@@ -299,8 +330,10 @@ def show_setup():
             
             if not v_name or not v_id:
                 st.error("⚠️ All detail fields are mandatory.")
-            elif not uploaded_file:
-                st.error("📄 Please upload your resume.")
+            elif input_type == "Upload Resume (PDF)" and not uploaded_file:
+                st.error("📄 Please upload your resume PDF.")
+            elif input_type == "Paste Job Description (JD)" and not jd_text.strip():
+                st.error("📝 Please paste the Job Description.")
             elif not st.session_state.persistent_photo:
                 st.error("📸 Identity verification required. Capture your photo on the right.")
             elif 'mic_test_recording' not in st.session_state or st.session_state.mic_test_recording is None:
@@ -309,9 +342,15 @@ def show_setup():
                 st.session_state.user_info = {"name": v_name, "id": v_id, "email": st.session_state.reg_email, "phone": st.session_state.reg_phone}
                 from datetime import datetime
                 st.session_state.interview_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                with st.spinner("✨ Analyzing profile and building path..."):
-                    text = extract_text_from_pdf(uploaded_file)
-                    res = call_ai([{"role": "system", "content": "Analyze resume."}, {"role": "user", "content": text}], model=model)
+                with st.spinner("✨ Analyzing input and building path..."):
+                    if input_type == "Upload Resume (PDF)":
+                        input_content = extract_text_from_pdf(uploaded_file)
+                        prompt_msg = "Analyze resume."
+                    else:
+                        input_content = jd_text
+                        prompt_msg = "Analyze job description and identify key skills."
+                    
+                    res = call_ai([{"role": "system", "content": prompt_msg}, {"role": "user", "content": input_content}], model=model)
                     if res:
                         st.session_state.analysis = res
                         st.session_state.step = 'analysis'
@@ -372,8 +411,8 @@ def interview_content():
     
     st.progress((q_idx + 1) / total)
     
-    # 📹 Q&A Left, Proctoring Right [2, 0.1, 1]
-    c_qa, spacer, c_proc = st.columns([2, 0.1, 1], gap="small", vertical_alignment="top")
+    # 📹 Q&A Left, Proctoring Right [3, 0.1, 0.7] - Optimized for smaller video
+    c_qa, spacer, c_proc = st.columns([3, 0.1, 0.7], gap="small", vertical_alignment="top")
     
     with c_qa:
         st.markdown('<div class="glass-card" style="min-height: 520px; display: flex; flex-direction: column; justify-content: space-between;">', unsafe_allow_html=True)
@@ -445,12 +484,13 @@ def interview_content():
         st.markdown('</div>', unsafe_allow_html=True)
 
     with c_proc:
-        st.markdown('<div class="glass-card" style="padding: 1rem; text-align: center; border-right: 4px solid #3b82f6;">', unsafe_allow_html=True)
-        st.markdown('<div style="color: #60a5fa; font-weight: 700; margin-bottom: 1rem; font-size: 0.9rem;">📹 PROCTORING UNIT</div>', unsafe_allow_html=True)
+        st.markdown('<div class="glass-card" style="padding: 0.8rem; text-align: center; border-right: 4px solid #3b82f6;">', unsafe_allow_html=True)
+        st.markdown('<div style="color: #60a5fa; font-weight: 700; margin-bottom: 0.5rem; font-size: 0.8rem;">📹 PROCTORING</div>', unsafe_allow_html=True)
+        # Use a smaller camera input if possible via standard Streamlit (just smaller column)
         st.camera_input("Monitoring", key=f"proctor_session_9_{q_idx}", label_visibility="collapsed")
         st.markdown(f"""
-            <div style="background: rgba(16, 185, 129, 0.1); color: #10b981; padding: 10px; border-radius: 8px; margin-top: 1rem; font-size: 0.8rem; font-weight: 600;">
-                🛡️ IDENTITY LOCKED<br>SESSION TRANSMITTING
+            <div style="background: rgba(16, 185, 129, 0.1); color: #10b981; padding: 6px; border-radius: 8px; margin-top: 0.5rem; font-size: 0.7rem; font-weight: 600;">
+                🛡️ LIVE MONITORING
             </div>
         """, unsafe_allow_html=True)
         st.markdown('</div>', unsafe_allow_html=True)
