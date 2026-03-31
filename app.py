@@ -61,10 +61,12 @@ st.markdown("""
         --bg-primary: #0a0e17;
         --bg-secondary: #111827;
         --bg-card: #1a2332;
+        --bg-card-hover: #232d3f;
         --accent-blue: #3b82f6;
         --accent-cyan: #06b6d4;
         --accent-green: #10b981;
         --accent-red: #ef4444;
+        --accent-yellow: #f59e0b;
         --text-primary: #f1f5f9;
         --text-secondary: #94a3b8;
         --text-muted: #64748b;
@@ -78,26 +80,19 @@ st.markdown("""
     .stApp {
         background: var(--bg-primary);
         background-image: 
-            radial-gradient(ellipse at 20% 0%, rgba(59, 130, 246, 0.12) 0%, transparent 50%),
-            radial-gradient(ellipse at 80% 100%, rgba(6, 182, 212, 0.08) 0%, transparent 50%);
+            radial-gradient(ellipse at 20% 0%, rgba(59, 130, 246, 0.15) 0%, transparent 50%),
+            radial-gradient(ellipse at 80% 100%, rgba(6, 182, 212, 0.1) 0%, transparent 50%);
         min-height: 100vh;
-        margin-top: -1.5rem;
-        padding-top: 0 !important;
-    }
-
-    .stApp > header {
-        display: none !important;
     }
 
     .block-container {
-        padding-top: 0.5rem !important;
-        padding-bottom: 0 !important;
+        padding-top: 1rem !important;
+        padding-bottom: 2rem !important;
+        max-width: 1200px !important;
     }
 
     header[data-testid="stHeader"] {
         display: none !important;
-        height: 0 !important;
-        visibility: hidden !important;
     }
 
     [data-testid="stHeader"], [data-testid="stFooter"], 
@@ -113,41 +108,48 @@ st.markdown("""
     }
 
     h1 {
-        font-size: 2.25rem !important;
+        font-size: 2rem !important;
         letter-spacing: -0.02em;
-        background: linear-gradient(135deg, #60a5fa 0%, #06b6d4 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
     }
 
     h2 {
-        font-size: 1.5rem !important;
+        font-size: 1.35rem !important;
         color: var(--accent-cyan) !important;
         -webkit-text-fill-color: var(--accent-cyan);
     }
 
     h3 {
-        font-size: 1.15rem !important;
+        font-size: 1.1rem !important;
         color: var(--text-secondary) !important;
         -webkit-text-fill-color: var(--text-secondary);
+    }
+
+    .page-container {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 2rem 1rem;
     }
 
     .card {
         background: var(--bg-card);
         border: 1px solid var(--border-color);
         border-radius: 16px;
-        padding: 1.75rem;
-        backdrop-filter: blur(12px);
+        padding: 2rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .card-simple {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 1.25rem;
     }
 
     .card-header {
         display: flex;
         align-items: center;
         gap: 0.75rem;
-        margin-bottom: 1.25rem;
-        padding-bottom: 1rem;
-        border-bottom: 1px solid var(--border-color);
+        margin-bottom: 1rem;
     }
 
     .card-icon {
@@ -160,67 +162,64 @@ st.markdown("""
         font-size: 1.1rem;
     }
 
+    .page-title {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+
+    .page-title h1 {
+        font-size: 2.25rem !important;
+        margin-bottom: 0.5rem;
+    }
+
+    .page-title p {
+        color: var(--text-secondary);
+        font-size: 1rem;
+    }
+
+    .step-indicator {
+        display: flex;
+        justify-content: center;
+        gap: 0.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .step-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: var(--border-color);
+    }
+
+    .step-dot.active {
+        background: var(--accent-blue);
+    }
+
+    .step-dot.completed {
+        background: var(--accent-green);
+    }
+
     .stTextInput > div > div > input,
-    .stTextArea > div > div > textarea,
-    .stSelectbox > div > div > div {
+    .stTextArea > div > div > textarea {
         background: rgba(0, 0, 0, 0.3) !important;
         border: 1px solid var(--border-color) !important;
         border-radius: 10px !important;
         color: var(--text-primary) !important;
         padding: 0.875rem 1rem !important;
         font-size: 0.95rem !important;
-        transition: all 0.2s ease !important;
-    }
-
-    .stSelectbox > label {
-        color: var(--text-secondary) !important;
-        font-weight: 500 !important;
-        margin-bottom: 0.5rem !important;
-    }
-
-    .stSelectbox [data-baseweb="select"] > div {
-        background: rgba(0, 0, 0, 0.3) !important;
-        border: 1px solid var(--border-color) !important;
-        border-radius: 10px !important;
-    }
-
-    .stSelectbox [data-baseweb="popover"] {
-        background: var(--bg-card) !important;
-        border: 1px solid var(--border-color) !important;
-        border-radius: 10px !important;
-    }
-
-    .stSelectbox [role="option"] {
-        color: var(--text-primary) !important;
-        padding: 0.75rem 1rem !important;
-    }
-
-    .stSelectbox [role="option"]:hover {
-        background: rgba(59, 130, 246, 0.15) !important;
-    }
-
-    .stSelectbox [aria-selected="true"] {
-        background: rgba(59, 130, 246, 0.2) !important;
-    }
-
-    .stSelectbox svg {
-        fill: var(--text-secondary) !important;
-    }
-
-    .stSelectbox [data-baseweb="icon"] {
-        fill: var(--text-secondary) !important;
     }
 
     .stTextInput > div > div > input:focus,
-    .stTextArea > div > div > textarea:focus,
-    .stSelectbox > div > div > div:focus-within {
+    .stTextArea > div > div > textarea:focus {
         border-color: var(--accent-blue) !important;
         box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15) !important;
     }
 
-    .stTextInput > div > div > input::placeholder,
-    .stTextArea > div > div > textarea::placeholder {
-        color: var(--text-muted) !important;
+    .stSelectbox > div > div > div {
+        background: rgba(0, 0, 0, 0.3) !important;
+        border: 1px solid var(--border-color) !important;
+        border-radius: 10px !important;
+        color: var(--text-primary) !important;
     }
 
     .stButton > button {
@@ -228,126 +227,52 @@ st.markdown("""
         padding: 0.75rem 1.5rem !important;
         font-weight: 600 !important;
         font-size: 0.95rem !important;
-        transition: all 0.2s ease !important;
-        border: none !important;
     }
 
     .stButton > button[kind="primary"] {
         background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%) !important;
         color: white !important;
-        box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35) !important;
-    }
-
-    .stButton > button[kind="primary"]:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(37, 99, 235, 0.45) !important;
     }
 
     .stButton > button[kind="secondary"] {
-        background: rgba(255, 255, 255, 0.05) !important;
+        background: rgba(255, 255, 255, 0.08) !important;
         color: var(--text-primary) !important;
         border: 1px solid var(--border-color) !important;
     }
 
-    .stButton > button[kind="secondary"]:hover {
-        background: rgba(255, 255, 255, 0.1) !important;
-        border-color: var(--accent-blue) !important;
-    }
-
     .stRadio > div {
+        display: flex;
         gap: 0.5rem;
     }
 
     .stRadio > div > label {
-        background: rgba(0, 0, 0, 0.2);
-        padding: 0.6rem 1.25rem;
+        background: rgba(0, 0, 0, 0.3);
+        padding: 0.6rem 1rem;
         border-radius: 8px;
         border: 1px solid var(--border-color);
         cursor: pointer;
-        transition: all 0.2s ease;
         color: var(--text-secondary);
     }
 
     .stRadio > div > label:has(input:checked) {
-        background: rgba(59, 130, 246, 0.15);
+        background: rgba(59, 130, 246, 0.2);
         border-color: var(--accent-blue);
         color: var(--accent-blue);
     }
 
     .stProgress > div > div > div {
         background: linear-gradient(90deg, var(--accent-blue), var(--accent-cyan)) !important;
-        border-radius: 10px !important;
-    }
-
-    .stProgress > div > div {
-        background: rgba(255, 255, 255, 0.08) !important;
-        border-radius: 10px !important;
-    }
-
-    .stCameraInput {
-        width: 100% !important;
-        display: flex !important;
-        justify-content: center !important;
-    }
-
-    .stCameraInput > div {
-        border: 2px dashed var(--border-color) !important;
-        border-radius: 10px !important;
-        background: rgba(0, 0, 0, 0.2) !important;
-        padding: 0.25rem !important;
-        width: 100% !important;
-        max-width: 200px !important;
     }
 
     .stCameraInput video {
-        border-radius: 8px !important;
-        max-height: 120px !important;
-        max-width: 100% !important;
-        object-fit: cover !important;
-    }
-
-    .stCameraInput [data-testid="stCameraInputButton"] {
-        padding: 0.25rem !important;
-    }
-
-    .stCameraInput [data-testid="stCameraInputButton"] button {
-        padding: 0.3rem 0.5rem !important;
-        font-size: 0.75rem !important;
-    }
-
-    .stAudioInput {
-        width: 100% !important;
-        display: flex !important;
-        justify-content: center !important;
+        border-radius: 12px !important;
+        max-height: 200px !important;
     }
 
     .stAudioInput > div {
-        border: 2px dashed var(--border-color) !important;
-        border-radius: 10px !important;
         background: rgba(0, 0, 0, 0.2) !important;
-        padding: 0.5rem !important;
-        width: 100% !important;
-        max-width: 200px !important;
-    }
-
-    .stAudioInput [data-testid="stAudioInputButton"] {
-        padding: 0.25rem !important;
-    }
-
-    .stAudioInput [data-testid="stAudioInputButton"] button {
-        padding: 0.3rem 0.5rem !important;
-        font-size: 0.75rem !important;
-    }
-
-    .stAudioInput audio {
-        max-height: 30px !important;
-    }
-
-    .stFileUploader > div {
-        background: rgba(0, 0, 0, 0.2);
-        border: 2px dashed var(--border-color);
-        border-radius: 12px;
-        padding: 1.5rem;
+        border: 2px dashed var(--border-color) !important;
+        border-radius: 12px !important;
     }
 
     .success-badge {
@@ -374,19 +299,6 @@ st.markdown("""
         font-weight: 600;
     }
 
-    .live-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.4rem;
-        background: rgba(6, 182, 212, 0.15);
-        color: #06b6d4;
-        padding: 0.35rem 0.65rem;
-        border-radius: 20px;
-        font-size: 0.7rem;
-        font-weight: 700;
-        letter-spacing: 0.5px;
-    }
-
     .info-badge {
         display: inline-flex;
         align-items: center;
@@ -399,177 +311,25 @@ st.markdown("""
         font-weight: 600;
     }
 
-    .step-indicator {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        margin-bottom: 1rem;
-    }
-
-    .step-dot {
-        width: 8px;
-        height: 8px;
-        border-radius: 50%;
-        background: var(--accent-blue);
-    }
-
-    .step-text {
-        color: var(--text-muted);
-        font-size: 0.75rem;
-        font-weight: 500;
-        letter-spacing: 0.5px;
-        text-transform: uppercase;
-    }
-
     .divider {
         height: 1px;
         background: linear-gradient(90deg, transparent, var(--border-color), transparent);
         margin: 1.5rem 0;
     }
 
-    .logo-container {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 1.25rem;
-        padding: 1rem 0;
-    }
-
-    .logo-container img {
-        filter: drop-shadow(0 4px 12px rgba(59, 130, 246, 0.4));
-    }
-
-    .logo-text h1 {
-        margin: 0;
-        font-size: 2rem;
-        font-weight: 800;
-        letter-spacing: 1px;
-    }
-
-    .logo-text p {
-        margin: 0.15rem 0 0 0;
-        color: var(--accent-cyan);
-        font-size: 0.8rem;
-        font-weight: 600;
-        letter-spacing: 2px;
-        text-transform: uppercase;
-    }
-
-    .question-card {
-        background: linear-gradient(135deg, rgba(59, 130, 246, 0.08) 0%, rgba(6, 182, 212, 0.05) 100%);
-        border: 1px solid rgba(59, 130, 246, 0.2);
-        border-radius: 14px;
-        padding: 1.5rem;
-    }
-
-    .answer-area {
-        background: rgba(0, 0, 0, 0.25);
-        border: 1px solid var(--border-color);
-        border-radius: 12px;
-        padding: 1rem;
-    }
-
-    .proctor-card {
-        background: rgba(0, 0, 0, 0.2);
-        border: 1px solid var(--border-color);
-        border-radius: 12px;
-        padding: 0.5rem;
-        text-align: center;
-    }
-
-    .result-pass {
-        background: linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(6, 182, 212, 0.15) 100%);
-        border: 2px solid #10b981;
-        border-radius: 16px;
-        padding: 1.5rem;
-        text-align: center;
-    }
-
-    .result-fail {
-        background: linear-gradient(135deg, rgba(239, 68, 68, 0.2) 0%, rgba(220, 38, 38, 0.15) 100%);
-        border: 2px solid #ef4444;
-        border-radius: 16px;
-        padding: 1.5rem;
-        text-align: center;
-    }
-
-    @media (max-width: 1200px) {
-        [data-testid="column"]:nth-child(3) { display: none; }
-        .logo-container { flex-direction: column; text-align: center; gap: 0.75rem !important; }
-    }
-
-    @media (max-width: 992px) {
-        .stApp { padding: 1rem !important; }
-        h1 { font-size: 1.8rem !important; }
-        h2 { font-size: 1.35rem !important; }
-        [data-testid="stHorizontalBlock"] { gap: 1rem !important; }
+    .form-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
     }
 
     @media (max-width: 768px) {
-        .stApp { padding: 0.75rem !important; }
-        h1 { font-size: 1.5rem !important; }
-        h2 { font-size: 1.2rem !important; }
-        .card { padding: 1.25rem !important; }
-        
-        [data-testid="stVerticalBlockBorderWrapper"] > div {
-            padding: 1rem !important;
+        .form-grid {
+            grid-template-columns: 1fr;
         }
-        
-        .logo-container { flex-direction: column; gap: 0.5rem !important; }
-        .logo-text h1 { font-size: 1.5rem !important; }
-        
-        [data-testid="stHorizontalBlock"] {
-            flex-direction: column !important;
+        .page-title h1 {
+            font-size: 1.75rem !important;
         }
-        
-        [data-testid="column"] {
-            width: 100% !important;
-            flex: 1 1 100% !important;
-        }
-        
-        .question-card { padding: 1rem !important; }
-        .question-card div { font-size: 1.1rem !important; }
-        
-        .stTextArea textarea { min-height: 120px !important; }
-    }
-
-    @media (max-width: 480px) {
-        h1 { font-size: 1.25rem !important; }
-        .card-title { font-size: 0.95rem !important; }
-        
-        .stButton > button {
-            padding: 0.6rem 1rem !important;
-            font-size: 0.85rem !important;
-        }
-        
-        .success-badge, .error-badge, .info-badge, .live-badge {
-            font-size: 0.65rem !important;
-            padding: 0.3rem 0.5rem !important;
-        }
-        
-        .proctor-card { padding: 0.5rem !important; }
-        .result-pass, .result-fail { padding: 1rem !important; }
-    }
-
-    div[data-testid="stVerticalBlockBorderWrapper"] {
-        background: transparent !important;
-        border: none !important;
-    }
-
-    .stAlert {
-        background: rgba(239, 68, 68, 0.1) !important;
-        border: 1px solid rgba(239, 68, 68, 0.3) !important;
-        border-radius: 10px !important;
-    }
-
-    .stSuccess {
-        background: rgba(16, 185, 129, 0.1) !important;
-        border: 1px solid rgba(16, 185, 129, 0.3) !important;
-    }
-
-    .stWarning {
-        background: rgba(245, 158, 11, 0.1) !important;
-        border: 1px solid rgba(245, 158, 11, 0.3) !important;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -586,7 +346,7 @@ def call_ai(messages, model=DEFAULT_MODEL, retries=3):
     for attempt in range(retries):
         try:
             res = requests.post(
-                KILO_API_URL, 
+                f"{KILO_API_URL}/chat/completions", 
                 headers=headers, 
                 json={"model": model, "messages": messages, "temperature": 0.7, "max_tokens": 1200}, 
                 timeout=90
