@@ -74,6 +74,23 @@ st.markdown("""
             radial-gradient(ellipse at 20% 0%, rgba(59, 130, 246, 0.12) 0%, transparent 50%),
             radial-gradient(ellipse at 80% 100%, rgba(6, 182, 212, 0.08) 0%, transparent 50%);
         min-height: 100vh;
+        margin-top: -1.5rem;
+        padding-top: 0 !important;
+    }
+
+    .stApp > header {
+        display: none !important;
+    }
+
+    .block-container {
+        padding-top: 0.5rem !important;
+        padding-bottom: 0 !important;
+    }
+
+    header[data-testid="stHeader"] {
+        display: none !important;
+        height: 0 !important;
+        visibility: hidden !important;
     }
 
     [data-testid="stHeader"], [data-testid="stFooter"], 
@@ -746,7 +763,7 @@ def render_header():
 
 def show_setup():
     st.markdown("""
-        <div class="logo-container">
+        <div class="logo-container" style="margin-top: -1rem;">
             <img src="data:image/png;base64,{LOGO_BASE64}" width="80">
             <div class="logo-text">
                 <h1>MANVER <span style="color: #06b6d4;">AI INTERVIEWER</span></h1>
@@ -811,27 +828,27 @@ def show_setup():
             
             model = st.selectbox(
                 "Intelligence Model",
-                st.session_state.available_models,
+                st.session_state.get("available_models", ["kilo-auto/free"]),
                 label_visibility="visible",
                 help="Select the AI model to use for interview"
             )
             
             if st.button("🚀 Start Interview Session", type="primary", use_container_width=True):
-                v_name = st.session_state.get("reg_name", "")
-                v_id = st.session_state.get("reg_id", "")
-                v_email = st.session_state.get("reg_email", "")
-                v_phone = st.session_state.get("reg_phone", "")
+                v_name = st.session_state.get("reg_name", "") or ""
+                v_id = st.session_state.get("reg_id", "") or ""
+                v_email = st.session_state.get("reg_email", "") or ""
+                v_phone = st.session_state.get("reg_phone", "") or ""
                 
-                v_name = v_name.strip() if isinstance(v_name, str) else ""
-                v_id = v_id.strip() if isinstance(v_id, str) else ""
-                v_email = v_email.strip() if isinstance(v_email, str) else ""
-                v_phone = str(v_phone).strip() if v_phone else ""
+                v_name = str(v_name).strip()
+                v_id = str(v_id).strip()
+                v_email = str(v_email).strip()
+                v_phone = str(v_phone).strip()
                 
                 if not v_name or not v_id or not v_email or not v_phone:
                     st.error("⚠️ All detail fields are mandatory.")
-                elif input_type == "Upload Resume (PDF)" and not uploaded_file:
+                elif input_type == "Upload Resume (PDF)" and (uploaded_file is None):
                     st.error("📄 Please upload your resume PDF.")
-                elif input_type == "Paste Job Description (JD)" and not jd_text.strip():
+                elif input_type == "Paste Job Description (JD)" and (not jd_text or not jd_text.strip()):
                     st.error("📝 Please paste the Job Description.")
                 elif not st.session_state.get("photo_verified"):
                     st.error("📸 Identity verification required. Capture your photo.")
