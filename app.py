@@ -46,6 +46,13 @@ def get_free_models():
 if 'available_models' not in st.session_state:
     st.session_state.available_models = get_free_models()
 
+if 'device_test_done' not in st.session_state:
+    st.session_state.device_test_done = False
+if 'device_permissions_granted' not in st.session_state:
+    st.session_state.device_permissions_granted = False
+if 'device_test_step' not in st.session_state:
+    st.session_state.device_test_step = 0
+
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
@@ -277,49 +284,63 @@ st.markdown("""
         border-radius: 10px !important;
     }
 
+    .stCameraInput {
+        width: 100% !important;
+        display: flex !important;
+        justify-content: center !important;
+    }
+
     .stCameraInput > div {
         border: 2px dashed var(--border-color) !important;
-        border-radius: 12px !important;
+        border-radius: 10px !important;
         background: rgba(0, 0, 0, 0.2) !important;
-        padding: 0.5rem !important;
+        padding: 0.25rem !important;
+        width: 100% !important;
+        max-width: 200px !important;
     }
 
     .stCameraInput video {
-        border-radius: 10px !important;
-        max-height: 140px !important;
+        border-radius: 8px !important;
+        max-height: 120px !important;
+        max-width: 100% !important;
         object-fit: cover !important;
     }
 
     .stCameraInput [data-testid="stCameraInputButton"] {
-        padding: 0.5rem !important;
+        padding: 0.25rem !important;
     }
 
     .stCameraInput [data-testid="stCameraInputButton"] button {
-        padding: 0.4rem 0.75rem !important;
-        font-size: 0.8rem !important;
+        padding: 0.3rem 0.5rem !important;
+        font-size: 0.75rem !important;
+    }
+
+    .stAudioInput {
+        width: 100% !important;
+        display: flex !important;
+        justify-content: center !important;
     }
 
     .stAudioInput > div {
         border: 2px dashed var(--border-color) !important;
-        border-radius: 12px !important;
+        border-radius: 10px !important;
         background: rgba(0, 0, 0, 0.2) !important;
-        padding: 0.75rem !important;
+        padding: 0.5rem !important;
+        width: 100% !important;
+        max-width: 200px !important;
+    }
+
+    .stAudioInput [data-testid="stAudioInputButton"] {
+        padding: 0.25rem !important;
     }
 
     .stAudioInput [data-testid="stAudioInputButton"] button {
-        padding: 0.4rem 0.75rem !important;
-        font-size: 0.8rem !important;
+        padding: 0.3rem 0.5rem !important;
+        font-size: 0.75rem !important;
     }
 
     .stAudioInput audio {
-        max-height: 40px !important;
-    }
-
-    .stAudioInput > div {
-        border: 2px dashed var(--border-color) !important;
-        border-radius: 12px !important;
-        background: rgba(0, 0, 0, 0.2) !important;
-        padding: 1rem !important;
+        max-height: 30px !important;
     }
 
     .stFileUploader > div {
@@ -761,6 +782,228 @@ def render_header():
         """, unsafe_allow_html=True)
     st.markdown('<div class="divider"></div>', unsafe_allow_html=True)
 
+def show_device_test():
+    st.markdown("""
+        <div style="text-align: center; margin-bottom: 2rem;">
+            <h1 style="margin-bottom: 0.5rem;">📷 Test Camera & Microphone</h1>
+            <p style="color: var(--text-secondary);">Verify your devices are working before the interview</p>
+        </div>
+    """, unsafe_allow_html=True)
+    
+    step = st.session_state.get("device_test_step", 0)
+    
+    if step == 0:
+        st.markdown("""
+            <div class="card" style="text-align: center; padding: 2rem;">
+                <div style="font-size: 3rem; margin-bottom: 1rem;">🎥</div>
+                <h3 style="color: var(--text-primary) !important; -webkit-text-fill-color: var(--text-primary) !important;">Device Permissions Required</h3>
+                <p style="color: var(--text-secondary); margin: 1rem 0;">
+                    We need access to your camera and microphone to conduct the video interview and verify your identity.
+                </p>
+                <p style="color: var(--text-muted); font-size: 0.85rem;">
+                    Click below to grant browser permissions. You will be prompted to allow camera and microphone access.
+                </p>
+            </div>
+        """, unsafe_allow_html=True)
+        
+        if st.button("🔓 Enable Camera & Microphone", type="primary", use_container_width=True):
+            st.session_state.device_test_step = 1
+            st.rerun()
+        
+        if st.button("Go Back", use_container_width=True):
+            st.session_state.device_test_step = 0
+            st.rerun()
+    
+    elif step == 1:
+        st.markdown("""
+            <script>
+            async function checkPermissions() {
+                const camPerm = await navigator.permissions.query({name: 'camera'});
+                const micPerm = await navigator.permissions.query({name: 'microphone'});
+                const results = {
+                    camera: camPerm.state,
+                    microphone: micPerm.state
+                };
+                window.parent.postMessage({type: 'permissionCheck', results: results}, '*');
+            }
+            checkPermissions();
+            </script>
+        """, unsafe_allow_html=True)
+        
+        col1, col2 = st.columns(2, gap="large")
+        
+        with col1:
+            st.markdown("""
+                <div class="card" style="text-align: center; padding: 1.5rem;">
+                    <div style="font-size: 2.5rem; margin-bottom: 0.75rem;">📷</div>
+                    <h4 style="color: var(--text-primary) !important; -webkit-text-fill-color: var(--text-primary) !important;">Camera</h4>
+                    <p style="color: var(--text-muted); font-size: 0.8rem;">Verify your camera is working</p>
+                </div>
+            """, unsafe_allow_html=True)
+            
+            st.markdown("""
+                <button id="start-camera-btn" onclick="startCamera()" style="
+                    background: linear-gradient(135deg, #3b82f6, #2563eb);
+                    color: white; border: none; padding: 0.75rem 1.5rem;
+                    border-radius: 10px; font-weight: 600; cursor: pointer;
+                    width: 100%; margin-top: 1rem;
+                ">Start Camera Preview</button>
+                <video id="camera-preview" autoplay playsinline style="display: none; width: 100%; border-radius: 10px; margin-top: 1rem;"></video>
+                <canvas id="camera-canvas" style="display: none;"></canvas>
+                <script>
+                let cameraStream = null;
+                async function startCamera() {
+                    try {
+                        cameraStream = await navigator.mediaDevices.getUserMedia({video: true, audio: false});
+                        const video = document.getElementById('camera-preview');
+                        video.srcObject = cameraStream;
+                        video.style.display = 'block';
+                        document.getElementById('start-camera-btn').style.display = 'none';
+                        window.parent.postMessage({type: 'cameraStarted', success: true}, '*');
+                    } catch(err) {
+                        alert('Camera access denied or not available: ' + err.message);
+                        window.parent.postMessage({type: 'cameraStarted', success: false, error: err.message}, '*');
+                    }
+                }
+                </script>
+            """, unsafe_allow_html=True)
+            
+            st.markdown('<span class="info-badge" id="camera-status">⏳ Checking...</span>', unsafe_allow_html=True)
+        
+        with col2:
+            st.markdown("""
+                <div class="card" style="text-align: center; padding: 1.5rem;">
+                    <div style="font-size: 2.5rem; margin-bottom: 0.75rem;">🎤</div>
+                    <h4 style="color: var(--text-primary) !important; -webkit-text-fill-color: var(--text-primary) !important;">Microphone</h4>
+                    <p style="color: var(--text-muted); font-size: 0.8rem;">Test your microphone input</p>
+                </div>
+            """, unsafe_allow_html=True)
+            
+            st.markdown("""
+                <button id="start-mic-btn" onclick="startMicrophone()" style="
+                    background: linear-gradient(135deg, #10b981, #059669);
+                    color: white; border: none; padding: 0.75rem 1.5rem;
+                    border-radius: 10px; font-weight: 600; cursor: pointer;
+                    width: 100%; margin-top: 1rem;
+                ">Start Microphone Test</button>
+                <canvas id="mic-visualizer" style="display: none; width: 100%; height: 60px; background: rgba(0,0,0,0.3); border-radius: 8px; margin-top: 1rem;"></canvas>
+                <p id="mic-level" style="display: none; text-align: center; color: var(--text-secondary); font-size: 0.85rem;">Listening...</p>
+                <script>
+                let audioContext = null;
+                let micStream = null;
+                async function startMicrophone() {
+                    try {
+                        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                        micStream = await navigator.mediaDevices.getUserMedia({audio: true});
+                        const source = audioContext.createMediaStreamSource(micStream);
+                        const analyser = audioContext.createAnalyser();
+                        analyser.fftSize = 256;
+                        source.connect(analyser);
+                        
+                        const canvas = document.getElementById('mic-visualizer');
+                        canvas.style.display = 'block';
+                        document.getElementById('mic-level').style.display = 'block';
+                        document.getElementById('start-mic-btn').style.display = 'none';
+                        
+                        const ctx = canvas.getContext('2d');
+                        const bufferLength = analyser.frequencyBinCount;
+                        const dataArray = new Uint8Array(bufferLength);
+                        
+                        function draw() {
+                            requestAnimationFrame(draw);
+                            analyser.getByteFrequencyData(dataArray);
+                            ctx.fillStyle = 'rgba(0,0,0,0.2)';
+                            ctx.fillRect(0, 0, canvas.width, canvas.height);
+                            const barWidth = (canvas.width / bufferLength) * 2.5;
+                            let x = 0;
+                            for(let i = 0; i < bufferLength; i++) {
+                                const barHeight = dataArray[i] / 2;
+                                ctx.fillStyle = 'rgb(' + (dataArray[i] + 100) + ',200,50)';
+                                ctx.fillRect(x, canvas.height - barHeight, barWidth, barHeight);
+                                x += barWidth + 1;
+                            }
+                        }
+                        draw();
+                        window.parent.postMessage({type: 'micStarted', success: true}, '*');
+                    } catch(err) {
+                        alert('Microphone access denied or not available: ' + err.message);
+                        window.parent.postMessage({type: 'micStarted', success: false, error: err.message}, '*');
+                    }
+                }
+                </script>
+            """, unsafe_allow_html=True)
+            
+            st.markdown('<span class="info-badge" id="mic-status">⏳ Checking...</span>', unsafe_allow_html=True)
+        
+        st.markdown('<div class="divider"></div>', unsafe_allow_html=True)
+        
+        col_done, col_back = st.columns([2, 1], gap="medium")
+        with col_done:
+            if st.button("✅ Done - Continue to Photo", type="primary", use_container_width=True):
+                st.session_state.device_test_done = True
+                st.session_state.device_permissions_granted = True
+                st.session_state.step = 'photo_capture'
+                st.rerun()
+        with col_back:
+            if st.button("← Back", use_container_width=True):
+                st.session_state.device_test_step = 0
+                st.rerun()
+
+def show_photo_capture():
+    st.markdown("""
+        <div style="text-align: center; margin-bottom: 1.5rem;">
+            <h1 style="margin-bottom: 0.5rem;">📸 Identity Verification</h1>
+            <p style="color: var(--text-secondary);">Capture your photograph for identity verification</p>
+        </div>
+    """, unsafe_allow_html=True)
+    
+    col_cam, col_info = st.columns([1, 1], gap="large")
+    
+    with col_cam:
+        st.markdown("""
+            <div style="background: rgba(0,0,0,0.3); border-radius: 12px; padding: 1rem; text-align: center;">
+                <p style="color: var(--accent-cyan); font-weight: 600; margin-bottom: 1rem;">
+                    📸 Capturing your photograph...
+                </p>
+            </div>
+        """, unsafe_allow_html=True)
+        
+        photo_cam = st.camera_input(
+            "Capture Photo", 
+            key="photo_capture_cam",
+            label_visibility="collapsed"
+        )
+        
+        if photo_cam:
+            st.session_state.persistent_photo = photo_cam
+            st.session_state.photo_verified = True
+            st.markdown('<span class="success-badge">✓ Photo Captured!</span>', unsafe_allow_html=True)
+            st.image(photo_cam, width=200)
+    
+    with col_info:
+        st.markdown("""
+            <div class="card">
+                <h3 style="color: var(--text-primary) !important; -webkit-text-fill-color: var(--text-primary) !important; margin-bottom: 1rem;">
+                    Photo Guidelines
+                </h3>
+                <ul style="color: var(--text-secondary); line-height: 1.8; padding-left: 1rem;">
+                    <li>Ensure your face is clearly visible</li>
+                    <li>Good lighting on your face</li>
+                    <li>Remove glasses or sunglasses</li>
+                    <li>Look directly at the camera</li>
+                    <li>Neutral expression preferred</li>
+                </ul>
+            </div>
+        """, unsafe_allow_html=True)
+        
+        if st.session_state.get("photo_verified") and st.button("Continue →", type="primary", use_container_width=True):
+            st.session_state.step = 'setup'
+            st.rerun()
+        
+        if st.button("← Go Back", use_container_width=True):
+            st.session_state.step = 'device_test'
+            st.rerun()
+
 def show_setup():
     st.markdown("""
         <div class="logo-container" style="margin-top: -1rem;">
@@ -834,18 +1077,26 @@ def show_setup():
             )
             
             if st.button("🚀 Start Interview Session", type="primary", use_container_width=True):
-                v_name = st.session_state.get("reg_name", "") or ""
-                v_id = st.session_state.get("reg_id", "") or ""
-                v_email = st.session_state.get("reg_email", "") or ""
-                v_phone = st.session_state.get("reg_phone", "") or ""
+                # Get values - use try/except to handle missing keys
+                try:
+                    v_name = st.session_state.get("reg_name", "")
+                    v_id = st.session_state.get("reg_id", "")
+                    v_email = st.session_state.get("reg_email", "")
+                    v_phone = st.session_state.get("reg_phone", "")
+                except:
+                    v_name = v_id = v_email = v_phone = ""
                 
-                v_name = str(v_name).strip()
-                v_id = str(v_id).strip()
-                v_email = str(v_email).strip()
-                v_phone = str(v_phone).strip()
+                # Convert to string and strip - handle None values
+                v_name = str(v_name).strip() if v_name is not None else ""
+                v_id = str(v_id).strip() if v_id is not None else ""
+                v_email = str(v_email).strip() if v_email is not None else ""
+                v_phone = str(v_phone).strip() if v_phone is not None else ""
                 
-                if not v_name or not v_id or not v_email or not v_phone:
-                    st.error("⚠️ All detail fields are mandatory.")
+                # Debug - show what we're getting
+                st.write("DEBUG - Values:", repr(v_name), repr(v_id), repr(v_email), repr(v_phone))
+                
+                if not (v_name and v_id and v_email and v_phone):
+                    st.error("⚠️ Please fill all required fields")
                 elif input_type == "Upload Resume (PDF)" and (uploaded_file is None):
                     st.error("📄 Please upload your resume PDF.")
                 elif input_type == "Paste Job Description (JD)" and (not jd_text or not jd_text.strip()):
@@ -887,12 +1138,12 @@ def show_setup():
             """, unsafe_allow_html=True)
             
             st.markdown("""
-                <div style="background: rgba(59, 130, 246, 0.08); padding: 0.75rem; border-radius: 10px; border: 1px solid rgba(59, 130, 246, 0.15); margin-bottom: 1rem;">
-                    <div style="color: #60a5fa; font-weight: 600; font-size: 0.85rem; margin-bottom: 0.5rem;">
-                        🎤 Microphone Check
+                <div style="background: rgba(59, 130, 246, 0.08); padding: 0.5rem; border-radius: 8px; border: 1px solid rgba(59, 130, 246, 0.15); margin-bottom: 0.75rem;">
+                    <div style="color: #60a5fa; font-weight: 600; font-size: 0.8rem; margin-bottom: 0.25rem;">
+                        🎤 Mic Check
                     </div>
-                    <div style="color: #64748b; font-size: 0.75rem; margin-bottom: 0.5rem;">
-                        Record 1-2 seconds of audio to verify your microphone is working.
+                    <div style="color: #64748b; font-size: 0.7rem;">
+                        Record 1-2 sec to verify mic.
                     </div>
                 </div>
             """, unsafe_allow_html=True)
@@ -900,17 +1151,17 @@ def show_setup():
             mic_test = st.audio_input("Test Microphone", key="mic_test_recording", label_visibility="collapsed")
             if mic_test:
                 st.session_state.mic_verified = True
-                st.markdown('<span class="success-badge">✓ Microphone Ready</span>', unsafe_allow_html=True)
+                st.markdown('<span class="success-badge">✓ Ready</span>', unsafe_allow_html=True)
             
-            st.markdown('<div style="margin: 1rem 0;"></div>', unsafe_allow_html=True)
+            st.markdown('<div style="margin: 0.75rem 0;"></div>', unsafe_allow_html=True)
             
             st.markdown("""
-                <div style="background: rgba(6, 182, 212, 0.08); padding: 0.75rem; border-radius: 10px; border: 1px solid rgba(6, 182, 212, 0.15); margin-bottom: 1rem;">
-                    <div style="color: #06b6d4; font-weight: 600; font-size: 0.85rem; margin-bottom: 0.5rem;">
-                        📸 Identity Verification
+                <div style="background: rgba(6, 182, 212, 0.08); padding: 0.5rem; border-radius: 8px; border: 1px solid rgba(6, 182, 212, 0.15); margin-bottom: 0.75rem;">
+                    <div style="color: #06b6d4; font-weight: 600; font-size: 0.8rem; margin-bottom: 0.25rem;">
+                        📸 Photo ID
                     </div>
-                    <div style="color: #64748b; font-size: 0.75rem; margin-bottom: 0.5rem;">
-                        Take a clear photo of yourself for identity verification.
+                    <div style="color: #64748b; font-size: 0.7rem;">
+                        Take your photo for verification.
                     </div>
                 </div>
             """, unsafe_allow_html=True)
@@ -926,8 +1177,8 @@ def show_setup():
             st.camera_input("Take Photo", key="setup_cam", label_visibility="collapsed", on_change=sync_photo)
             
             if st.session_state.get("photo_verified") and st.session_state.persistent_photo:
-                st.image(st.session_state.persistent_photo, width=140)
-                st.markdown('<span class="success-badge">✓ Photo Captured</span>', unsafe_allow_html=True)
+                st.image(st.session_state.persistent_photo, width=120)
+                st.markdown('<span class="success-badge">✓ Captured</span>', unsafe_allow_html=True)
 
 def show_analysis():
     render_header()
@@ -1146,13 +1397,13 @@ def interview_content():
             </div>
         """, unsafe_allow_html=True)
         
-        st.markdown('<div class="proctor-card">', unsafe_allow_html=True)
+        st.markdown('<div class="proctor-card" style="padding: 0.25rem;">', unsafe_allow_html=True)
         st.camera_input("Monitoring", key=f"proctor_cam_{q_idx}", label_visibility="collapsed")
         st.markdown('</div>', unsafe_allow_html=True)
         
         st.markdown(f"""
-            <div style="background: rgba(16, 185, 129, 0.1); color: #10b981; padding: 0.5rem; border-radius: 8px; margin-top: 0.5rem; font-size: 0.65rem; font-weight: 600; text-align: center;">
-                🛡️ LIVE MONITORING
+            <div style="background: rgba(16, 185, 129, 0.1); color: #10b981; padding: 0.4rem; border-radius: 6px; margin-top: 0.5rem; font-size: 0.6rem; font-weight: 600; text-align: center;">
+                🛡️ LIVE
             </div>
         """, unsafe_allow_html=True)
 
@@ -1266,11 +1517,17 @@ def show_report():
                 del st.session_state[key]
             st.rerun()
 
-if st.session_state.step == 'setup': 
+step = st.session_state.get('step', 'device_test')
+
+if step == 'device_test':
+    show_device_test()
+elif step == 'photo_capture':
+    show_photo_capture()
+elif step == 'device_test_complete' or step == 'setup': 
     show_setup()
-elif st.session_state.step == 'analysis': 
+elif step == 'analysis': 
     show_analysis()
-elif st.session_state.step == 'interview': 
+elif step == 'interview': 
     show_interview()
-elif st.session_state.step == 'report': 
+elif step == 'report': 
     show_report()
