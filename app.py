@@ -23,32 +23,33 @@ DEFAULT_MODEL = "kilo-auto/free"
 def render_header():
     if 'user_info' not in st.session_state or not st.session_state.user_info.get("name"): return
     
-    st.markdown('<div class="glass-card" style="margin-bottom: 2rem; padding: 0.8rem; border-left: 5px solid #3b82f6;">', unsafe_allow_html=True)
-    h_c1, h_c2, h_c3, h_c4 = st.columns([1, 1, 4, 3], gap="small")
+    st.markdown('<div class="header-container" style="margin-bottom: 2rem; padding: 1rem; border-left: 5px solid #3b82f6; background: rgba(255, 255, 255, 0.03); border-radius: 1rem; backdrop-filter: blur(8px);">', unsafe_allow_html=True)
     
-    with h_c1:
-        st.image(LOGO_PATH, width=70) # Slightly smaller
-        
-    with h_c2:
+    cols = st.columns([1, 4, 3], gap="medium")
+    
+    with cols[0]:
         if st.session_state.persistent_photo:
-            st.image(st.session_state.persistent_photo, width=75) # Slightly smaller
+            st.image(st.session_state.persistent_photo, width=65)
+        else:
+            st.image(LOGO_PATH, width=60)
             
-    with h_c3:
+    with cols[1]:
         info = st.session_state.user_info
         st.markdown(f"""
-            <div style="padding-top: 0px;">
-                <h3 style="margin:0; color:#eff6ff; text-transform: uppercase; font-size: 1.2rem; letter-spacing: 0.5px;">{info['name']}</h3>
-                <div style="margin:0; color:#60a5fa; font-family:monospace; font-weight:700; font-size: 0.85rem;">ID: {info['id']}</div>
-                <div style="margin-top:4px; font-size:0.65rem; color:#10b981; font-weight:600; letter-spacing: 1px;">🛡️ IDENTITY VERIFIED</div>
+            <div style="display: flex; flex-direction: column; justify-content: center; height: 100%;">
+                <h3 style="margin:0; color:#eff6ff; text-transform: uppercase; font-size: 1.1rem; letter-spacing: 0.5px; background: none; -webkit-text-fill-color: #eff6ff;">{info['name']}</h3>
+                <div style="margin:2px 0; color:#60a5fa; font-family:monospace; font-weight:700; font-size: 0.8rem;">ID: {info['id']}</div>
+                <div style="margin-top:2px; font-size:0.6rem; color:#10b981; font-weight:700; letter-spacing: 0.5px;">🛡️ IDENTITY VERIFIED</div>
             </div>
         """, unsafe_allow_html=True)
         
-    with h_c4:
+    with cols[2]:
+        time_parts = st.session_state.interview_time.split(' ') if st.session_state.interview_time else ["", ""]
         st.markdown(f"""
-            <div style="text-align: right; padding-top: 0px;">
-                <div style="color: #60a5fa; font-weight: 700; font-size: 0.9rem; margin-bottom: 2px;">📅 {st.session_state.interview_time.split(' ')[0]}</div>
-                <div style="color: #94a3b8; font-weight: 600; font-size: 0.8rem;">⏱️ {st.session_state.interview_time.split(' ')[1]}</div>
-                <div style="margin-top: 5px; font-size: 0.6rem; color: #4ade80; border: 1px solid #10b981; padding: 2px 8px; border-radius: 20px; display: inline-block;">📡 LIVE</div>
+            <div style="text-align: right;">
+                <div style="color: #60a5fa; font-weight: 700; font-size: 0.85rem;">📅 {time_parts[0]}</div>
+                <div style="color: #94a3b8; font-weight: 600; font-size: 0.75rem;">⏱️ {time_parts[1]}</div>
+                <div style="margin-top: 4px; font-size: 0.55rem; color: #4ade80; border: 1px solid #10b981; padding: 1px 6px; border-radius: 20px; display: inline-block;">📡 LIVE</div>
             </div>
         """, unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
@@ -135,6 +136,27 @@ st.markdown("""
         --color-bg: #0f172a;
         --color-primary: #3b82f6;
         --color-secondary: #64748b;
+    }
+
+    /* Global Transitions */
+    * { transition: all 0.2s ease-out; }
+
+    /* Main App Container */
+    .stApp {
+        background-color: var(--color-bg);
+        background-image: 
+            radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.15) 0px, transparent 50%),
+            radial-gradient(at 100% 0%, rgba(37, 99, 235, 0.1) 0px, transparent 50%);
+    }
+
+    /* Primary Buttons */
+    div[data-testid="stButton"] button[kind="primary"] {
+        background: linear-gradient(135deg, #3b82f6, #2563eb) !important;
+        border: none !important;
+        border-radius: 0.75rem !important;
+        padding: 0.6rem 1.5rem !important;
+        font-weight: 700 !important;
+        color: white !important;
         box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3) !important;
     }
 
@@ -142,11 +164,14 @@ st.markdown("""
     div[data-testid="stButton"] button[kind="secondary"] {
         background: rgba(255, 255, 255, 0.05) !important;
         color: #fff !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        border-radius: 0.75rem !important;
     }
     
     div[data-testid="stButton"] button:hover {
-        transform: translateY(-1px);
+        transform: translateY(-2px);
         filter: brightness(1.1);
+        box-shadow: 0 6px 16px rgba(37, 99, 235, 0.4) !important;
     }
 
     h1, h2, h3 {
@@ -158,38 +183,65 @@ st.markdown("""
         margin-bottom: 1rem !important;
     }
     
-    .stProgress > div > div > div > div {
-        background: linear-gradient(to right, #3b82f6, #10b981) !important;
-    }
-    
-    /* Mobile Responsiveness */
-    @media (max-width: 768px) {
-        .glass-card { padding: 1rem !important; }
-        h1 { font-size: 1.8rem !important; }
-        h2 { font-size: 1.4rem !important; }
-        div[data-testid="column"] { width: 100% !important; flex: 1 1 100% !important; min-width: 100% !important; }
-    }
-
-    /* Remove white borders/boxes from streamlit */
-    div[data-testid="stVerticalBlockBorderWrapper"] { border: none !important; }
-    
-    /* Clean up the text area */
-    .stTextArea textarea {
-        background: rgba(0, 0, 0, 0.2) !important;
-        border: 1px solid rgba(255, 255, 255, 0.1) !important;
-        border-radius: 0.75rem !important;
-        color: white !important;
-    }
-    
-    .glass-card {
+    /* Better Glass Cards Targeting */
+    [data-testid="stVerticalBlockBorderWrapper"] > div > div > div[data-testid="stVerticalBlock"] {
         background: rgba(255, 255, 255, 0.03);
         backdrop-filter: blur(12px);
         -webkit-backdrop-filter: blur(12px);
         border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 1rem;
-        padding: 1.5rem;
+        border-radius: 1.25rem;
+        padding: 2rem;
         margin-bottom: 1.5rem;
-        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        box-shadow: 0 10px 40px 0 rgba(0, 0, 0, 0.4);
+    }
+
+    /* Handle empty vertical blocks to prevent "empty boxes" */
+    [data-testid="stVerticalBlock"]:empty {
+        display: none !important;
+    }
+    
+    /* Responsive Column Handling */
+    [data-testid="column"] {
+        padding: 0 10px !important;
+    }
+    
+    @media (max-width: 768px) {
+        [data-testid="stHorizontalBlock"] {
+            flex-direction: column !important;
+        }
+        [data-testid="column"] {
+            width: 100% !important;
+            flex: 1 1 100% !important;
+            min-width: 100% !important;
+            margin-bottom: 1.5rem !important;
+        }
+        .stApp { padding: 1rem !important; }
+        h1 { font-size: 1.8rem !important; }
+        h2 { font-size: 1.5rem !important; }
+        h3 { font-size: 1.2rem !important; }
+    }
+
+    /* Clean up headers/footers */
+    [data-testid="stHeader"], [data-testid="stFooter"] { display: none !important; }
+    
+    /* Input Styling */
+    .stTextInput input, .stTextArea textarea, .stSelectbox select {
+        background: rgba(0, 0, 0, 0.25) !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        border-radius: 0.75rem !important;
+        color: white !important;
+        padding: 0.75rem !important;
+    }
+
+    /* Progress Bar */
+    .stProgress [data-baseweb="progress-bar"] {
+        background-color: rgba(255, 255, 255, 0.05) !important;
+        border-radius: 10px !important;
+        height: 10px !important;
+    }
+    .stProgress [role="progressbar"] {
+        background: linear-gradient(to right, #3b82f6, #60a5fa) !important;
+        border-radius: 10px !important;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -197,20 +249,31 @@ st.markdown("""
 # --- AI & Parsing Helpers ---
 def get_api_key(): return os.getenv("VITE_KILO_API_KEY") or os.getenv("KILO_API_KEY")
 
-def call_ai(messages, model=DEFAULT_MODEL):
+def call_ai(messages, model=DEFAULT_MODEL, retries=3):
     api_key = get_api_key()
     headers = {"Content-Type": "application/json"}
     if api_key: headers["Authorization"] = f"Bearer {api_key}"
-    try:
-        res = requests.post(KILO_API_URL, headers=headers, json={"model": model, "messages": messages, "temperature": 0.7, "max_tokens": 1200}, timeout=45)
-        if res.status_code == 200:
-            return res.json()["choices"][0]["message"]["content"]
-        else:
-            st.error(f"API Error: {res.status_code} - See details in console")
-            return None
-    except Exception as e:
-        st.error(f"Network Error: {str(e)}")
-        return None
+    
+    for attempt in range(retries):
+        try:
+            res = requests.post(
+                KILO_API_URL, 
+                headers=headers, 
+                json={"model": model, "messages": messages, "temperature": 0.7, "max_tokens": 1200}, 
+                timeout=90 # Increased timeout for complex analysis
+            )
+            if res.status_code == 200:
+                return res.json()["choices"][0]["message"]["content"]
+            else:
+                st.error(f"API Error ({res.status_code}): Attempt {attempt+1}/{retries}")
+                time.sleep(1) # Short wait before retry
+        except Exception as e:
+            if attempt < retries - 1:
+                st.warning(f"⏳ Connection slow, retrying ({attempt+1}/{retries})...")
+                time.sleep(2)
+            else:
+                st.error(f"❌ Network Error after {retries} attempts: {str(e)}")
+    return None
 
 def extract_text_from_pdf(file):
     reader = PdfReader(file)
@@ -300,15 +363,14 @@ def show_setup():
         </script>
     """, unsafe_allow_html=True)
     
-    c1, c2 = st.columns([1, 1], gap="large")
+    c1, c2 = st.columns([1.2, 1], gap="large")
     
     with c1:
-        st.markdown('<div class="glass-card">', unsafe_allow_html=True)
-        st.write("### 🔑 Candidate Details")
-        st.text_input("Full Name *", key="reg_name", placeholder="John Doe")
-        st.text_input("Email ID *", key="reg_email", placeholder="john@example.com")
-        st.text_input("Candidate ID *", key="reg_id", placeholder="CAND-001")
-        st.text_input("Phone Number *", key="reg_phone", placeholder="+91 XXXX XXXX")
+        st.markdown('<h3 style="background:none;-webkit-text-fill-color:#60a5fa;margin-bottom:1.5rem;">🔑 Candidate Details</h3>', unsafe_allow_html=True)
+        st.text_input("Full Name *", key="reg_name", placeholder="e.g. John Doe")
+        st.text_input("Email ID *", key="reg_email", placeholder="e.g. john@example.com")
+        st.text_input("Candidate ID *", key="reg_id", placeholder="e.g. CAND-001")
+        st.text_input("Phone Number *", key="reg_phone", placeholder="e.g. +91 XXXX XXXX")
         
         st.write("### 📄 Assessment Basis")
         input_type = st.radio("Choose Input Type:", ["Upload Resume (PDF)", "Paste Job Description (JD)"], horizontal=True, label_visibility="collapsed")
@@ -348,30 +410,33 @@ def show_setup():
                         prompt_msg = "Analyze resume."
                     else:
                         input_content = jd_text
-                        prompt_msg = "Analyze job description and identify key skills."
+                        prompt_msg = "Analyze job description and identify key skills. DO NOT INCLUDE LINKEDIN PROFILES OR LINKS."
                     
                     res = call_ai([{"role": "system", "content": prompt_msg}, {"role": "user", "content": input_content}], model=model)
                     if res:
                         st.session_state.analysis = res
                         st.session_state.step = 'analysis'
                         st.rerun()
-        st.markdown('</div>', unsafe_allow_html=True)
 
     with c2:
-        st.markdown('<div class="glass-card" style="text-align: center;">', unsafe_allow_html=True)
-        st.write("### 🎙️ Hardware & Identity Check")
+        st.markdown('<h3 style="background:none;-webkit-text-fill-color:#60a5fa;margin-bottom:1.5rem;">🎙️ Hardware & Identity</h3>', unsafe_allow_html=True)
         
-        # 🎤 Native Microphone Check (100% Reliability for permissions)
-        st.info("🎤 **Step 1: Verify Microphone**")
-        st.write("Record a quick 1-second audio clip to unlock the session.")
+        # 🎤 Native Microphone Check
+        st.markdown('<div style="background: rgba(59, 130, 246, 0.1); padding: 1rem; border-radius: 0.75rem; border: 1px solid rgba(59, 130, 246, 0.2); margin-bottom: 1.5rem;">'
+                    '<div style="color: #60a5fa; font-weight: 700; font-size: 0.9rem; margin-bottom: 0.5rem;">🎤 STEP 1: MICROPHONE VERIFICATION</div>'
+                    '<div style="color: #94a3b8; font-size: 0.8rem; margin-bottom: 1rem;">Record 1 second of audio to verify your hardware.</div>'
+                    '</div>', unsafe_allow_html=True)
+        
         mic_test = st.audio_input("Test Recording", key="mic_test_recording", label_visibility="collapsed")
         if mic_test:
-            st.success("✅ Microphone Verified Successfully!")
+            st.success("✅ Microphone Verified")
         
-        st.divider()
+        st.markdown('<div style="margin: 2rem 0;"></div>', unsafe_allow_html=True) # Controlled spacer
         
-        st.info("👤 **Step 2: Capture Identity**")
-        st.write("Click the camera icon below to manually capture your photo.")
+        st.markdown('<div style="background: rgba(59, 130, 246, 0.1); padding: 1rem; border-radius: 0.75rem; border: 1px solid rgba(59, 130, 246, 0.2); margin-bottom: 1.5rem;">'
+                    '<div style="color: #60a5fa; font-weight: 700; font-size: 0.9rem; margin-bottom: 0.5rem;">👤 STEP 2: IDENTITY CAPTURE</div>'
+                    '<div style="color: #94a3b8; font-size: 0.8rem; margin-bottom: 1rem;">Click the camera icon to capture your profile photo.</div>'
+                    '</div>', unsafe_allow_html=True)
         
         def sync_photo():
             if st.session_state.setup_cam is None: st.session_state.persistent_photo = None
@@ -381,27 +446,62 @@ def show_setup():
         
         if st.session_state.persistent_photo:
             st.image(st.session_state.persistent_photo, width=150)
-            st.success("✅ Photo Verified")
-        st.markdown('</div>', unsafe_allow_html=True)
+            st.success("✅ Photo Captured")
 
 def show_analysis():
     render_header()
-    st.markdown('<div style="text-align: center; margin-bottom: 2rem;">'
+    
+    st.markdown('<div style="text-align: center; margin: 1rem 0 2rem 0;">'
                 '<h1>🔍 CANDIDATE INSIGHTS</h1>'
                 '</div>', unsafe_allow_html=True)
-    st.markdown(f'<div class="glass-card"><div style="color: #cbd5e1; line-height: 1.6;">{st.session_state.analysis}</div></div>', unsafe_allow_html=True)
     
-    col_l, col_r, col_c = st.columns([1, 1, 1])
-    with col_r:
+    # Header Info Card
+    c_img, c_det = st.columns([1, 3], gap="large")
+    
+    with c_img:
+        if st.session_state.persistent_photo:
+            st.image(st.session_state.persistent_photo, use_container_width=True)
+            st.markdown("""
+                <style>
+                    [data-testid="stImage"] img {
+                        aspect-ratio: 1 / 1;
+                        object-fit: cover;
+                        border-radius: 12px;
+                        border: 2px solid #3b82f6;
+                    }
+                </style>
+            """, unsafe_allow_html=True)
+            
+    with c_det:
+        info = st.session_state.user_info
+        st.markdown(f"""
+            <div style="background: rgba(255, 255, 255, 0.05); padding: 1.5rem; border-radius: 12px; border-left: 4px solid #3b82f6;">
+                <table style="width: 100%; color: white; border-collapse: collapse;">
+                    <tr><td style="padding: 10px 0; color: #60a5fa; font-weight: 700; width: 30%;">FULL NAME</td><td style="font-size: 1.2rem; font-weight: 800;">{info['name'].upper()}</td></tr>
+                    <tr><td style="padding: 10px 0; color: #60a5fa; font-weight: 700;">IDENTIFIER</td><td>{info['id']}</td></tr>
+                    <tr><td style="padding: 10px 0; color: #60a5fa; font-weight: 700;">EMAIL CONTACT</td><td>{info['email']}</td></tr>
+                    <tr><td style="padding: 10px 0; color: #60a5fa; font-weight: 700;">PHONE VERIFIED</td><td>{info['phone']}</td></tr>
+                </table>
+            </div>
+        """, unsafe_allow_html=True)
+
+    st.markdown('<div style="margin-top: 2.5rem;"></div>', unsafe_allow_html=True)
+    
+    # Centered Proceed Button
+    _, btn_col, _ = st.columns([1, 2, 1])
+    with btn_col:
         if st.button("✅ Confirm & Proceed", type="primary", use_container_width=True):
-            with st.spinner("🚀 Generating technical questionnaire..."):
-                prompt = "Generate 8 technical questions based on the candidate. One per line. No numbers."
+            with st.status("🚀 Generating technical questionnaire...", expanded=True) as status:
+                st.write("Processing profile context...")
+                prompt = "Generate 8 specific, high-level technical questions based on the candidate's skills. One per line. No numbers."
                 text = call_ai([{"role": "system", "content": prompt}, {"role": "user", "content": st.session_state.analysis}])
                 if text:
+                    st.write("Mapping interview path...")
                     st.session_state.questions = [q.strip() for q in text.split('\n') if len(q.strip()) > 10][:8]
                     st.session_state.answers = [""] * len(st.session_state.questions)
                     st.session_state.current_q = 0
                     st.session_state.step = 'interview'
+                    status.update(label="✨ Interview Path Built!", state="complete", expanded=False)
                     st.rerun()
 
 @st.fragment
@@ -411,11 +511,10 @@ def interview_content():
     
     st.progress((q_idx + 1) / total)
     
-    # 📹 Q&A Left, Proctoring Right [3, 0.1, 0.7] - Optimized for smaller video
-    c_qa, spacer, c_proc = st.columns([3, 0.1, 0.7], gap="small", vertical_alignment="top")
+    # 📹 Q&A Left, Proctoring Right - Optimized for smaller video
+    c_qa, c_proc = st.columns([3, 1], gap="medium")
     
     with c_qa:
-        st.markdown('<div class="glass-card" style="min-height: 520px; display: flex; flex-direction: column; justify-content: space-between;">', unsafe_allow_html=True)
         question = st.session_state.questions[q_idx]
         st.markdown(f'<div style="font-size: 1.6rem; font-weight: 800; color: #60a5fa; margin-bottom: 2rem;">{question}</div>', unsafe_allow_html=True)
         
@@ -467,9 +566,10 @@ def interview_content():
                 button[title="View source"] {{display: none;}}
                 .custom-footer {{
                     position: fixed; left: 0; bottom: 0; width: 100%;
-                    background: rgba(15, 23, 42, 0.95); color: #64748b;
-                    text-align: center; padding: 10px; font-size: 0.8rem;
+                    background: rgba(15, 23, 42, 0.9); color: #64748b;
+                    text-align: center; padding: 12px; font-size: 0.75rem;
                     z-index: 9999; border-top: 1px solid rgba(255,255,255,0.05);
+                    font-weight: 600; letter-spacing: 1px; backdrop-filter: blur(4px);
                 }}
                 </style>
             """, unsafe_allow_html=True)
@@ -481,10 +581,8 @@ def interview_content():
                     st.session_state.current_q += 1
                     st.rerun()
                 else: confirm_submission()
-        st.markdown('</div>', unsafe_allow_html=True)
 
     with c_proc:
-        st.markdown('<div class="glass-card" style="padding: 0.8rem; text-align: center; border-right: 4px solid #3b82f6;">', unsafe_allow_html=True)
         st.markdown('<div style="color: #60a5fa; font-weight: 700; margin-bottom: 0.5rem; font-size: 0.8rem;">📹 PROCTORING</div>', unsafe_allow_html=True)
         # Use a smaller camera input if possible via standard Streamlit (just smaller column)
         st.camera_input("Monitoring", key=f"proctor_session_9_{q_idx}", label_visibility="collapsed")
@@ -493,7 +591,6 @@ def interview_content():
                 🛡️ LIVE MONITORING
             </div>
         """, unsafe_allow_html=True)
-        st.markdown('</div>', unsafe_allow_html=True)
 
 def show_interview():
     render_header()
@@ -515,9 +612,8 @@ def show_report():
             {"role": "user", "content": f"Candidate: {info.get('name', 'N/A')}\nID: {info.get('id', 'N/A')}\nEmail: {info.get('email', 'N/A')}\nDate: {st.session_state.interview_time}\n\nTranscript:\n{transcript}"}
         ])
     
-    c1, c2 = st.columns([2, 1], gap="large")
+    c1, c2 = st.columns([1.5, 1], gap="large")
     with c1:
-        st.markdown('<div class="glass-card">', unsafe_allow_html=True)
         # Decision Badge
         is_pass = "PASS" in str(res).upper()
         badge_bg = "rgba(16, 185, 129, 0.2)" if is_pass else "rgba(239, 68, 68, 0.2)"
@@ -526,15 +622,18 @@ def show_report():
         
         st.markdown(f'<div style="background: {badge_bg}; border: 1px solid {badge_border}; color: white; padding: 1.2rem; border-radius: 12px; text-align: center; margin-bottom: 2rem; font-weight: 800; font-size: 1.5rem; letter-spacing: 2px;">{badge_text}</div>', unsafe_allow_html=True)
         
-        st.write(f"### 📋 Detailed Analysis")
-        st.markdown(f'<div style="color: #cbd5e1; line-height: 1.7; font-size: 1.05rem;">{res}</div>', unsafe_allow_html=True)
-        st.divider()
+        st.markdown('<h3 style="background:none;-webkit-text-fill-color:#60a5fa;">📋 Detailed Analysis</h3>', unsafe_allow_html=True)
+        st.markdown(f'<div style="color: #cbd5e1; line-height: 1.7; font-size: 1.05rem; background: rgba(0,0,0,0.2); padding: 1.5rem; border-radius: 12px;">{res}</div>', unsafe_allow_html=True)
+        
+    with c2:
         if st.session_state.persistent_photo:
-            st.image(st.session_state.persistent_photo)
-        st.markdown('</div>', unsafe_allow_html=True)
-
-    if st.button("🔄 Start New"): st.session_state.clear(); st.rerun()
-
+            st.markdown('<div style="color: #60a5fa; font-weight: 700; margin-bottom: 0.5rem; font-size: 0.9rem;">👤 CANDIDATE PHOTO</div>', unsafe_allow_html=True)
+            st.image(st.session_state.persistent_photo, use_container_width=True)
+        
+        st.markdown('<div style="margin-top: 2rem;"></div>', unsafe_allow_html=True)
+        if st.button("🔄 Start New Interview", use_container_width=True): 
+            st.session_state.clear()
+            st.rerun()
 if st.session_state.step == 'setup': show_setup()
 elif st.session_state.step == 'analysis': show_analysis()
 elif st.session_state.step == 'interview': show_interview()
