@@ -21,8 +21,30 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-KILO_API_URL = "https://api.kilo.ai/api/gateway/chat/completions"
+KILO_API_URL = "https://api.kilo.ai/api/gateway"
 DEFAULT_MODEL = "kilo-auto/free"
+
+def get_free_models():
+    try:
+        res = requests.get(f"{KILO_API_URL}/models", timeout=10)
+        if res.status_code == 200:
+            data = res.json()
+            models = []
+            for m in data.get("data", []):
+                model_id = m.get("id", "")
+                pricing = m.get("pricing", {})
+                is_free = float(pricing.get("prompt", 1)) == 0 and float(pricing.get("completion", 1)) == 0
+                if is_free or "/free" in model_id.lower() or "free" in m.get("owned_by", "").lower():
+                    models.append(model_id)
+            if not models:
+                models = ["kilo-auto/free", "minimax/minimax-m2.5:free"]
+            return models
+    except:
+        pass
+    return ["kilo-auto/free", "minimax/minimax-m2.5:free"]
+
+if 'available_models' not in st.session_state:
+    st.session_state.available_models = get_free_models()
 
 st.markdown("""
     <style>
@@ -242,10 +264,38 @@ st.markdown("""
         border: 2px dashed var(--border-color) !important;
         border-radius: 12px !important;
         background: rgba(0, 0, 0, 0.2) !important;
+        padding: 0.5rem !important;
     }
 
     .stCameraInput video {
         border-radius: 10px !important;
+        max-height: 140px !important;
+        object-fit: cover !important;
+    }
+
+    .stCameraInput [data-testid="stCameraInputButton"] {
+        padding: 0.5rem !important;
+    }
+
+    .stCameraInput [data-testid="stCameraInputButton"] button {
+        padding: 0.4rem 0.75rem !important;
+        font-size: 0.8rem !important;
+    }
+
+    .stAudioInput > div {
+        border: 2px dashed var(--border-color) !important;
+        border-radius: 12px !important;
+        background: rgba(0, 0, 0, 0.2) !important;
+        padding: 0.75rem !important;
+    }
+
+    .stAudioInput [data-testid="stAudioInputButton"] button {
+        padding: 0.4rem 0.75rem !important;
+        font-size: 0.8rem !important;
+    }
+
+    .stAudioInput audio {
+        max-height: 40px !important;
     }
 
     .stAudioInput > div {
@@ -385,7 +435,7 @@ st.markdown("""
         background: rgba(0, 0, 0, 0.2);
         border: 1px solid var(--border-color);
         border-radius: 12px;
-        padding: 1rem;
+        padding: 0.5rem;
         text-align: center;
     }
 
@@ -761,7 +811,7 @@ def show_setup():
             
             model = st.selectbox(
                 "Intelligence Model",
-                ["kilo-auto/free", "minimax/minimax-m2.5:free"],
+                st.session_state.available_models,
                 label_visibility="visible",
                 help="Select the AI model to use for interview"
             )
@@ -820,11 +870,11 @@ def show_setup():
             """, unsafe_allow_html=True)
             
             st.markdown("""
-                <div style="background: rgba(59, 130, 246, 0.08); padding: 1rem; border-radius: 10px; border: 1px solid rgba(59, 130, 246, 0.15); margin-bottom: 1rem;">
+                <div style="background: rgba(59, 130, 246, 0.08); padding: 0.75rem; border-radius: 10px; border: 1px solid rgba(59, 130, 246, 0.15); margin-bottom: 1rem;">
                     <div style="color: #60a5fa; font-weight: 600; font-size: 0.85rem; margin-bottom: 0.5rem;">
                         🎤 Microphone Check
                     </div>
-                    <div style="color: #64748b; font-size: 0.75rem; margin-bottom: 0.75rem;">
+                    <div style="color: #64748b; font-size: 0.75rem; margin-bottom: 0.5rem;">
                         Record 1-2 seconds of audio to verify your microphone is working.
                     </div>
                 </div>
@@ -835,14 +885,14 @@ def show_setup():
                 st.session_state.mic_verified = True
                 st.markdown('<span class="success-badge">✓ Microphone Ready</span>', unsafe_allow_html=True)
             
-            st.markdown('<div style="margin: 1.5rem 0;"></div>', unsafe_allow_html=True)
+            st.markdown('<div style="margin: 1rem 0;"></div>', unsafe_allow_html=True)
             
             st.markdown("""
-                <div style="background: rgba(6, 182, 212, 0.08); padding: 1rem; border-radius: 10px; border: 1px solid rgba(6, 182, 212, 0.15); margin-bottom: 1rem;">
+                <div style="background: rgba(6, 182, 212, 0.08); padding: 0.75rem; border-radius: 10px; border: 1px solid rgba(6, 182, 212, 0.15); margin-bottom: 1rem;">
                     <div style="color: #06b6d4; font-weight: 600; font-size: 0.85rem; margin-bottom: 0.5rem;">
                         📸 Identity Verification
                     </div>
-                    <div style="color: #64748b; font-size: 0.75rem; margin-bottom: 0.75rem;">
+                    <div style="color: #64748b; font-size: 0.75rem; margin-bottom: 0.5rem;">
                         Take a clear photo of yourself for identity verification.
                     </div>
                 </div>
@@ -859,7 +909,7 @@ def show_setup():
             st.camera_input("Take Photo", key="setup_cam", label_visibility="collapsed", on_change=sync_photo)
             
             if st.session_state.get("photo_verified") and st.session_state.persistent_photo:
-                st.image(st.session_state.persistent_photo, width=180)
+                st.image(st.session_state.persistent_photo, width=140)
                 st.markdown('<span class="success-badge">✓ Photo Captured</span>', unsafe_allow_html=True)
 
 def show_analysis():
@@ -1074,7 +1124,7 @@ def interview_content():
     
     with col_proc:
         st.markdown("""
-            <div style="color: #64748b; font-weight: 600; margin-bottom: 0.75rem; font-size: 0.8rem; letter-spacing: 0.5px;">
+            <div style="color: #64748b; font-weight: 600; margin-bottom: 0.5rem; font-size: 0.75rem; letter-spacing: 0.5px;">
                 📹 PROCTORING
             </div>
         """, unsafe_allow_html=True)
@@ -1084,7 +1134,7 @@ def interview_content():
         st.markdown('</div>', unsafe_allow_html=True)
         
         st.markdown(f"""
-            <div style="background: rgba(16, 185, 129, 0.1); color: #10b981; padding: 0.6rem; border-radius: 8px; margin-top: 0.75rem; font-size: 0.7rem; font-weight: 600; text-align: center;">
+            <div style="background: rgba(16, 185, 129, 0.1); color: #10b981; padding: 0.5rem; border-radius: 8px; margin-top: 0.5rem; font-size: 0.65rem; font-weight: 600; text-align: center;">
                 🛡️ LIVE MONITORING
             </div>
         """, unsafe_allow_html=True)
