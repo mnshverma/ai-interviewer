@@ -430,7 +430,7 @@ def interview_content():
                 st.rerun()
         with col_nav2:
             st.markdown(f"""
-                <button id="speak-btn" style="background: linear-gradient(135deg, #10b981, #059669); color: white; border: none; padding: 0.75rem; border-radius: 12px; width: 100%; cursor: pointer; font-weight: 700; transition: all 0.2s; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);">🎤 Voice Answer</button>
+                <button id="speak-btn" onclick="startSpeech()" style="background: linear-gradient(135deg, #10b981, #059669); color: white; border: none; padding: 0.75rem; border-radius: 12px; width: 100%; cursor: pointer; font-weight: 700; transition: all 0.2s; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);">🎤 Voice Answer</button>
                 <script>
                     function startSpeech() {{
                         const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
