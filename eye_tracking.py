@@ -38,8 +38,8 @@ class EyeTrackingState:
     is_calibrated: bool = False
     baseline_x: float = 0.0
     baseline_y: float = 0.0
-    tolerance_x: float = 0.15
-    tolerance_y: float = 0.12
+    tolerance_x: float = 0.08
+    tolerance_y: float = 0.10
     strikes: int = 0
     last_warning_time: float = 0.0
     current_gaze_start: Optional[float] = None
