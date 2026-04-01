@@ -57,6 +57,58 @@ def safe_api_call(func, *args, **kwargs):
         st.error(f"⚠️ Service temporarily unavailable: {str(e)}")
         return None
 
+def show_loading_overlay(message="Loading...", spinner=True):
+    """Show a full-screen loading overlay that prevents interaction"""
+    overlay_html = f'''
+    <div id="loading-overlay" style="
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.8);
+        backdrop-filter: blur(2px);
+        z-index: 9999;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        color: white;
+    ">
+        <div style="text-align: center;">
+            {"<div style='font-size: 3rem; margin-bottom: 1rem;'>⏳</div>" if spinner else ""}
+            <h3 style="color: white; margin-bottom: 0.5rem;">{message}</h3>
+            <p style="color: rgba(255, 255, 255, 0.8); margin-bottom: 1rem;">Please wait...</p>
+            {"<div style='width: 40px; height: 40px; border: 3px solid rgba(255, 255, 255, 0.3); border-radius: 50%; border-top-color: white; animation: spin 1s linear infinite; margin: 0 auto;'></div>" if spinner else ""}
+        </div>
+    </div>
+
+    <style>
+    @keyframes spin {{
+        0% {{ transform: rotate(0deg); }}
+        100% {{ transform: rotate(360deg); }}
+    }}
+
+    /* Disable scrolling when overlay is active */
+    body {{
+        overflow: hidden !important;
+    }}
+    </style>
+    '''
+    st.markdown(overlay_html, unsafe_allow_html=True)
+
+def hide_loading_overlay():
+    """Hide the loading overlay"""
+    st.markdown("""
+    <script>
+    const overlay = document.getElementById('loading-overlay');
+    if (overlay) {
+        overlay.style.display = 'none';
+    }
+    document.body.style.overflow = 'auto';
+    </script>
+    """, unsafe_allow_html=True)
+
 if 'available_models' not in st.session_state:
     st.session_state.available_models = safe_api_call(get_free_models) or ["kilo-auto/free"]
 
@@ -974,13 +1026,13 @@ def confirm_submission():
         st.rerun()
 
 def render_step_progress():
-    """Render a visual progress indicator for interview steps"""
+    """Render a horizontal progress bar for interview steps"""
     steps = [
-        {"name": "Device Test", "icon": "📷", "step": "device_test"},
-        {"name": "Setup", "icon": "🔑", "step": "setup"},
-        {"name": "Analysis", "icon": "🧠", "step": "analysis"},
-        {"name": "Interview", "icon": "🎤", "step": "interview"},
-        {"name": "Report", "icon": "📋", "step": "report"}
+        {"name": "Device Setup", "icon": "📷🎤", "step": "device_test", "description": "Test camera & microphone"},
+        {"name": "Your Details", "icon": "👤", "step": "setup", "description": "Enter personal information"},
+        {"name": "Resume Analysis", "icon": "📄", "step": "analysis", "description": "AI analyzes your profile"},
+        {"name": "Live Interview", "icon": "🎯", "step": "interview", "description": "Answer technical questions"},
+        {"name": "Final Results", "icon": "🏆", "step": "report", "description": "View evaluation report"}
     ]
 
     current_step = st.session_state.get('step', 'device_test')
@@ -992,9 +1044,31 @@ def render_step_progress():
             current_idx = i
             break
 
-    st.markdown("""
-        <div style="display: flex; justify-content: center; align-items: center; margin: 1rem 0; padding: 0.5rem; background: rgba(0,0,0,0.2); border-radius: 12px;">
-    """, unsafe_allow_html=True)
+    # Calculate progress percentage
+    progress_percentage = ((current_idx + 1) / len(steps)) * 100
+
+    # Get current step info
+    current_step_info = steps[current_idx] if current_idx < len(steps) else steps[-1]
+
+    # Build the progress bar HTML
+    progress_html = f'''
+        <div style="margin: 1rem 0; padding: 1.5rem; background: rgba(0,0,0,0.2); border-radius: 12px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <div>
+                    <div style="color: var(--text-primary); font-size: 1rem; font-weight: 700;">{current_step_info['name']}</div>
+                    <div style="color: var(--text-secondary); font-size: 0.8rem;">{current_step_info['description']}</div>
+                </div>
+                <span style="color: var(--text-secondary); font-size: 0.8rem; background: rgba(255,255,255,0.1); padding: 0.25rem 0.75rem; border-radius: 20px;">{current_idx + 1} of {len(steps)}</span>
+            </div>
+
+            <!-- Progress Bar -->
+            <div style="width: 100%; height: 10px; background: rgba(255,255,255,0.1); border-radius: 5px; margin-bottom: 1.5rem; overflow: hidden;">
+                <div style="width: {progress_percentage}%; height: 100%; background: linear-gradient(90deg, #10b981 0%, #059669 100%); border-radius: 5px; transition: width 0.8s ease-in-out; box-shadow: 0 0 15px rgba(16, 185, 129, 0.4);"></div>
+            </div>
+
+            <!-- Step Indicators -->
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+    '''
 
     for i, step in enumerate(steps):
         is_completed = i < current_idx
@@ -1002,33 +1076,82 @@ def render_step_progress():
         is_pending = i > current_idx
 
         if is_completed:
-            color = "#10b981"
-            bg_color = "rgba(16, 185, 129, 0.2)"
-            border = "2px solid #10b981"
+            bg_color = "#10b981"
+            icon_color = "white"
+            status_indicator = "✓"
         elif is_current:
-            color = "#3b82f6"
-            bg_color = "rgba(59, 130, 246, 0.2)"
-            border = "2px solid #3b82f6"
+            bg_color = "#3b82f6"
+            icon_color = "white"
+            status_indicator = "●"
         else:
-            color = "#64748b"
-            bg_color = "rgba(100, 116, 139, 0.1)"
-            border = "2px solid rgba(100, 116, 139, 0.3)"
+            bg_color = "rgba(100, 116, 139, 0.3)"
+            icon_color = "#64748b"
+            status_indicator = "○"
 
-        connector = '<div style="width: 2rem; height: 2px; background: rgba(255,255,255,0.2); margin: 0 0.5rem;"></div>' if i < len(steps) - 1 else ''
-
-        st.markdown(f"""
-            <div style="display: flex; flex-direction: column; align-items: center; margin: 0 0.25rem;">
-                <div style="background: {bg_color}; border: {border}; border-radius: 50%; width: 3rem; height: 3rem; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; margin-bottom: 0.25rem;">
-                    {step['icon']}
+        progress_html += f'''
+            <div style="display: flex; flex-direction: column; align-items: center; flex: 1; position: relative;">
+                <div style="background: {bg_color}; border-radius: 50%; width: 2.8rem; height: 2.8rem; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; margin-bottom: 0.5rem; box-shadow: 0 3px 10px rgba(0,0,0,0.3); position: relative; z-index: 2; {'animation: pulse 2s infinite;' if is_current else ''}">
+                    <span style="color: {icon_color}; line-height: 1;">{step['icon']}</span>
                 </div>
-                <div style="color: {color}; font-size: 0.7rem; font-weight: 600; text-align: center; white-space: nowrap;">
+                <div style="color: {bg_color if is_completed or is_current else '#64748b'}; font-size: 0.65rem; font-weight: 600; text-align: center; white-space: nowrap; max-width: 4rem;">
                     {step['name']}
                 </div>
+                <div style="color: {bg_color if is_completed else '#64748b'}; font-size: 0.9rem; margin-top: 0.25rem; opacity: 0.8;">
+                    {status_indicator}
+                </div>
             </div>
-            {connector}
-        """, unsafe_allow_html=True)
+        '''
 
-    st.markdown("</div>", unsafe_allow_html=True)
+    progress_html += '''
+            </div>
+        </div>
+
+        <style>
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        </style>
+    '''
+
+    for i, step in enumerate(steps):
+        is_completed = i < current_idx
+        is_current = i == current_idx
+        is_pending = i > current_idx
+
+        if is_completed:
+            bg_color = "#10b981"
+            icon_color = "white"
+            status_indicator = "✓"
+        elif is_current:
+            bg_color = "#3b82f6"
+            icon_color = "white"
+            status_indicator = "●"
+        else:
+            bg_color = "rgba(100, 116, 139, 0.3)"
+            icon_color = "#64748b"
+            status_indicator = "○"
+
+        progress_html += f'''
+            <div style="display: flex; flex-direction: column; align-items: center; flex: 1; position: relative;">
+                <div style="background: {bg_color}; border-radius: 50%; width: 2.5rem; height: 2.5rem; display: flex; align-items: center; justify-content: center; font-size: 1rem; margin-bottom: 0.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.2); position: relative; z-index: 2;">
+                    <span style="color: {icon_color}; line-height: 1;">{step['icon']}</span>
+                </div>
+                <div style="color: {bg_color if is_completed or is_current else '#64748b'}; font-size: 0.7rem; font-weight: 600; text-align: center; white-space: nowrap;">
+                    {step['name']}
+                </div>
+                <div style="color: {bg_color if is_completed else '#64748b'}; font-size: 0.8rem; margin-top: 0.25rem;">
+                    {status_indicator}
+                </div>
+            </div>
+        '''
+
+    progress_html += '''
+            </div>
+        </div>
+    '''
+
+    st.markdown(progress_html, unsafe_allow_html=True)
 
 def render_header():
     if 'user_info' not in st.session_state or not st.session_state.user_info.get("name"): 
@@ -1519,21 +1642,7 @@ def show_setup():
                     }
                     st.session_state.interview_time = datetime.now().strftime("%B %d, %Y at %I:%M %p")
                     
-                    # Show enhanced loading state
-                    st.markdown("""
-                        <div style="text-align: center; padding: 2rem; background: rgba(59, 130, 246, 0.1); border-radius: 12px; border: 1px solid rgba(59, 130, 246, 0.3); margin: 1rem 0;">
-                            <div style="font-size: 2.5rem; margin-bottom: 1rem;">🧠</div>
-                            <h4 style="color: var(--text-primary); margin-bottom: 0.5rem;">Analyzing Your Information</h4>
-                            <p style="color: var(--text-secondary); margin-bottom: 1rem;">AI is processing your resume/job description and preparing personalized questions...</p>
-                            <div style="display: inline-block; width: 40px; height: 40px; border: 3px solid rgba(59, 130, 246, 0.3); border-radius: 50%; border-top-color: #3b82f6; animation: spin 1s linear infinite;"></div>
-                        </div>
-                        <style>
-                        @keyframes spin {
-                            0% { transform: rotate(0deg); }
-                            100% { transform: rotate(360deg); }
-                        }
-                        </style>
-                    """, unsafe_allow_html=True)
+                    show_loading_overlay("🧠 Analyzing Your Information<br><small>AI is processing your resume/job description and preparing personalized questions...</small>", spinner=True)
 
                     with st.spinner(""):
                         if input_type == "Upload Resume (PDF)":
@@ -1672,14 +1781,7 @@ def show_analysis():
         if not analysis_text:
             st.error("❌ Cannot proceed without analysis data. Please return to setup and try again.")
         elif st.button("✅ Confirm & Proceed to Interview", type="primary", use_container_width=True):
-            st.markdown("""
-                <div style="text-align: center; padding: 2rem; background: rgba(16, 185, 129, 0.1); border-radius: 12px; border: 1px solid rgba(16, 185, 129, 0.3); margin: 1rem 0;">
-                    <div style="font-size: 2.5rem; margin-bottom: 1rem;">🎯</div>
-                    <h4 style="color: var(--text-primary); margin-bottom: 0.5rem;">Preparing Your Interview</h4>
-                    <p style="color: var(--text-secondary); margin-bottom: 1rem;">Generating personalized technical questions based on your profile...</p>
-                    <div style="display: inline-block; width: 40px; height: 40px; border: 3px solid rgba(16, 185, 129, 0.3); border-radius: 50%; border-top-color: #10b981; animation: spin 1s linear infinite;"></div>
-                </div>
-            """, unsafe_allow_html=True)
+            show_loading_overlay("🎯 Preparing Your Interview<br><small>Generating personalized technical questions based on your profile...</small>", spinner=True)
 
             with st.spinner(""):
                 prompt = "Generate exactly 8 specific, high-level technical interview questions based on the provided skills. One question per line. No numbering. Make them challenging and relevant to the role."
@@ -1772,99 +1874,147 @@ def interview_content():
             </div>
         """, unsafe_allow_html=True)
         
-        st.markdown('<div class="answer-area">', unsafe_allow_html=True)
-        ans = st.text_area(
-            "Your Answer", 
-            value=st.session_state.answers[q_idx], 
-            height=220, 
-            key=f"ans_ta_{q_idx}", 
-            placeholder="Type your answer here... You can use the voice input button below.",
-            label_visibility="collapsed"
-        )
-        st.session_state.answers[q_idx] = ans
-        st.markdown('</div>', unsafe_allow_html=True)
-        
-        col_back, col_voice, col_next = st.columns([1, 1, 1], gap="medium")
-        
+        # Custom text area with microphone icon
+        current_answer = st.session_state.answers[q_idx]
+
+        text_area_html = f'''
+        <div style="position: relative;">
+            <textarea
+                id="answer-textarea-{q_idx}"
+                placeholder="Type your answer here... Click the microphone to use voice input"
+                style="
+                    width: 100%;
+                    min-height: 220px;
+                    padding: 1rem;
+                    padding-right: 3rem;
+                    border: 1px solid rgba(255, 255, 255, 0.2);
+                    border-radius: 8px;
+                    background: rgba(0, 0, 0, 0.3);
+                    color: var(--text-primary);
+                    font-family: inherit;
+                    font-size: 0.95rem;
+                    line-height: 1.5;
+                    resize: vertical;
+                    outline: none;
+                "
+                oninput="updateTextAreaValue(this.value, {q_idx})"
+            >{current_answer}</textarea>
+
+            <button
+                id="mic-btn-{q_idx}"
+                onclick="toggleVoiceInput({q_idx})"
+                style="
+                    position: absolute;
+                    top: 1rem;
+                    right: 1rem;
+                    background: rgba(16, 185, 129, 0.1);
+                    border: 1px solid rgba(16, 185, 129, 0.3);
+                    border-radius: 6px;
+                    width: 2rem;
+                    height: 2rem;
+                    cursor: pointer;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    color: #10b981;
+                    font-size: 1rem;
+                    transition: all 0.2s;
+                "
+                onmouseover="this.style.background='rgba(16, 185, 129, 0.2)'; this.style.borderColor='rgba(16, 185, 129, 0.5)';"
+                onmouseout="this.style.background='rgba(16, 185, 129, 0.1)'; this.style.borderColor='rgba(16, 185, 129, 0.3)';"
+                title="Click to start voice input"
+            >
+                🎤
+            </button>
+        </div>
+
+        <script>
+        let recognition_{q_idx} = null;
+        let isListening_{q_idx} = false;
+
+        function updateTextAreaValue(value, qIdx) {{
+            // Update Streamlit session state
+            window.parent.postMessage({{
+                type: 'streamlit:setComponentValue',
+                dataType: 'string',
+                value: value,
+                key: 'answer_' + qIdx
+            }}, '*');
+        }}
+
+        function toggleVoiceInput(qIdx) {{
+            const micBtn = document.getElementById('mic-btn-' + qIdx);
+            const textarea = document.getElementById('answer-textarea-' + qIdx);
+
+            if (!isListening_{q_idx}) {{
+                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                if (!SpeechRecognition) {{
+                    alert('Voice input not supported in this browser');
+                    return;
+                }}
+
+                recognition_{q_idx} = new SpeechRecognition();
+                recognition_{q_idx}.continuous = false;
+                recognition_{q_idx}.interimResults = false;
+                recognition_{q_idx}.lang = 'en-US';
+
+                recognition_{q_idx}.onstart = function() {{
+                    isListening_{q_idx} = true;
+                    micBtn.innerHTML = '🛑';
+                    micBtn.style.background = 'rgba(239, 68, 68, 0.2)';
+                    micBtn.style.borderColor = 'rgba(239, 68, 68, 0.5)';
+                    micBtn.style.color = '#ef4444';
+                    micBtn.title = 'Click to stop voice input';
+                }};
+
+                recognition_{q_idx}.onresult = function(event) {{
+                    const transcript = event.results[0][0].transcript;
+                    const currentValue = textarea.value;
+                    textarea.value = currentValue ? currentValue + ' ' + transcript : transcript;
+                    updateTextAreaValue(textarea.value, qIdx);
+                    textarea.dispatchEvent(new Event('input', {{ bubbles: true }}));
+                }};
+
+                recognition_{q_idx}.onend = function() {{
+                    isListening_{q_idx} = false;
+                    micBtn.innerHTML = '🎤';
+                    micBtn.style.background = 'rgba(16, 185, 129, 0.1)';
+                    micBtn.style.borderColor = 'rgba(16, 185, 129, 0.3)';
+                    micBtn.style.color = '#10b981';
+                    micBtn.title = 'Click to start voice input';
+                }};
+
+                recognition_{q_idx}.onerror = function() {{
+                    isListening_{q_idx} = false;
+                    micBtn.innerHTML = '🎤';
+                    micBtn.style.background = 'rgba(16, 185, 129, 0.1)';
+                    micBtn.style.borderColor = 'rgba(16, 185, 129, 0.3)';
+                    micBtn.style.color = '#10b981';
+                }};
+
+                recognition_{q_idx}.start();
+            }} else {{
+                if (recognition_{q_idx}) {{
+                    recognition_{q_idx}.stop();
+                }}
+            }}
+        }}
+        </script>
+        '''
+
+        st.markdown(text_area_html, unsafe_allow_html=True)
+
+        # Get updated value from the custom textarea
+        updated_value = st.session_state.get(f'answer_{q_idx}', current_answer)
+        st.session_state.answers[q_idx] = updated_value
+
+        col_back, _, col_next = st.columns([1, 0.2, 1.2], gap="medium")
+
         with col_back:
             if st.button("⬅️ Previous", disabled=(q_idx == 0), use_container_width=True):
                 st.session_state.current_q -= 1
                 st.rerun()
 
-        with col_voice:
-            if st.button("🎤 Voice Input", use_container_width=True):
-                st.info("🎤 Voice input feature - Click and speak to add text to your answer")
-            else:
-                st.markdown("""
-                    <button id="speak-btn" onclick="toggleSpeech()" style="
-                        background: linear-gradient(135deg, #10b981, #059669);
-                        color: white;
-                        border: none;
-                        padding: 0.7rem 1rem;
-                        border-radius: 10px;
-                        width: 100%;
-                        cursor: pointer;
-                        font-weight: 600;
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                        gap: 0.5rem;
-                        transition: all 0.2s;
-                    ">
-                        🎤 Voice Input
-                    </button>
-                <script>
-                let recognition = null;
-                let isListening = false;
-                
-                function toggleSpeech() {
-                    if (!isListening) {
-                        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-                        if (!SpeechRecognition) {
-                            alert('Voice input not supported in this browser');
-                            return;
-                        }
-                        recognition = new SpeechRecognition();
-                        recognition.continuous = false;
-                        recognition.interimResults = false;
-                        recognition.lang = 'en-US';
-                        
-                        recognition.onstart = function() {
-                            isListening = true;
-                            document.getElementById('speak-btn').innerHTML = '🛑 Stop';
-                            document.getElementById('speak-btn').style.background = '#ef4444';
-                        };
-                        
-                        recognition.onresult = function(event) {
-                            const transcript = event.results[0][0].transcript;
-                            const textareas = window.parent.document.querySelectorAll('textarea');
-                            for (let t of textareas) {
-                                if (t && t.innerText !== undefined) {
-                                    t.value = t.value ? t.value + ' ' + transcript : transcript;
-                                    t.dispatchEvent(new Event('input', { bubbles: true }));
-                                    break;
-                                }
-                            }
-                        };
-                        
-                        recognition.onend = function() {
-                            isListening = false;
-                            document.getElementById('speak-btn').innerHTML = '🎤 Voice Input';
-                            document.getElementById('speak-btn').style.background = 'linear-gradient(135deg, #10b981, #059669)';
-                        };
-                        
-                        recognition.onerror = function() {
-                            isListening = false;
-                            document.getElementById('speak-btn').innerHTML = '🎤 Voice Input';
-                            document.getElementById('speak-btn').style.background = 'linear-gradient(135deg, #10b981, #059669)';
-                        };
-                        
-                        recognition.start();
-                    }
-                }
-                </script>
-            """, unsafe_allow_html=True)
-        
         with col_next:
             label = "Finish Interview ✨" if q_idx + 1 == total else "Next Question ➡️"
             if st.button(label, use_container_width=True, type="primary"):
@@ -1933,14 +2083,7 @@ def show_report():
         </div>
     """, unsafe_allow_html=True)
     
-    st.markdown("""
-        <div style="text-align: center; padding: 2rem; background: rgba(245, 158, 11, 0.1); border-radius: 12px; border: 1px solid rgba(245, 158, 11, 0.3); margin: 1rem 0;">
-            <div style="font-size: 2.5rem; margin-bottom: 1rem;">📊</div>
-            <h4 style="color: var(--text-primary); margin-bottom: 0.5rem;">Evaluating Your Performance</h4>
-            <p style="color: var(--text-secondary); margin-bottom: 1rem;">AI is analyzing your responses, communication skills, and technical knowledge...</p>
-            <div style="display: inline-block; width: 40px; height: 40px; border: 3px solid rgba(245, 158, 11, 0.3); border-radius: 50%; border-top-color: #f59e0b; animation: spin 1s linear infinite;"></div>
-        </div>
-    """, unsafe_allow_html=True)
+    show_loading_overlay("📊 Evaluating Your Performance<br><small>AI is analyzing your responses, communication skills, and technical knowledge...</small>", spinner=True)
 
     with st.spinner(""):
         transcript = ""
