@@ -1147,7 +1147,7 @@ def show_setup():
             jd_text = ""
             
             if input_type == "Upload Resume (PDF)":
-                uploaded_file = st.file_uploader("Upload Resume (PDF) *", type=['pdf'], label_visibility="collapsed", help="Upload your resume in PDF format")
+                uploaded_file = st.file_uploader("", type=['pdf'], label_visibility="collapsed", help="Upload your resume in PDF format")
                 if uploaded_file is not None:
                     file_size = uploaded_file.size / 1024
                     st.markdown(f"""
