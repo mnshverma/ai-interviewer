@@ -16,7 +16,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Initialize session state
+# Initialize session state (only sets defaults if missing)
 initialize_session_state()
 
 # CSS Styling (Embedded for now - could be moved to separate file later)
@@ -296,6 +296,11 @@ st.markdown("""
 
 # Main application routing
 step = st.session_state.get('step', 'setup')
+
+# Handle old step values from previous version
+if step not in ['setup', 'analysis', 'interview', 'report']:
+    step = 'setup'
+    st.session_state.step = 'setup'
 
 # Only show session header if user is identified
 if step in ['interview', 'report'] and st.session_state.get('user_info'):

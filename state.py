@@ -46,7 +46,7 @@ def initialize_session_state() -> None:
 
     # Interview data
     if 'step' not in st.session_state:
-        st.session_state.step = 'setup'  # Changed to start with setup
+        st.session_state.step = 'setup'
     if 'analysis' not in st.session_state:
         st.session_state.analysis = ""
     if 'questions' not in st.session_state:
