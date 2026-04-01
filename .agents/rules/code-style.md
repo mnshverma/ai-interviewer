@@ -1,76 +1,112 @@
 # Code Style — AI Interviewer
 
 ## Language & Framework
-- **JavaScript** (ES2022+), no TypeScript
-- **React 19** with functional components only
-- **Vite 7** for build tooling
-- **Vanilla CSS** — no Tailwind, no CSS-in-JS
+- **Python 3.11+**
+- **Streamlit** for UI
+- **Kilo AI Gateway** for AI integration
 
-## React Conventions
+## Python Conventions
 
-### Components
-- One component per file
-- Use `.jsx` extension for all React files
-- Export as `default export`
-- Name files in PascalCase matching the component name
-- Place all components in `src/components/`
+### Imports
+Order imports strictly:
+1. Standard library (`os`, `datetime`, `base64`, `json`, `time`)
+2. Third-party (`streamlit`, `requests`, `pypdf`, `dotenv`, `fpdf`)
+3. No local imports (all code in single `app.py` file)
 
-### Hooks
-- Use `useState` for local state (no Redux, no Context API)
-- Use `useCallback` for memoized event handlers
-- Use `useEffect` with proper cleanup functions
-- Use `useRef` for DOM refs and mutable values that don't trigger re-renders
-- Always specify dependency arrays for `useEffect` and `useCallback`
+```python
+import os
+import json
+import time
+from datetime import datetime
+import base64
 
-### Props
-- Destructure props in function signature
-- Use descriptive prop names
-- Document complex props with comments
-- No PropTypes required (keep it simple)
+import streamlit as st
+import requests
+from pypdf import PdfReader
+from dotenv import load_dotenv
+from fpdf import FPDF
+```
 
-### State Management
-- All global interview state lives in `App.jsx`
-- Pass state down as props
-- Pass setters down as callback props
-- Use lifting state up pattern — never duplicate state across components
-
-## Naming Conventions
+### Naming Conventions
 
 | Entity | Convention | Example |
 |--------|-----------|---------|
-| Components | PascalCase | `VideoInterview.jsx` |
-| Functions | camelCase | `handleStartInterview()` |
-| Event handlers | `handle` prefix | `handleSubmitAnswer()` |
-| Constants | UPPER_SNAKE_CASE | `MAX_QUESTIONS` |
-| CSS classes | kebab-case | `.interview-container` |
-| CSS variables | `--` prefix, kebab-case | `--primary-blue` |
-| Files (non-components) | camelCase | `openRouterAPI.js` |
+| Functions | snake_case | `get_api_key()`, `show_device_test()` |
+| Classes | PascalCase | `InterviewSession` |
+| Constants | UPPER_SNAKE_CASE | `KILO_API_URL`, `DEFAULT_MODEL` |
+| Session State Keys | snake_case | `device_test_step`, `persistent_photo` |
+| File | lowercase | `app.py` |
 
-## CSS Rules
-- All styles in `src/index.css` (single design system file)
-- Use CSS custom properties for theming (colors, spacing, radii, shadows)
-- Use glassmorphism effects (backdrop-filter, translucent backgrounds)
-- No inline styles in JSX
-- Use `rem` for sizing, `px` only for borders/shadows
-- Mobile-first responsive design with media queries
-- Smooth transitions on interactive elements (0.2-0.3s ease)
+### Functions
+- Use type hints for parameters and return types (preferred, not required)
+- Use descriptive names that indicate purpose
+- Keep functions focused (single responsibility)
 
-## File Organization
+```python
+def call_ai(messages: list, model: str = DEFAULT_MODEL, retries: int = 3) -> str | None:
+    """Call Kilo AI Gateway API with retry logic."""
+    ...
 ```
-src/
-├── App.jsx              ← Orchestrator only, state + flow logic
-├── main.jsx             ← Entry point, never modify
-├── index.css            ← ALL styles, design system tokens
-├── components/          ← One component per file
-│   └── *.jsx
-└── utils/               ← Pure logic, no React
-    └── *.js
+
+### Error Handling
+- Always wrap API calls and file operations in try/except
+- Return sensible defaults on failure
+- Show user-friendly messages via `st.error()`
+
+```python
+def extract_text_from_pdf(file):
+    try:
+        reader = PdfReader(file)
+        text = ""
+        for page in reader.pages:
+            text += page.extract_text() or ""
+        return text
+    except Exception as e:
+        st.error(f"Error reading PDF: {str(e)}")
+        return ""
 ```
+
+## Streamlit-Specific Rules
+
+### Session State
+- Initialize all session state variables at the top (after CSS definition)
+- Use descriptive snake_case names
+- Document critical state variables in AGENTS.md
+
+```python
+if 'step' not in st.session_state:
+    st.session_state.step = 'device_test'
+if 'user_info' not in st.session_state:
+    st.session_state.user_info = {"name": "", "email": "", "phone": "", "id": ""}
+```
+
+### UI Components
+- Use `st.markdown()` with `unsafe_allow_html=True` for CSS styling only
+- Never pass user input directly to `unsafe_allow_html=True`
+- Use Streamlit's built-in components: `st.button()`, `st.text_input()`, `st.camera_input()`, etc.
+
+### Page Functions
+- One function per page/stage (e.g., `show_device_test()`, `show_setup()`)
+- Use `st.session_state.step` for routing
+
+```python
+step = st.session_state.get('step', 'device_test')
+
+if step == 'device_test':
+    show_device_test()
+elif step == 'photo_capture':
+    show_photo_capture()
+elif step == 'setup':
+    show_setup()
+```
+
+## Formatting
+- Max line length: 100 characters
+- Use f-strings for string interpolation
+- 2 spaces for indentation (no tabs)
+- Blank line between function definitions
 
 ## Code Quality
-- No `console.log` in production code (use only for dev debugging, remove before commit)
-- No `var` — use `const` by default, `let` only when reassignment is needed
-- Use template literals over string concatenation
-- Use optional chaining (`?.`) and nullish coalescing (`??`)
-- Async/await over raw Promises
-- Early returns to reduce nesting
+- No debug prints in production (remove before commit)
+- Remove `st.write()` debug statements
+- Test Python syntax before commit: `python -m py_compile app.py`

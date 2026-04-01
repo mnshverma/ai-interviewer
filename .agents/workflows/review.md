@@ -10,7 +10,7 @@ Follow these steps to perform a code review on the Python-native AI Interviewer.
 
 - [ ] Python 3.9+
 - [ ] streamlit installed (`pip install streamlit`)
-- [ ] PyPDF2 and requests installed
+- [ ] pypdf and requests installed
 
 ## Step 1: Quality Check
 

@@ -2,7 +2,7 @@ import streamlit as st
 import os
 import requests
 import json
-from PyPDF2 import PdfReader
+from pypdf import PdfReader
 from dotenv import load_dotenv
 import time
 from fpdf import FPDF
@@ -757,6 +757,10 @@ def show_photo_capture():
         """, unsafe_allow_html=True)
         
         if st.session_state.get("photo_verified") and st.button("Continue →", type="primary", use_container_width=True):
+            # Preserve all verification states across steps
+            st.session_state.mic_verified = True
+            st.session_state.device_test_done = True
+            st.session_state.device_permissions_granted = True
             st.session_state.step = 'setup'
             st.rerun()
         
@@ -851,9 +855,6 @@ def show_setup():
                 v_id = str(v_id).strip() if v_id is not None else ""
                 v_email = str(v_email).strip() if v_email is not None else ""
                 v_phone = str(v_phone).strip() if v_phone is not None else ""
-                
-                # Debug - show what we're getting
-                st.write("DEBUG - Values:", repr(v_name), repr(v_id), repr(v_email), repr(v_phone))
                 
                 if not (v_name and v_id and v_email and v_phone):
                     st.error("⚠️ Please fill all required fields")

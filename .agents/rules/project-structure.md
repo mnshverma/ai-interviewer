@@ -3,65 +3,58 @@
 ## Standard Structure
 
 ```
-ai-interviewer/
-├── .agents/                    ← AI agent configuration
-│   ├── CONTEXT.md              ← Project context (architecture, file map)
-│   ├── CONTEXT.local.md        ← Local state, progress, TODO
-│   ├── workflows/              ← Agent workflow commands
-│   ├── rules/                  ← Mandatory AI rules
-│   └── skills/                 ← Specialized skills
-├── src/                        ← ALL source code
-│   ├── App.jsx                 ← Main orchestrator (state + flow)
-│   ├── main.jsx                ← React entry (DO NOT modify)
-│   ├── index.css               ← Single CSS file (design system)
-│   ├── components/             ← React components (one per file)
-│   │   └── *.jsx
-│   ├── utils/                  ← Pure utility modules (no React)
-│   │   └── *.js
-│   └── assets/                 ← Static imports (images, icons)
-├── public/                     ← Unprocessed static assets
-├── dist/                       ← Build output (git-ignored)
-├── .env                        ← Secrets (git-ignored)
-├── .env.example                ← Env template (committed)
-├── package.json
-├── vite.config.js
-├── vercel.json
-├── eslint.config.js
-└── README.md
+.
+├── app.py                   # Main Streamlit application (ALL code in one file)
+├── requirements.txt         # Python dependencies
+├── manver-logo.png          # Application logo (base64 encoded in app.py)
+├── AGENTS.md                # Agent guidelines for developers
+├── .env                     # Secrets (git-ignored)
+├── .env.example             # Environment template (committed)
+├── .gitignore               # Includes .env, .env.local, etc.
+└── .agents/                 # AI Agent Configuration
+    ├── CONTEXT.md           # Project context (architecture, file map)
+    ├── CONTEXT.local.md     # Local state, progress, TODO
+    ├── workflows/           # Agent workflow commands
+    │   ├── deploy.md        # Streamlit Cloud deployment
+    │   └── review.md        # Code review workflow
+    └── rules/               # Mandatory AI rules
+        ├── api-conventions.md
+        ├── code-style.md
+        ├── error-handling.md
+        ├── git-workflow.md
+        ├── security.md
+        ├── state-management.md
+        └── testing.md
 ```
 
-## Rules for Adding Files
+## Rules for This Project
 
-### New Component
-1. Create `src/components/MyComponent.jsx`
-2. Use PascalCase filename matching the component name
-3. Export as `default`
-4. Import and use in `App.jsx` or parent component
-5. Add styles to `src/index.css` (never create per-component CSS files)
+### Single File Architecture
+- **ALL application code lives in `app.py`** — no separate modules or packages
+- Functions are defined in the order: helpers → state init → page functions → main routing
+- CSS is defined via `st.markdown()` with `<style>` blocks
 
-### New Utility
-1. Create `src/utils/myUtility.js`
-2. Use camelCase filename
-3. Export named functions (not default)
-4. Keep React-free — pure JavaScript logic only
-5. Utility should be importable by any component
+### Adding New Features
+1. Add helper functions near the top of `app.py` (after imports, before state init)
+2. Add page functions after the helper functions
+3. Update the routing logic at the bottom of the file
+4. Add CSS styles to the `<style>` block in the markup section
 
-### New Page/View
-This app is a single-page app (SPA). There are no routes or pages.
-Different "views" are controlled by the `interviewState` state machine in `App.jsx`.
-To add a new view:
-1. Add a new state value in `App.jsx`
-2. Add conditional rendering in `App.jsx`'s return JSX
-3. Create the component in `src/components/`
+### Adding New State Variables
+1. Initialize in the state initialization block (after `st.markdown()`)
+2. Use descriptive snake_case names
+3. Document in AGENTS.md if it's a critical state variable
+
+### Environment Variables
+- **NEVER hardcode API keys** — use `os.getenv()` or `.env` file
+- Required: `VITE_KILO_API_KEY` or `KILO_API_KEY`
+- Store in `.env` (git-ignored)
 
 ## Files That Should NOT Be Modified
-- `src/main.jsx` — React entry point, no logic belongs here
-- `vite.config.js` — Only modify when adding Vite plugins
-- `eslint.config.js` — Only modify when adding lint rules
+- `requirements.txt` — only update to add new dependencies
+- `.gitignore` — managed by project rules
 
 ## Files That Should NOT Be Created
-- No `src/styles/` directory — all CSS lives in `src/index.css`
-- No `src/context/` — no React Context is used
-- No `src/hooks/` — keep hooks in the component that uses them
-- No `src/pages/` — this is not a multi-page app
-- No `src/services/` — use `src/utils/` instead
+- No separate `.py` modules — all code in `app.py`
+- No `tests/` directory — manual testing via Streamlit
+- No `utils/` directory — helper functions in main file

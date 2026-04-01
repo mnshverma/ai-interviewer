@@ -2,128 +2,127 @@
 
 ## Project Identity
 
-- **Name**: Manvar AI Interviewer
-- **Type**: Resume-Based Live Video Interview Platform
-- **Stack**: React 19 + Vite 7 + Vanilla CSS + OpenRouter API
-- **Deployment**: Vercel (Static SPA)
-- **Brand**: Manvar AI Interviewer — Professional blue & white glassmorphism theme
+- **Name**: MANVER AI Interviewer
+- **Type**: Streamlit-based Video Interview Platform
+- **Stack**: Python 3.11+ / Streamlit / Kilo AI Gateway API / pypdf / FPDF
+- **Deployment**: Streamlit Cloud
+- **Brand**: MANVER AI Interviewer — Professional dark theme with blue accents
 
 ## Project Overview
 
-An AI-powered interviewer that analyzes resumes and conducts live video interviews with real-time questions, speech recognition (Web Speech API), video recording (WebRTC), and comprehensive AI-generated evaluation reports using OpenRouter (LLaMA 3.1 8B free tier).
+A Streamlit-based AI interviewer that:
+- Tests camera and microphone permissions
+- Captures candidate photo for identity verification
+- Collects candidate details (name, email, ID, phone)
+- Analyzes resume or job description using Kilo AI Gateway
+- Generates technical interview questions
+- Conducts live Q&A with proctoring (webcam monitoring)
+- Produces AI-generated evaluation reports (PDF)
 
 ## Key Architecture Decisions
 
-- **No backend server** — 100% client-side SPA
-- **No state management library** — simple `useState` in `App.jsx`
-- **No CSS framework** — custom Vanilla CSS design system in `src/index.css`
-- **No external speech services** — browser-native Web Speech API
-- **No video upload** — local-only WebRTC MediaRecorder
-- **OpenRouter API** — free LLM gateway for resume analysis, question generation, answer evaluation, and final reports
+- **Backend**: Streamlit (Python) — handles all server-side logic
+- **State Management**: `st.session_state` — for workflow progression and data
+- **AI Integration**: Kilo AI Gateway — for resume analysis, question generation, evaluation
+- **PDF Generation**: FPDF — for final evaluation reports
+- **No database** — all data in memory (session state)
+- **No authentication** — open access interview platform
 
 ## Directory Structure
 
 ```
-ai-interviewer/
-├── .agents/                        ← AI Agent Configuration (THIS FOLDER)
-│   ├── CONTEXT.md                  ← Project context & architecture (this file)
-│   ├── CONTEXT.local.md            ← Local dev state, progress, TODO
-│   ├── workflows/                  ← Core agent workflow commands
-│   │   ├── deploy.md
-│   │   ├── fix-issue.md
-│   │   └── review.md
-│   ├── rules/                      ← Mandatory AI rules for code generation
-│   │   ├── api-conventions.md
-│   │   ├── code-style.md
-│   │   ├── state-management.md
-│   │   ├── error-handling.md
-│   │   ├── git-workflow.md
-│   │   ├── project-structure.md
-│   │   ├── security.md
-│   │   └── testing.md
-│   └── skills/
-│       ├── deploy/
-│       │   └── SKILL.md
-│       └── security-review/
-│           └── SKILL.md
-├── src/
-│   ├── App.jsx                     ← Main orchestrator (state machine)
-│   ├── main.jsx                    ← React entry point
-│   ├── index.css                   ← Full design system
-│   ├── components/
-│   │   ├── DataInput.jsx           ← Resume upload & parsing
-│   │   ├── ErrorBoundary.jsx       ← Global error boundary
-│   │   ├── FinalReport.jsx         ← AI evaluation results
-│   │   ├── InterviewHistory.jsx    ← Past interview sessions
-│   │   ├── InterviewSettings.jsx   ← Config (API key, type, options)
-│   │   ├── ScoreVisualization.jsx  ← Score charts & metrics
-│   │   ├── Toast.jsx               ← Notification toasts
-│   │   ├── TranscriptPanel.jsx     ← Real-time transcript
-│   │   └── VideoInterview.jsx      ← Camera, recording & Q&A flow
-│   └── utils/
-│       ├── openRouterAPI.js        ← AI/LLM integration layer
-│       ├── pdfParser.js            ← PDF.js resume parsing
-│       └── speechService.js        ← TTS & STT wrapper
-├── public/                         ← Static assets
-├── dist/                           ← Production build output
-├── .env                            ← API keys (git-ignored)
-├── .env.example                    ← Env template
-├── package.json
-├── vite.config.js
-├── vercel.json                     ← Vercel deployment config
-└── README.md
+.
+├── app.py                   # Main Streamlit application (all UI, API calls, state)
+├── requirements.txt         # Python dependencies
+├── manver-logo.png          # Application logo
+├── AGENTS.md                # Agent guidelines (this file)
+├── .env                     # Environment variables (API keys) — git-ignored
+├── .env.example             # Environment template
+├── .gitignore               # Includes .env
+└── .agents/                 # AI Agent Configuration
+    ├── CONTEXT.md           # Project context (this file)
+    ├── CONTEXT.local.md     # Local dev state
+    ├── workflows/           # Agent workflow commands
+    │   ├── deploy.md        # Streamlit Cloud deployment
+    │   └── review.md        # Code review workflow
+    ├── skills/              # Specialized agent skills
+    │   ├── deploy/SKILL.md   # Deployment skill
+    │   └── security-review/SKILL.md
+    └── rules/               # Mandatory AI rules
+        ├── api-conventions.md
+        ├── code-style.md
+        ├── error-handling.md
+        ├── git-workflow.md
+        ├── security.md
+        ├── state-management.md
+        └── testing.md
 ```
 
 ## Interview State Machine
 
-The app flows through these states (managed in `App.jsx`):
+The app flows through these states (managed in `st.session_state.step`):
 
 ```
-setup → analyzing → interviewing → completing → report
+device_test → photo_capture → setup → analysis → interview → report
 ```
+
+| State | Description |
+|-------|-------------|
+| `device_test` | Camera/microphone permission and testing |
+| `photo_capture` | Candidate photo capture for identity |
+| `setup` | Candidate details form + resume/JD upload |
+| `analysis` | AI analysis of resume/JD |
+| `interview` | Q&A session with webcam proctoring |
+| `report` | Final evaluation report |
 
 ## Critical Files Map
 
 | File | Purpose |
 |------|---------|
-| `src/App.jsx` | Main orchestrator — all state, interview flow logic |
-| `src/utils/openRouterAPI.js` | ALL AI API calls (resume analysis, questions, evaluation, report) |
-| `src/utils/speechService.js` | Text-to-Speech & Speech-to-Text via Web Speech API |
-| `src/utils/pdfParser.js` | PDF text extraction via Mozilla pdf.js |
-| `src/index.css` | Complete design system (colors, typography, glassmorphism) |
-| `src/components/VideoInterview.jsx` | Camera access, MediaRecorder, Q&A interaction |
-| `src/components/InterviewSettings.jsx` | API key input, interview type, voice options |
-| `src/components/DataInput.jsx` | Resume upload (drag-drop, PDF/TXT) |
-| `src/components/FinalReport.jsx` | AI-generated evaluation display |
-| `src/components/ScoreVisualization.jsx` | Charts & metrics rendering |
-| `src/components/InterviewHistory.jsx` | Past session browser |
+| `app.py` | Main application — all routes, UI, API calls, state management |
+| `requirements.txt` | Python dependencies |
+| `.env` | API keys (KILO_API_KEY) |
+
+## Key Functions in app.py
+
+| Function | Purpose |
+|----------|---------|
+| `show_device_test()` | Device permission testing UI |
+| `show_photo_capture()` | Photo capture for identity |
+| `show_setup()` | Candidate details + resume/JD input |
+| `show_analysis()` | AI analysis display |
+| `interview_content()` | Q&A with proctoring |
+| `show_report()` | Final evaluation |
+| `call_ai()` | Kilo API integration |
+| `extract_text_from_pdf()` | Resume PDF parsing |
+| `create_pdf_report()` | PDF report generation |
 
 ## Common Tasks
 
-- **Add a new interview type**: Update `InterviewSettings.jsx` options + `openRouterAPI.js` prompt templates
-- **Change AI model**: Edit model ID in `src/utils/openRouterAPI.js`
-- **Modify UI theme**: Edit CSS custom properties in `src/index.css`
-- **Add a new component**: Create in `src/components/`, import in `App.jsx`
-- **Deploy**: `npm run build` → push to Vercel
+- **Run locally**: `streamlit run app.py --server.port 8501`
+- **Deploy**: See `.agents/skills/deploy/SKILL.md`
+- **Add new step**: Add function + update routing in main block
+- **Modify API**: Edit `call_ai()` function
+- **Change UI**: Edit CSS in `st.markdown()` calls
 
 ## Dependencies
 
-| Package | Version | Purpose |
-|---------|---------|---------|
-| react | ^19.2.0 | UI framework |
-| react-dom | ^19.2.0 | React DOM renderer |
-| pdfjs-dist | ^5.4.530 | PDF text extraction |
-| vite | ^7.2.4 | Build tool & dev server |
-| eslint | ^9.39.1 | Code linting |
+| Package | Purpose |
+|---------|---------|
+| streamlit | Web framework |
+| requests | HTTP client for API calls |
+| pypdf | PDF text extraction |
+| fpdf | PDF report generation |
+| python-dotenv | Environment variable loading |
 
 ## Rules Summary
 
 Always follow the rules defined in `.agents/rules/`:
-- `code-style.md` — React/JSX conventions, naming, CSS patterns
-- `api-conventions.md` — OpenRouter API usage, error handling, rate limits
+- `code-style.md` — Python naming, imports, formatting
+- `api-conventions.md` — Kilo API usage patterns
 - `error-handling.md` — Graceful degradation, user-friendly errors
-- `security.md` — API key protection, data privacy
+- `security.md` — API key protection, no hardcoded secrets
 - `project-structure.md` — File organization standards
 - `git-workflow.md` — Branch strategy, commit conventions
 - `testing.md` — Testing requirements
-- `state-management.md` — Local state & storage patterns
+- `state-management.md` — Streamlit session state patterns

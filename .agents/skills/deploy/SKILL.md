@@ -14,7 +14,7 @@ Before deploying, always run these checks:
 ### 1. Dependency Check
 Ensure all used libraries are in `requirements.txt`:
 ```bash
-# Verify if streamlit, PyPDF2, requests are present
+# Verify if streamlit, pypdf, requests are present
 cat requirements.txt
 ```
 

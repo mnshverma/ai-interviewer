@@ -1,87 +1,98 @@
 # Testing — AI Interviewer
 
 ## Current Testing Approach
-This project currently uses **manual testing** as the primary QA method. Automated tests are a future enhancement.
+This project uses **manual testing** as the primary QA method. No automated test framework is currently configured.
 
 ## Manual Testing Checklist
 
-### Resume Upload
-- [ ] PDF upload works (drag-and-drop + click)
-- [ ] TXT upload works
-- [ ] Large files (>1MB) handled gracefully
-- [ ] Invalid files show error message
-- [ ] Resume text preview shows correctly
+### Device Testing (device_test)
+- [ ] Camera permission prompt appears
+- [ ] Microphone permission prompt appears
+- [ ] Live camera preview works
+- [ ] Microphone level visualizer works
+- [ ] "Done - Continue to Photo" works
 
-### Interview Settings
-- [ ] API key input accepts and validates key format
-- [ ] Interview type dropdown works (Technical, Behavioral, Mixed, Leadership)
-- [ ] Voice toggle works
-- [ ] Recording toggle works
-- [ ] "Start Interview" disabled until resume + API key provided
+### Photo Capture (photo_capture)
+- [ ] Camera feed displays
+- [ ] Photo capture works
+- [ ] Preview shows after capture
+- [ ] "Continue →" proceeds to setup
 
-### Video Interview
-- [ ] Camera preview starts correctly
-- [ ] Recording indicator shows when recording
-- [ ] AI question displays on screen
-- [ ] TTS speaks the question (when voice enabled)
-- [ ] "Start Recording Answer" begins STT
-- [ ] "Stop & Submit" captures the answer
-- [ ] Next question loads after submission
-- [ ] Progress indicator updates
+### Setup/Candidate Details (setup)
+- [ ] All form fields accept input
+- [ ] Resume PDF upload works
+- [ ] JD text area accepts input
+- [ ] Model dropdown shows available models
+- [ ] Form validation shows errors for empty fields
+- [ ] "Start Interview Session" proceeds to analysis
 
-### AI Integration
-- [ ] Resume analysis returns meaningful result
-- [ ] Questions are relevant to the resume
-- [ ] Answer evaluation provides feedback
-- [ ] Final report is comprehensive and structured
-- [ ] Fallback models work when primary fails
+### Analysis (analysis)
+- [ ] AI analysis displays correctly
+- [ ] Candidate info shows correctly
+- [ ] "Confirm & Proceed to Interview" works
 
-### Report & History
-- [ ] Final report displays with scores
-- [ ] Score visualization renders correctly
-- [ ] Download transcript works
-- [ ] Download recording works (when recorded)
-- [ ] Interview saved to history
-- [ ] History panel shows past interviews
+### Interview (interview)
+- [ ] Questions display correctly
+- [ ] Answer text area works
+- [ ] Voice input button works
+- [ ] Navigation (Next/Previous) works
+- [ ] Progress bar updates
+- [ ] Proctoring camera works
+
+### Report (report)
+- [ ] AI evaluation displays
+- [ ] PASS/FAIL badge shows correctly
+- [ ] Transcript view works
+- [ ] "Start New Interview" resets everything
 
 ### Cross-Browser
-- [ ] Chrome (primary — all features)
-- [ ] Edge (all features)
-- [ ] Firefox (speech recognition may differ)
-- [ ] Safari (limited speech recognition)
+- [ ] Chrome (primary)
+- [ ] Edge
+- [ ] Firefox
 
-### Responsive Design
+### Responsive
 - [ ] Desktop (1920px+)
 - [ ] Laptop (1366px)
 - [ ] Tablet (768px)
 - [ ] Mobile (375px)
 
+## Python Syntax Check
+
+Before every commit, verify syntax:
+```bash
+python -m py_compile app.py
+```
+
+Or:
+```bash
+python -c "import ast; ast.parse(open('app.py').read())"
+```
+
+## Linting (Optional)
+
+Install and run black for formatting:
+```bash
+pip install black
+black app.py --line-length 100
+```
+
 ## Future: Automated Testing
 
 ### Planned Stack
 ```
-npm install --save-dev vitest @testing-library/react @testing-library/jest-dom
+pip install pytest pytest-cov
 ```
 
-### Unit Test Targets
-- `src/utils/openRouterAPI.js` — Mock API responses, test parsing
-- `src/utils/pdfParser.js` — Test text extraction
-- `src/utils/speechService.js` — Test service initialization
+### Test Targets
+- API calls (`call_ai` function)
+- PDF parsing (`extract_text_from_pdf`)
+- PDF report generation (`create_pdf_report`)
+- State transitions
 
-### Component Test Targets
-- `DataInput.jsx` — File selection, validation
-- `InterviewSettings.jsx` — Form validation, state
-- `FinalReport.jsx` — Report rendering with various data shapes
-
-### Test File Convention
+### Test Convention
 ```
-src/
-├── utils/
-│   ├── openRouterAPI.js
-│   └── __tests__/
-│       └── openRouterAPI.test.js
-├── components/
-│   ├── DataInput.jsx
-│   └── __tests__/
-│       └── DataInput.test.jsx
+tests/
+├── test_api.py
+├── test_parsing.py
+└── test_report.py
 ```

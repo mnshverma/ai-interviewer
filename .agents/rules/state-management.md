@@ -1,69 +1,76 @@
 # State Management & Storage — AI Interviewer
 
 ## Overview
-This app has **NO backend database**. All state is either:
-1. **React state** (in-memory, lost on refresh)
-2. **localStorage** (persisted in browser)
-3. **Environment variables** (build-time config)
+This app has **NO backend database**. All state is managed via:
+1. **Streamlit Session State** (in-memory, lost on refresh)
+2. **Environment variables** (API keys, configuration)
 
-## React State (App.jsx)
+## Streamlit Session State
 
-All interview state is centralized in `App.jsx`:
+All application state is stored in `st.session_state`:
 
-```javascript
-// Core interview state
-const [resumeData, setResumeData] = useState(null);          // Parsed resume text
-const [interviewConfig, setInterviewConfig] = useState(null); // API key, type, options
-const [interviewState, setInterviewState] = useState("setup"); // State machine
-const [resumeAnalysis, setResumeAnalysis] = useState("");      // AI resume analysis
-const [questions, setQuestions] = useState([]);                 // Generated questions
-const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-const [transcript, setTranscript] = useState([]);              // Q&A transcript
-const [isAISpeaking, setIsAISpeaking] = useState(false);       // TTS active flag
-const [isListening, setIsListening] = useState(false);         // STT active flag
-const [finalReport, setFinalReport] = useState(null);          // AI evaluation
+### Core State Variables
+```python
+# Workflow control
+st.session_state.step = 'device_test'  # Current page/stage
+
+# User data
+st.session_state.user_info = {"name": "", "email": "", "phone": "", "id": ""}
+st.session_state.persistent_photo = None  # Captured photo
+st.session_state.interview_time = None      # Interview timestamp
+
+# Interview data
+st.session_state.analysis = ""       # AI resume/JD analysis
+st.session_state.questions = []      # Generated interview questions
+st.session_state.answers = []         # User's answers
+st.session_state.current_q = 0       # Current question index
+
+# Verification flags
+st.session_state.device_test_done = False
+st.session_state.device_permissions_granted = False
+st.session_state.mic_verified = False
+st.session_state.photo_verified = False
+
+# API data
+st.session_state.available_models = []  # Fetched from Kilo API
 ```
 
 ### State Machine Transitions
 ```
-setup        → analyzing     (on "Start Interview" click)
-analyzing    → interviewing  (after questions generated)
-interviewing → completing    (after last question answered)
-completing   → report        (after final report generated)
-report       → setup         (on "New Interview" click)
+device_test → photo_capture → setup → analysis → interview → report
+```
+
+### Initialization Pattern
+Always initialize all session state variables in one place (after CSS, before page functions):
+
+```python
+if 'step' not in st.session_state: 
+    st.session_state.step = 'device_test'
+
+if 'user_info' not in st.session_state:
+    st.session_state.user_info = {"name": "", "email": "", "phone": "", "id": ""}
+
+# ... continue for all state variables
 ```
 
 ### Rules
-- **Never** create duplicate state in child components for data that comes from App.jsx
-- **Never** use `useContext` or Redux — this app is simple enough for prop drilling
-- **Always** use functional updates when new state depends on previous: `setState(prev => ...)`
-
-## localStorage Usage
-
-### What Gets Persisted
-- **Interview History**: Past interview sessions (scores, dates, types)
-- **API Key**: Optionally saved for convenience (encrypted in future)
-- **User Preferences**: Voice on/off, recording on/off
-
-### localStorage Keys
-| Key | Type | Purpose |
-|-----|------|---------|
-| `interviewHistory` | JSON array | Past interview sessions |
-| `openrouter_api_key` | string | Saved API key |
-| `interview_preferences` | JSON object | User settings |
-
-### localStorage Rules
-- Always wrap in try/catch (storage may be full or disabled)
-- Always JSON.parse with fallback: `JSON.parse(value) ?? defaultValue`
-- Never store sensitive data without encryption warning to user
-- Clean up old entries if history grows too large (max 50 sessions)
+- **Always** initialize before use to avoid KeyError
+- **Never** rely on default values — always set in initialization block
+- **Use** descriptive snake_case names
+- **Preserve** critical flags when transitioning between steps
 
 ## Environment Variables
 
 | Variable | Required | Purpose |
 |----------|----------|---------|
-| `VITE_OPENROUTER_API_KEY` | Yes | OpenRouter API access |
+| `VITE_KILO_API_KEY` | No | Kilo API key for higher rate limits |
+| `KILO_API_KEY` | No | Alternative API key name |
 
-- Access via `import.meta.env.VITE_OPENROUTER_API_KEY`
-- Must be prefixed with `VITE_` for Vite to expose to client
-- Set in `.env` file (git-ignored) or Vercel dashboard
+- Access via `os.getenv("VITE_KILO_API_KEY")` or `os.getenv("KILO_API_KEY")`
+- Store in `.env` file (git-ignored)
+- Fall back to anonymous mode if not provided
+
+## No localStorage or Database
+- Streamlit doesn't have access to browser localStorage
+- All data is in-memory only
+- "New Interview" button clears all session state

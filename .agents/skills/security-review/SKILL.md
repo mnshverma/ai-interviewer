@@ -49,7 +49,7 @@ pip-audit -r requirements.txt
 ```
 
 Check specifically:
-- `PyPDF2` (ensure version is up to date)
+- `pypdf` (ensure version is up to date)
 - `streamlit` (check for known security advisories)
 - `requests` (verify SSL verification is NOT disabled)
 
