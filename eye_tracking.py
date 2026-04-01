@@ -14,7 +14,7 @@ try:
     import numpy as np
     NP_AVAILABLE = True
     import mediapipe as mp
-    if hasattr(mp, 'solutions'):
+    if hasattr(mp, 'solutions') and hasattr(mp.solutions, 'face_mesh'):
         MP_AVAILABLE = True
     CV2_AVAILABLE = True
 except (ImportError, AttributeError) as e:
@@ -58,7 +58,7 @@ class EyeTrackingState:
 
 class EyeTracker:
     def __init__(self):
-        if not CV2_AVAILABLE:
+        if not CV2_AVAILABLE or not MP_AVAILABLE:
             self.face_mesh = None
             self.mp_face_mesh = None
             self.mp_drawing = None
