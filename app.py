@@ -623,11 +623,11 @@ def render_header():
 
 def show_device_test():
     render_branding()
-    render_step_progress()
+    
     st.markdown("""
-        <div style="text-align: center; margin-top: 1rem;">
-            <h1>Ready to Begin?</h1>
-            <p class="step-subtitle" style="margin-top: 0.5rem;">Join thousands of candidates worldwide in our secure assessment environment.</p>
+        <div style="text-align: center; margin-top: 2rem;">
+            <h1 style="font-size: 2.5rem !important;">AI Interviewer</h1>
+            <p class="step-subtitle">Secure video assessment platform</p>
         </div>
     """, unsafe_allow_html=True)
 
@@ -635,211 +635,127 @@ def show_device_test():
 
     if step_num == 0:
         st.markdown("""
-            <div class="wizard-card wizard-card-center" style="padding: 3rem 2rem;">
-                <div style="font-size: 4rem; margin-bottom: 2rem; animation: pulse 2.5s infinite;">🛡️</div>
-                <h2 style="margin-bottom: 1.25rem; font-size: 2rem !important;">Advanced Session Shield</h2>
-                <p style="color: var(--text-secondary); max-width: 500px; margin: 0 auto 2.5rem; line-height: 1.8; font-size: 1.05rem;">
-                    To initiate your secure interview, we must verify your system's hardware configuration. 
-                    This ensures optimal video and audio transmission during your session.
+            <div class="wizard-card wizard-card-center" style="padding: 2rem;">
+                <p style="color: var(--text-secondary); margin-bottom: 2rem;">
+                    Test your camera and microphone to continue
                 </p>
-                <div style="display: flex; justify-content: center; gap: 2rem; color: var(--text-muted); font-size: 0.8rem; font-weight: 600; text-transform: uppercase;">
-                    <span style="display: flex; align-items: center; gap: 0.5rem;">🔒 Encrypted</span>
-                    <span style="display: flex; align-items: center; gap: 0.5rem;">⚡ Low Latency</span>
-                    <span style="display: flex; align-items: center; gap: 0.5rem;">🤖 AI Powered</span>
-                </div>
             </div>
         """, unsafe_allow_html=True)
 
-        if st.button("Start System Initialization", type="primary", use_container_width=True):
+        if st.button("Start Test", type="primary", use_container_width=True):
             st.session_state.device_test_step = 1
             st.rerun()
 
     elif step_num == 1:
-        st.markdown("""
-            <div style="margin-top: 1rem; margin-bottom: 2rem;">
-                <h3 style="margin-bottom: 0.5rem;">Hardware Configuration</h3>
-                <p style="color: var(--text-secondary); font-size: 0.95rem;">Test your inputs before proceeding to the session</p>
-            </div>
-        """, unsafe_allow_html=True)
-
         col1, col2 = st.columns(2, gap="large")
 
         with col1:
-            st.markdown('<div class="wizard-card" style="padding: 1.5rem; height: 100%;">', unsafe_allow_html=True)
-            st.markdown('<h4 style="margin-bottom: 1.25rem;">📷 Video Status</h4>', unsafe_allow_html=True)
-            camera_ok = st.camera_input("Test camera", label_visibility="collapsed", key="test_camera")
+            camera_ok = st.camera_input("Camera", label_visibility="collapsed", key="test_camera")
+            st.markdown('<p style="text-align: center; color: var(--text-muted); font-size: 0.85rem;">Camera</p>', unsafe_allow_html=True)
             if camera_ok:
-                st.markdown('<div style="margin-top: 1rem; padding: 0.75rem; background: rgba(16, 185, 129, 0.1); border-radius: 10px; border: 1px solid rgba(16, 185, 129, 0.2);"><p style="color: #10b981; margin: 0; font-weight: 600; text-align: center; font-size: 0.85rem;">✓ Video Ready</p></div>', unsafe_allow_html=True)
-            st.markdown('</div>', unsafe_allow_html=True)
+                st.markdown('<p style="text-align: center; color: #10b981; font-weight: 600; font-size: 0.85rem;">✓ Ready</p>', unsafe_allow_html=True)
 
         with col2:
-            st.markdown('<div class="wizard-card" style="padding: 1.5rem; height: 100%;">', unsafe_allow_html=True)
-            st.markdown('<h4 style="margin-bottom: 1.25rem;">🎤 Audio Status</h4>', unsafe_allow_html=True)
-            mic_ok = st.audio_input("Test microphone", label_visibility="collapsed", key="test_mic")
+            mic_ok = st.audio_input("Microphone", label_visibility="collapsed", key="test_mic")
+            st.markdown('<p style="text-align: center; color: var(--text-muted); font-size: 0.85rem;">Microphone</p>', unsafe_allow_html=True)
             if mic_ok:
-                st.markdown('<div style="margin-top: 1rem; padding: 0.75rem; background: rgba(16, 185, 129, 0.1); border-radius: 10px; border: 1px solid rgba(16, 185, 129, 0.2);"><p style="color: #10b981; margin: 0; font-weight: 600; text-align: center; font-size: 0.85rem;">✓ Audio Detected</p></div>', unsafe_allow_html=True)
-            st.markdown('</div>', unsafe_allow_html=True)
+                st.markdown('<p style="text-align: center; color: #10b981; font-weight: 600; font-size: 0.85rem;">✓ Ready</p>', unsafe_allow_html=True)
 
         st.markdown('<br>', unsafe_allow_html=True)
-        col_back, _, col_next = st.columns([1, 0.2, 1])
-        with col_back:
-            if st.button("← Reset Defaults", use_container_width=True, type="secondary"):
-                st.session_state.device_test_step = 0
-                st.rerun()
-        with col_next:
-            can_proceed = camera_ok is not None and mic_ok is not None
-            if st.button("Finalize Verification →", type="primary", use_container_width=True, disabled=not can_proceed):
-                st.session_state.device_test_done = True
-                st.session_state.device_permissions_granted = True
-                st.session_state.photo_verified = True
-                st.session_state.mic_verified = True
-                st.session_state.persistent_photo = camera_ok
-                st.session_state.step = 'photo_capture'
-                st.rerun()
+        
+        can_proceed = camera_ok is not None and mic_ok is not None
+        if st.button("Continue", type="primary", use_container_width=True, disabled=not can_proceed):
+            st.session_state.device_test_done = True
+            st.session_state.device_permissions_granted = True
+            st.session_state.photo_verified = True
+            st.session_state.mic_verified = True
+            st.session_state.persistent_photo = camera_ok
+            st.session_state.step = 'photo_capture'
+            st.rerun()
 
 def show_photo_capture():
     render_branding()
-    render_step_progress()
+    
     st.markdown("""
         <div style="text-align: center; margin-bottom: 2rem;">
-            <h1>Identification</h1>
-            <p style="color: var(--text-secondary);">Verify your identity for the official session record</p>
+            <h1>Take Photo</h1>
+            <p style="color: var(--text-secondary);">Look at the camera</p>
         </div>
     """, unsafe_allow_html=True)
     
-    col_cam, col_info = st.columns([1.2, 1], gap="large")
+    col_cam, _ = st.columns([1.2, 1], gap="large")
     
     with col_cam:
-        st.markdown('<div class="wizard-card" style="padding: 1.25rem;">', unsafe_allow_html=True)
-        photo_cam = st.camera_input(
-            "Capture Identity", 
-            key="photo_capture_cam",
-            label_visibility="collapsed"
-        )
-        st.markdown('</div>', unsafe_allow_html=True)
+        photo_cam = st.camera_input("Photo", key="photo_capture_cam", label_visibility="collapsed")
         
         if photo_cam:
             st.session_state.persistent_photo = photo_cam
             st.session_state.photo_verified = True
-            st.markdown('<div style="text-align: center; color: #10b981; font-weight: 600; margin-top: 1rem;">✨ Verification Photo Captured</div>', unsafe_allow_html=True)
+            st.markdown('<p style="text-align: center; color: #10b981; font-weight: 600;">✓ Photo captured</p>', unsafe_allow_html=True)
     
-    with col_info:
-        st.markdown("""
-            <div class="wizard-card">
-                <h3 style="margin-bottom: 1.25rem;">Guidelines</h3>
-                <div style="display: grid; gap: 0.75rem; color: var(--text-secondary); font-size: 0.9rem;">
-                    <div style="display: flex; gap: 0.75rem;"><span>👤</span> Clear face visibility</div>
-                    <div style="display: flex; gap: 0.75rem;"><span>💡</span> Good ambient lighting</div>
-                    <div style="display: flex; gap: 0.75rem;"><span>👓</span> No sunglasses/hats</div>
-                    <div style="display: flex; gap: 0.75rem;"><span>🎯</span> Look directly forward</div>
-                </div>
-            </div>
-        """, unsafe_allow_html=True)
-        
-        if st.session_state.get("photo_verified") and st.button("Finalize Verification →", type="primary", use_container_width=True):
-            st.session_state.mic_verified = True
-            st.session_state.device_test_done = True
-            st.session_state.device_permissions_granted = True
-            st.session_state.step = 'eye_calibration'
-            st.rerun()
-        
-        if st.button("← Go Back", use_container_width=True):
-            st.session_state.step = 'device_test'
-            st.rerun()
+    if st.session_state.get("photo_verified") and st.button("Continue", type="primary", use_container_width=True):
+        st.session_state.mic_verified = True
+        st.session_state.device_test_done = True
+        st.session_state.device_permissions_granted = True
+        st.session_state.step = 'eye_calibration'
+        st.rerun()
 
 def show_eye_calibration():
     render_branding()
-    tracker = st.session_state.get('eye_tracker')
     
     st.markdown("""
-        <div style="text-align: center; margin-bottom: 1.5rem;">
-            <h1 style="margin-bottom: 0.5rem;">👁️ Eye Tracking Calibration</h1>
-            <p style="color: var(--text-secondary);">Look directly at the camera and follow the instructions</p>
+        <div style="text-align: center; margin-bottom: 2rem;">
+            <h1>Calibration</h1>
+            <p style="color: var(--text-secondary);">Look at the camera</p>
         </div>
     """, unsafe_allow_html=True)
     
-    col_info, col_cam = st.columns([1, 1.5], gap="large")
+    frame_data = st.camera_input("Position face", key="calibration_camera", label_visibility="collapsed")
     
-    with col_info:
-        st.markdown("""
-            <div class="wizard-card">
-                <h3 style="margin-bottom: 1.25rem;">Calibration Protocol</h3>
-                <div style="display: grid; gap: 1rem; color: var(--text-secondary); font-size: 0.9rem;">
-                    <div style="display: flex; gap: 0.75rem;"><span>📏</span> Maintain arm's length distance</div>
-                    <div style="display: flex; gap: 0.75rem;"><span>👁️</span> Focus directly on the camera</div>
-                    <div style="display: flex; gap: 0.75rem;"><span>🧘</span> Remain stationary for 3 seconds</div>
-                </div>
-                <div style="margin-top: 1.5rem; padding: 1rem; background: rgba(59, 130, 246, 0.08); border-radius: 14px; border: 1px solid rgba(59, 130, 246, 0.15);">
-                    <p style="color: var(--accent-primary); font-size: 0.8rem; line-height: 1.5; margin: 0;">
-                        <b>Security Note:</b> Gaze monitoring is active during the session. Persistent looking away may trigger automated warnings.
-                    </p>
-                </div>
-            </div>
-        """, unsafe_allow_html=True)
-        
-        if st.session_state.get('eye_calibration_done'):
-            st.markdown("""
-                <div style="text-align: center; padding: 1rem; background: rgba(16, 185, 129, 0.1); border-radius: 8px; border: 1px solid #10b981;">
-                    <span style="font-size: 2rem;">✅</span>
-                    <p style="color: #10b981; font-weight: 600; margin-top: 0.5rem;">Calibration Complete!</p>
-                </div>
-            """, unsafe_allow_html=True)
-    
-    with col_cam:
-        frame_data = st.camera_input(
-            "Position your face in the center",
-            key="calibration_camera",
-            label_visibility="collapsed"
-        )
-        
-        if frame_data is not None:
+    if frame_data is not None:
+        tracker = st.session_state.get('eye_tracker')
+        if tracker:
             import cv2
             import numpy as np
-            from io import BytesIO
-            
             bytes_data = frame_data.getvalue()
             frame = cv2.imdecode(np.frombuffer(bytes_data, np.uint8), cv2.IMREAD_COLOR)
-            
-            if tracker:
-                success = tracker.calibrate(frame)
-                if success:
-                    st.session_state.eye_calibration_done = True
-                    st.session_state.eye_tracking_active = True
-                    tracker.state.is_active = True
-                    st.success("Calibration successful!")
-                    time.sleep(0.5)
-                    st.rerun()
-        
-        if st.session_state.get('eye_calibration_done'):
-            if st.button("Continue to Interview Setup →", type="primary", use_container_width=True):
-                st.session_state.step = 'setup'
-                st.rerun()
-        else:
-            if st.button("Skip Calibration", use_container_width=True):
+            success = tracker.calibrate(frame)
+            if success:
                 st.session_state.eye_calibration_done = True
-                st.session_state.step = 'setup'
+                st.session_state.eye_tracking_active = True
+                tracker.state.is_active = True
+                st.success("Calibration done")
+                time.sleep(0.5)
                 st.rerun()
+    
+    if st.session_state.get('eye_calibration_done'):
+        if st.button("Continue", type="primary", use_container_width=True):
+            st.session_state.step = 'setup'
+            st.rerun()
+    else:
+        if st.button("Skip", use_container_width=True):
+            st.session_state.eye_calibration_done = True
+            st.session_state.step = 'setup'
+            st.rerun()
 
 def show_setup():
     render_branding()
-    render_step_progress()
 
     st.markdown("<h1>Your Details</h1>", unsafe_allow_html=True)
-    st.markdown('<p class="step-subtitle">Tell us about yourself to get started</p>', unsafe_allow_html=True)
 
     c1, c2 = st.columns(2, gap="medium")
     with c1:
-        st.text_input("Full Name *", key="reg_name", placeholder="e.g. John Doe")
-        st.text_input("Email ID *", key="reg_email", placeholder="john@example.com")
+        st.text_input("Full Name *", key="reg_name", placeholder="John Doe")
+        st.text_input("Email *", key="reg_email", placeholder="john@example.com")
     with c2:
-        st.text_input("Candidate ID *", key="reg_id", placeholder="e.g. CAND-001")
-        st.text_input("Phone Number *", key="reg_phone", placeholder="+91 XXXX XXXX")
+        st.text_input("Candidate ID *", key="reg_id", placeholder="CAND-001")
+        st.text_input("Phone *", key="reg_phone", placeholder="+91 XXXX XXXX")
 
     st.markdown("<br>", unsafe_allow_html=True)
-
     st.markdown("#### Resume or Job Description")
+
     input_type = st.radio(
-        "Choose input type:",
+        "Choose:",
         ["Upload Resume (PDF)", "Paste Job Description"],
         horizontal=True,
         label_visibility="collapsed"
@@ -849,152 +765,127 @@ def show_setup():
     jd_text = ""
 
     if input_type == "Upload Resume (PDF)":
-        uploaded_file = st.file_uploader("Upload Resume", type=['pdf'], label_visibility="collapsed")
+        uploaded_file = st.file_uploader("Upload", type=['pdf'], label_visibility="collapsed")
         if uploaded_file:
-            st.success(f"✓ {uploaded_file.name} ({uploaded_file.size / 1024:.1f} KB)")
+            st.success(f"✓ {uploaded_file.name}")
     else:
-        jd_text = st.text_area("Job Description", height=150, placeholder="Paste the job description here...", label_visibility="collapsed")
+        jd_text = st.text_area("Job Description", height=120, placeholder="Paste job description...", label_visibility="collapsed")
 
     st.markdown("<br>", unsafe_allow_html=True)
 
-    col1, _, col3 = st.columns([1, 0.5, 1], gap="medium")
-    with col1:
-        if st.button("← Back", use_container_width=True):
-            st.session_state.step = 'device_test'
-            st.rerun()
-    with col3:
-        if st.button("Continue →", type="primary", use_container_width=True):
-            v_name = str(st.session_state.get("reg_name", "")).strip()
-            v_id = str(st.session_state.get("reg_id", "")).strip()
-            v_email = str(st.session_state.get("reg_email", "")).strip()
-            v_phone = str(st.session_state.get("reg_phone", "")).strip()
+    if st.button("Continue", type="primary", use_container_width=True):
+        v_name = str(st.session_state.get("reg_name", "")).strip()
+        v_id = str(st.session_state.get("reg_id", "")).strip()
+        v_email = str(st.session_state.get("reg_email", "")).strip()
+        v_phone = str(st.session_state.get("reg_phone", "")).strip()
 
-            missing = []
-            if not v_name: missing.append("Name")
-            if not v_email: missing.append("Email")
-            if not v_id: missing.append("ID")
-            if not v_phone: missing.append("Phone")
+        missing = []
+        if not v_name: missing.append("Name")
+        if not v_email: missing.append("Email")
+        if not v_id: missing.append("ID")
+        if not v_phone: missing.append("Phone")
 
-            if missing:
-                st.error(f"Please fill: {', '.join(missing)}")
-            elif input_type == "Upload Resume (PDF)" and not uploaded_file:
-                st.error("Please upload your resume")
-            elif input_type == "Paste Job Description" and not jd_text.strip():
-                st.error("Please paste the job description")
+        if missing:
+            st.error(f"Please fill: {', '.join(missing)}")
+        elif input_type == "Upload Resume (PDF)" and not uploaded_file:
+            st.error("Please upload your resume")
+        elif input_type == "Paste Job Description" and not jd_text.strip():
+            st.error("Please paste the job description")
+        else:
+            st.session_state.user_info = {
+                "name": v_name, "id": v_id,
+                "email": v_email, "phone": v_phone
+            }
+            st.session_state.interview_time = datetime.now().strftime("%B %d, %Y at %I:%M %p")
+
+            show_loading_overlay("Analyzing...")
+
+            if input_type == "Upload Resume (PDF)":
+                input_content = extract_text_from_pdf(uploaded_file)
+                prompt_msg = "Analyze this resume and identify key skills, experience, and qualifications."
             else:
-                st.session_state.user_info = {
-                    "name": v_name, "id": v_id,
-                    "email": v_email, "phone": v_phone
-                }
-                st.session_state.interview_time = datetime.now().strftime("%B %d, %Y at %I:%M %p")
+                input_content = jd_text
+                prompt_msg = "Analyze this job description and identify key skills, requirements, and qualifications. NO LINKS."
 
-                show_loading_overlay("Analyzing your information...")
-
-                if input_type == "Upload Resume (PDF)":
-                    input_content = extract_text_from_pdf(uploaded_file)
-                    prompt_msg = "Analyze this resume and identify key skills, experience, and qualifications. Provide a detailed summary."
-                else:
-                    input_content = jd_text
-                    prompt_msg = "Analyze this job description and identify key skills, requirements, and qualifications needed. DO NOT INCLUDE ANY LINKS OR URLs."
-
-                model = st.session_state.get("available_models", ["kilo-auto/free"])[0]
-                res = safe_api_call(call_ai, [{"role": "system", "content": prompt_msg}, {"role": "user", "content": input_content}], model=model)
-                
-                hide_loading_overlay() # Added hide
-                
-                if res:
-                    st.session_state.analysis = res
-                    st.session_state.step = 'analysis'
-                    st.rerun()
+            model = st.session_state.get("available_models", ["kilo-auto/free"])[0]
+            res = safe_api_call(call_ai, [{"role": "system", "content": prompt_msg}, {"role": "user", "content": input_content}], model=model)
+            
+            hide_loading_overlay()
+            
+            if res:
+                st.session_state.analysis = res
+                st.session_state.step = 'analysis'
+                st.rerun()
 
 def show_analysis():
     render_branding()
-    render_step_progress()
 
     st.markdown("<h1>Analysis</h1>", unsafe_allow_html=True)
-    st.markdown('<p class="step-subtitle">Review your profile analysis before proceeding</p>', unsafe_allow_html=True)
 
     info = st.session_state.user_info
     st.markdown(f"""
         <div class="wizard-card">
-            <h3 style="margin-bottom: 1rem; color: var(--text-primary);">Your Profile</h3>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; color: var(--text-secondary); font-size: 0.9rem;">
-                <div><strong style="color: var(--text-primary);">Name:</strong> {info['name']}</div>
-                <div><strong style="color: var(--text-primary);">ID:</strong> {info['id']}</div>
-                <div><strong style="color: var(--text-primary);">Email:</strong> {info['email']}</div>
-                <div><strong style="color: var(--text-primary);">Phone:</strong> {info['phone']}</div>
-            </div>
+            <h3 style="margin-bottom: 1rem;">Your Profile</h3>
+            <p style="color: var(--text-secondary);">{info['name']} | {info['email']} | {info['id']}</p>
         </div>
     """, unsafe_allow_html=True)
 
     analysis_text = st.session_state.get('analysis', '').strip()
     if analysis_text:
-        with st.expander("View AI Analysis Summary", expanded=False):
+        with st.expander("View AI Analysis", expanded=False):
             st.markdown(analysis_text)
-    else:
-        st.warning("Analysis data is not available. Please go back and try again.")
 
     st.markdown("<br>", unsafe_allow_html=True)
 
-    col1, _, col3 = st.columns([1, 0.5, 1], gap="medium")
-    with col1:
-        if st.button("← Back", use_container_width=True):
-            st.session_state.step = 'setup'
+    if not analysis_text:
+        st.button("Continue", type="primary", use_container_width=True, disabled=True)
+    elif st.button("Continue", type="primary", use_container_width=True):
+        show_loading_overlay("Preparing...")
+
+        prompt = "Generate 8 technical interview questions based on skills. One per line."
+        text = safe_api_call(call_ai, [{"role": "system", "content": prompt}, {"role": "user", "content": analysis_text}])
+        
+        hide_loading_overlay()
+        
+        if text:
+            questions = [q.strip() for q in text.split('\n') if len(q.strip()) > 15][:8]
+            if len(questions) < 5:
+                questions = [
+                    "Describe your experience with system design.",
+                    "How do you debug production issues?",
+                    "Explain your performance optimization strategy.",
+                    "What is your experience with cloud services?",
+                    "How do you ensure code quality?",
+                    "Describe a challenging problem you solved.",
+                    "How do you stay updated with tech?",
+                    "Explain security best practices."
+                ][:8]
+            st.session_state.questions = questions
+            st.session_state.answers = [""] * len(questions)
+            st.session_state.current_q = 0
+            st.session_state.step = 'interview'
             st.rerun()
-    with col3:
-        if not analysis_text:
-            st.button("Continue →", type="primary", use_container_width=True, disabled=True)
-        elif st.button("Continue →", type="primary", use_container_width=True):
-            show_loading_overlay("Preparing your interview...")
 
-            prompt = "Generate exactly 8 specific, high-level technical interview questions based on the provided skills. One question per line. No numbering. Make them challenging and relevant to the role."
-            text = safe_api_call(call_ai, [{"role": "system", "content": prompt}, {"role": "user", "content": analysis_text}])
-            
-            hide_loading_overlay() # Added hide
-            
-            if text:
-                questions = [q.strip() for q in text.split('\n') if len(q.strip()) > 15][:8]
-                if len(questions) < 5:
-                    questions = [
-                        "Describe your experience with system design and architecture patterns.",
-                        "How do you approach debugging complex production issues?",
-                        "Explain your strategy for optimizing application performance.",
-                        "What is your experience with cloud services and infrastructure?",
-                        "How do you ensure code quality and maintainability?",
-                        "Describe a challenging technical problem you solved.",
-                        "How do you stay updated with emerging technologies?",
-                        "Explain your approach to security best practices."
-                    ][:8]
-                st.session_state.questions = questions
-                st.session_state.answers = [""] * len(questions)
-                st.session_state.current_q = 0
-                st.session_state.step = 'interview'
-                st.rerun()
-
-@st.fragment
 def interview_content():
     tracker = st.session_state.get('eye_tracker')
 
     if tracker and st.session_state.get('eye_tracking_active'):
         warning_info = tracker.get_warning_info()
-
         if warning_info and tracker.state.strikes >= 1:
             strike_num = tracker.state.strikes
-
             if strike_num == 1:
-                st.warning("Please keep your eyes on the screen. First warning.")
+                st.warning("Please keep eyes on screen.")
             elif strike_num == 2:
-                st.error("Warning: Looking away is considered cheating. One more and you may be terminated.")
+                st.error("Warning: Looking away is cheating.")
             elif strike_num == 3:
-                st.error("Final warning. Look away again and your interview will be terminated.")
+                st.error("Final warning. Look away again and interview ends.")
             elif strike_num >= 4:
                 st.session_state.interview_terminated = True
                 tracker.state.is_active = False
                 st.markdown("""
-                    <div class="termination-screen">
-                        <div style="font-size: 4rem;">❌</div>
-                        <h1 style="color: var(--accent-red); font-size: 2rem; margin-top: 1rem;">Interview Terminated</h1>
-                        <p style="color: var(--text-secondary); margin-top: 1rem;">Repeated eye-tracking violations detected.</p>
+                    <div style="text-align: center; padding: 3rem;">
+                        <h1 style="color: #ef4444;">Interview Terminated</h1>
+                        <p style="color: var(--text-secondary);">Repeated violations detected.</p>
                     </div>
                 """, unsafe_allow_html=True)
                 st.session_state.step = 'report'
@@ -1003,41 +894,35 @@ def interview_content():
     q_idx = st.session_state.current_q
     total = len(st.session_state.questions)
 
-    # Question header
     st.markdown(f"""
-        <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 1rem;">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 1rem;">
             <h2 style="margin: 0;">Question {q_idx + 1}</h2>
-            <span style="color: var(--text-muted); font-size: 0.85rem; font-weight: 600;">{q_idx + 1} / {total}</span>
+            <span style="color: var(--text-muted);">{q_idx + 1} / {total}</span>
         </div>
     """, unsafe_allow_html=True)
     st.progress((q_idx + 1) / total)
 
     st.markdown(f"""
-        <div class="wizard-card" style="margin-top: 1.5rem; border-left: 4px solid var(--accent-primary);">
-            <div style="font-size: 1.15rem; font-weight: 500; color: var(--text-primary); line-height: 1.6;">
-                {st.session_state.questions[q_idx]}
-            </div>
+        <div class="wizard-card" style="margin: 1rem 0; border-left: 4px solid var(--accent-primary);">
+            {st.session_state.questions[q_idx]}
         </div>
     """, unsafe_allow_html=True)
 
     st.session_state.answers[q_idx] = st.text_area(
-        "Response Area",
+        "Your Answer",
         value=st.session_state.answers[q_idx],
-        height=220,
+        height=180,
         key=f"ans_ta_{q_idx}",
-        placeholder="Type your comprehensive response here...",
         label_visibility="collapsed"
     )
 
     col_back, _, col_next = st.columns([1, 0.4, 1], gap="medium")
-
     with col_back:
-        if st.button("← Previous Question", disabled=(q_idx == 0), use_container_width=True, type="secondary"):
+        if st.button("← Previous", disabled=(q_idx == 0), use_container_width=True, type="secondary"):
             st.session_state.current_q -= 1
             st.rerun()
-
     with col_next:
-        label = "Complete Interview" if q_idx + 1 == total else "Next Question →"
+        label = "Submit Interview" if q_idx + 1 == total else "Next →"
         if st.button(label, use_container_width=True, type="primary"):
             if q_idx + 1 < total:
                 st.session_state.current_q += 1
@@ -1045,32 +930,17 @@ def interview_content():
             else:
                 confirm_submission()
 
-    # Proctoring section (Refined)
-    with st.expander("🛠️ Advanced Monitoring & AI Assistant", expanded=False):
-        t_col1, t_col2 = st.columns([1, 1.2])
+    with st.expander("Monitoring", expanded=False):
+        t_col1, t_col2 = st.columns([1, 1])
         with t_col1:
-            st.markdown("##### 📹 Vision Status")
-            proctor_frame = st.camera_input("Camera", key="interview_camera", label_visibility="collapsed")
-            
-            if proctor_frame is not None and tracker and st.session_state.get('eye_tracking_active'):
-                import cv2
-                import numpy as np
-                bytes_data = proctor_frame.getvalue()
-                frame = cv2.imdecode(np.frombuffer(bytes_data, np.uint8), cv2.IMREAD_COLOR)
-                tracker.process_frame(frame)
-        
+            st.camera_input("Camera", key="interview_camera", label_visibility="collapsed")
         with t_col2:
-            st.markdown("##### 📊 Integrity Report")
             tracker = st.session_state.get('eye_tracker')
             strikes = tracker.state.strikes if tracker else 0
-            
             if strikes > 0:
-                st.warning(f"Attention Required: {strikes} tracking anomalies detected.")
+                st.warning(f"Alerts: {strikes}")
             else:
-                st.markdown('<div style="padding: 15px; background: rgba(16, 185, 129, 0.1); border-radius: 12px; border: 1px solid rgba(16, 185, 129, 0.2);"><p style="color: #10b981; margin: 0; font-weight: 600;">✅ Tracking: Secure & Compliant</p></div>', unsafe_allow_html=True)
-            
-            st.markdown("<br>", unsafe_allow_html=True)
-            st.markdown(f'<p style="color: var(--text-muted); font-size: 0.8rem;">Session ID: {st.session_state.user_info.get("id", "N/A")}</p>', unsafe_allow_html=True)
+                st.markdown('<p style="color: #10b981;">✓ Secure</p>', unsafe_allow_html=True)
 
 def show_interview():
     render_step_progress()
@@ -1081,67 +951,51 @@ def show_report():
 
     info = st.session_state.user_info
 
-    show_loading_overlay("Evaluating your performance...")
+    show_loading_overlay("Evaluating...")
 
     transcript = ""
     for i, (q, a) in enumerate(zip(st.session_state.questions, st.session_state.answers)):
         transcript += f"Q{i+1}: {q}\nA: {a}\n\n"
 
     res = safe_api_call(call_ai, [
-        {"role": "system", "content": "You are an expert technical interviewer. Evaluate the candidate's interview responses. You MUST START your response with either 'RESULT: PASS' or 'RESULT: FAIL' based on the overall quality of answers, then provide detailed feedback including strengths, areas for improvement, and a final recommendation."},
-        {"role": "user", "content": f"Candidate: {info.get('name', 'N/A')}\nID: {info.get('id', 'N/A')}\nEmail: {info.get('email', 'N/A')}\nDate: {st.session_state.interview_time}\n\nInterview Transcript:\n{transcript}"}
+        {"role": "system", "content": "Evaluate interview responses. Start with 'RESULT: PASS' or 'RESULT: FAIL'. Provide feedback."},
+        {"role": "user", "content": f"Candidate: {info.get('name', 'N/A')}\nID: {info.get('id', 'N/A')}\nTranscript:\n{transcript}"}
     ])
 
-    hide_loading_overlay() # Added hide
+    hide_loading_overlay()
 
     is_pass = "PASS" in str(res).upper()
 
-    st.markdown("<h1>Performance Report</h1>", unsafe_allow_html=True)
+    st.markdown("<h1>Results</h1>", unsafe_allow_html=True)
 
-    # Result state card
     if is_pass:
         st.markdown(f"""
-            <div class="wizard-card" style="border-left: 5px solid #10b981; background: rgba(16, 185, 129, 0.05);">
-                <div style="display: flex; align-items: center; gap: 1rem;">
-                    <span style="font-size: 2.5rem;">🎉</span>
-                    <div>
-                        <h3 style="margin: 0; color: #10b981 !important;">Interview Successful</h3>
-                        <p style="margin: 0; color: var(--text-secondary); font-size: 0.9rem;">You have met the technical threshold for this assessment.</p>
-                    </div>
-                </div>
+            <div class="wizard-card" style="border-left: 5px solid #10b981;">
+                <h3 style="color: #10b981 !important;">Interview Passed</h3>
             </div>
         """, unsafe_allow_html=True)
     else:
         st.markdown(f"""
-            <div class="wizard-card" style="border-left: 5px solid #ef4444; background: rgba(239, 68, 68, 0.05);">
-                <div style="display: flex; align-items: center; gap: 1rem;">
-                    <span style="font-size: 2.5rem;">📋</span>
-                    <div>
-                        <h3 style="margin: 0; color: #ef4444 !important;">Session Completed</h3>
-                        <p style="margin: 0; color: var(--text-secondary); font-size: 0.9rem;">The assessment is complete. Review your feedback below.</p>
-                    </div>
-                </div>
+            <div class="wizard-card" style="border-left: 5px solid #ef4444;">
+                <h3 style="color: #ef4444 !important;">Interview Completed</h3>
             </div>
         """, unsafe_allow_html=True)
 
-    # Main evaluation logic
     if res:
         analysis_text = res.replace("RESULT: PASS", "").replace("RESULT: FAIL", "").strip()
-        st.markdown("### AI Evaluation & Feedback")
+        st.markdown("### Feedback")
         st.markdown(f"""
-            <div class="wizard-card" style="line-height: 1.7; color: var(--text-secondary);">
+            <div class="wizard-card">
                 {analysis_text}
             </div>
         """, unsafe_allow_html=True)
     
-    # Metrics row
     tracker = st.session_state.get('eye_tracker')
     if tracker and st.session_state.get('eye_tracking_active'):
         report = tracker.generate_report()
         score = report.get('compliance_score', 0)
         strikes = report.get('strikes', 0)
         
-        # Duration calculation
         try:
             start_dt = datetime.strptime(st.session_state.interview_time, "%B %d, %Y at %I:%M %p")
             duration_mins = int((datetime.now() - start_dt).total_seconds() / 60)
@@ -1149,29 +1003,14 @@ def show_report():
         except:
             duration_str = "N/A"
             
-        st.markdown("### Integrity & Compliance")
+        st.markdown("### Compliance")
         m1, m2, m3 = st.columns(3)
         with m1:
-            st.markdown(f"""
-                <div class="wizard-card" style="text-align: center; padding: 1.25rem;">
-                    <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.5rem;">Compliance</div>
-                    <div style="font-size: 1.75rem; font-weight: 700; color: var(--accent-primary);">{score:.0f}%</div>
-                </div>
-            """, unsafe_allow_html=True)
+            st.markdown(f"""<div class="wizard-card" style="text-align: center;"><div style="font-size: 0.75rem; color: var(--text-muted);">Compliance</div><div style="font-size: 1.5rem; font-weight: 700;">{score:.0f}%</div></div>""", unsafe_allow_html=True)
         with m2:
-            st.markdown(f"""
-                <div class="wizard-card" style="text-align: center; padding: 1.25rem;">
-                    <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.5rem;">Alerts</div>
-                    <div style="font-size: 1.75rem; font-weight: 700; color: { '#ef4444' if strikes > 0 else '#10b981' };">{strikes}/4</div>
-                </div>
-            """, unsafe_allow_html=True)
+            st.markdown(f"""<div class="wizard-card" style="text-align: center;"><div style="font-size: 0.75rem; color: var(--text-muted);">Alerts</div><div style="font-size: 1.5rem; font-weight: 700; color: {'#ef4444' if strikes > 0 else '#10b981'};">{strikes}/4</div></div>""", unsafe_allow_html=True)
         with m3:
-            st.markdown(f"""
-                <div class="wizard-card" style="text-align: center; padding: 1.25rem;">
-                    <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.5rem;">Duration</div>
-                    <div style="font-size: 1.75rem; font-weight: 700; color: var(--text-primary);">{duration_str}</div>
-                </div>
-            """, unsafe_allow_html=True)
+            st.markdown(f"""<div class="wizard-card" style="text-align: center;"><div style="font-size: 0.75rem; color: var(--text-muted);">Duration</div><div style="font-size: 1.5rem; font-weight: 700;">{duration_str}</div></div>""", unsafe_allow_html=True)
 
     st.markdown("<br>", unsafe_allow_html=True)
     
@@ -1179,15 +1018,15 @@ def show_report():
     with col_pdf:
         pdf_data = create_pdf_report(info, res, transcript, st.session_state.get('persistent_photo'))
         st.download_button(
-            label="📄 Download Official Report",
+            label="Download Report",
             data=pdf_data,
-            file_name=f"Assessment_{info.get('name', 'Report')}.pdf",
+            file_name=f"Report_{info.get('name', 'Assessment')}.pdf",
             mime="application/pdf",
             use_container_width=True,
             type="primary"
         )
     with col_new:
-        if st.button("Start New Session", use_container_width=True):
+        if st.button("New Session", use_container_width=True):
             for key in list(st.session_state.keys()):
                 del st.session_state[key]
             st.rerun()
