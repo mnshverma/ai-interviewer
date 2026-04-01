@@ -16,7 +16,7 @@ with open(LOGO_PATH, "rb") as f:
     LOGO_BASE64 = base64.b64encode(f.read()).decode()
 
 st.set_page_config(
-    page_title="MANWAR AI INTERVIEWER",
+    page_title="MANVER AI INTERVIEWER",
     page_icon=LOGO_PATH,
     layout="wide",
     initial_sidebar_state="collapsed"
@@ -437,7 +437,7 @@ def create_pdf_report(info, evaluation, transcript, photo_bytes=None):
     pdf.set_y(-15)
     pdf.set_font('Arial', 'I', 8)
     pdf.set_text_color(148, 163, 184)
-    pdf.cell(0, 10, '© 2026 MANWAR AI INTERVIEWER - CONFIDENTIAL CANDIDATE DATA', 0, 0, 'C')
+    pdf.cell(0, 10, '© 2026 MANVER AI INTERVIEWER - CONFIDENTIAL CANDIDATE DATA', 0, 0, 'C')
 
     output = pdf.output(dest='S')
     if isinstance(output, str):
@@ -445,7 +445,7 @@ def create_pdf_report(info, evaluation, transcript, photo_bytes=None):
     return output
 
 if 'step' not in st.session_state: 
-    st.session_state.step = 'setup'
+    st.session_state.step = 'device_test'
 
 if 'user_info' not in st.session_state:
     st.session_state.user_info = {"name": "", "email": "", "phone": "", "id": ""}
@@ -530,15 +530,28 @@ def confirm_submission():
         if st.button("🔙 Not yet", use_container_width=True, kind="secondary"):
             st.rerun()
 
+def render_branding():
+    """Global branding header for all steps"""
+    st.markdown(f"""
+        <div style="text-align: center; margin-bottom: 2.5rem; animation: fadeInDown 0.8s ease-out;">
+            <div style="display: inline-block; padding: 1rem; background: var(--bg-glass); border-radius: 24px; border: 1px solid var(--border-glass); box-shadow: var(--shadow-premium); backdrop-filter: blur(12px);">
+                <img src="data:image/png;base64,{LOGO_BASE64}" style="height: 60px; margin-bottom: 0.5rem; filter: drop-shadow(0 0 10px rgba(59, 130, 246, 0.3));">
+                <div style="font-family: 'Outfit', sans-serif; font-size: 1.25rem; font-weight: 800; background: var(--gradient-main); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: 0.1em; text-transform: uppercase;">
+                    MANVER AI
+                </div>
+            </div>
+        </div>
+    """, unsafe_allow_html=True)
+
 def render_step_progress():
     """Render a clean wizard-style progress indicator"""
     steps = [
-        {"label": "Setup", "step": "device_test"},
+        {"label": "Verify", "step": "device_test"},
         {"label": "Photo", "step": "photo_capture"},
-        {"label": "Calibration", "step": "eye_calibration"},
+        {"label": "Sync", "step": "eye_calibration"},
         {"label": "Details", "step": "setup"},
-        {"label": "Analysis", "step": "analysis"},
-        {"label": "Interview", "step": "interview"},
+        {"label": "Analyze", "step": "analysis"},
+        {"label": "Session", "step": "interview"},
         {"label": "Results", "step": "report"}
     ]
 
@@ -607,10 +620,15 @@ def render_header():
     """, unsafe_allow_html=True)
 
 def show_device_test():
+    render_branding()
     render_step_progress()
 
-    st.markdown("<h1>Setup Your Devices</h1>", unsafe_allow_html=True)
-    st.markdown('<p class="step-subtitle">Verify your camera and microphone to begin the session</p>', unsafe_allow_html=True)
+    st.markdown("""
+        <div style="text-align: center;">
+            <h1 style="margin-bottom: 0.25rem;">Welcome to MANVER</h1>
+            <p class="step-subtitle">Secure Technical Assessment Platform</p>
+        </div>
+    """, unsafe_allow_html=True)
 
     step = st.session_state.get("device_test_step", 0)
 
@@ -666,6 +684,7 @@ def show_device_test():
                 st.rerun()
 
 def show_photo_capture():
+    render_branding()
     render_step_progress()
     st.markdown("""
         <div style="text-align: center; margin-bottom: 2rem;">
@@ -715,6 +734,7 @@ def show_photo_capture():
             st.rerun()
 
 def show_eye_calibration():
+    render_branding()
     tracker = st.session_state.get('eye_tracker')
     
     st.markdown("""
@@ -787,7 +807,7 @@ def show_eye_calibration():
                 st.rerun()
 
 def show_setup():
-    render_header()
+    render_branding()
     render_step_progress()
 
     st.markdown("<h1>Your Details</h1>", unsafe_allow_html=True)
@@ -874,7 +894,7 @@ def show_setup():
                     st.rerun()
 
 def show_analysis():
-    render_header()
+    render_branding()
     render_step_progress()
 
     st.markdown("<h1>Analysis</h1>", unsafe_allow_html=True)
@@ -1039,7 +1059,6 @@ def interview_content():
             st.markdown(f'<p style="color: var(--text-muted); font-size: 0.8rem;">Session ID: {st.session_state.user_info.get("id", "N/A")}</p>', unsafe_allow_html=True)
 
 def show_interview():
-    render_header()
     render_step_progress()
     interview_content()
 
@@ -1160,6 +1179,10 @@ def show_report():
             st.rerun()
 
 step = st.session_state.get('step', 'device_test')
+
+# Only show session header if user is identified
+if step in ['interview', 'report'] and st.session_state.get('user_info'):
+     render_header()
 
 if step == 'device_test':
     show_device_test()
