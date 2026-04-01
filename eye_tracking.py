@@ -1,12 +1,20 @@
-import cv2
-import mediapipe as mp
-import numpy as np
 import time
 import base64
 import json
 from datetime import datetime
 from typing import Optional, Tuple, List, Dict
 from dataclasses import dataclass, field, asdict
+
+try:
+    import cv2
+    import mediapipe as mp
+    import numpy as np
+    CV2_AVAILABLE = True
+except ImportError:
+    cv2 = None
+    mp = None
+    np = None
+    CV2_AVAILABLE = False
 
 
 @dataclass
@@ -38,10 +46,34 @@ class EyeTrackingState:
     recalibration_requested: bool = False
     break_approved: bool = False
     break_start_time: Optional[float] = None
+    break_duration: float = 60.0
 
 
 class EyeTracker:
     def __init__(self):
+        if not CV2_AVAILABLE:
+            self.face_mesh = None
+            self.mp_face_mesh = None
+            self.mp_drawing = None
+            self.mp_drawing_styles = None
+            self.left_eye_indices = []
+            self.right_eye_indices = []
+            self.left_iris_idx = 0
+            self.right_iris_idx = 0
+            self.blink_counter = 0
+            self.blink_start = None
+            self.is_blinking = False
+            self.consecutive_away_frames = 0
+            self.min_away_duration = 1.5
+            self.frames_for_away = 45
+            self.calibration_samples = []
+            self.calibration_frames_needed = 30
+            self.ambient_light_threshold = 0.6
+            self.last_light_check = time.time()
+            self.current_brightness = 1.0
+            self.state = EyeTrackingState()
+            return
+        
         self.mp_face_mesh = mp.solutions.face_mesh
         self.face_mesh = self.mp_face_mesh.FaceMesh(
             max_num_faces=1,
@@ -75,6 +107,9 @@ class EyeTracker:
         self.current_brightness = 1.0
         
     def calculate_gaze_ratio(self, eye_points, iris_point, frame_width: int, frame_height: int) -> Tuple[float, float]:
+        if not CV2_AVAILABLE:
+            return 0.0, 0.0
+            
         eye_left = np.array([eye_points[0].x * frame_width, eye_points[0].y * frame_height])
         eye_right = np.array([eye_points[3].x * frame_width, eye_points[3].y * frame_height])
         iris = np.array([iris_point.x * frame_width, iris_point.y * frame_height])
@@ -106,6 +141,9 @@ class EyeTracker:
         return gaze_x, gaze_y
     
     def detect_blink(self, left_eye, right_eye) -> bool:
+        if not CV2_AVAILABLE:
+            return False
+        
         def get_eye_aspect(eye):
             vertical_1 = np.linalg.norm(np.array([eye[1].x - eye[5].x, eye[1].y - eye[5].y]))
             vertical_2 = np.linalg.norm(np.array([eye[2].x - eye[4].x, eye[2].y - eye[4].y]))
@@ -131,6 +169,9 @@ class EyeTracker:
             return False
     
     def check_lighting_condition(self, frame) -> bool:
+        if not CV2_AVAILABLE:
+            return True
+            
         current_time = time.time()
         if current_time - self.last_light_check > 2.0:
             gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
@@ -139,6 +180,9 @@ class EyeTracker:
         return self.current_brightness >= self.ambient_light_threshold
     
     def process_frame(self, frame) -> Dict:
+        if not CV2_AVAILABLE or self.face_mesh is None:
+            return {"status": "unavailable", "looking_at": "center", "gaze_x": 0, "gaze_y": 0}
+        
         if self.state.is_paused or self.state.break_approved:
             if self.state.break_approved and self.state.break_start_time is None:
                 self.state.break_start_time = time.time()
@@ -216,6 +260,9 @@ class EyeTracker:
         }
     
     def calibrate(self, frame) -> bool:
+        if not CV2_AVAILABLE or self.face_mesh is None:
+            return True
+            
         frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         results = self.face_mesh.process(frame_rgb)
         
@@ -259,8 +306,11 @@ class EyeTracker:
         self.state.strikes += 1
         self.state.last_warning_time = current_time
         
-        _, buffer = cv2.imencode('.jpg', frame)
-        screenshot_b64 = base64.b64encode(buffer).decode('utf-8')
+        if CV2_AVAILABLE:
+            _, buffer = cv2.imencode('.jpg', frame)
+            screenshot_b64 = base64.b64encode(buffer).decode('utf-8')
+        else:
+            screenshot_b64 = None
         
         event = GazeEvent(
             timestamp=datetime.now().isoformat(),
@@ -306,7 +356,7 @@ class EyeTracker:
     def approve_break(self, duration_seconds: int = 60):
         self.state.break_approved = True
         self.state.break_start_time = time.time()
-        self.state.break_duration = duration_seconds
+        self.state.break_duration = float(duration_seconds)
     
     def end_break(self):
         if self.state.break_approved and self.state.break_start_time:
