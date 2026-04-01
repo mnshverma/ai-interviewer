@@ -159,7 +159,7 @@ class EyeTracker:
             return ear
         
         left_ear = get_eye_aspect(left_eye)
-        right_ear = get_eye_aspect(left_eye)
+        right_ear = get_eye_aspect(right_eye)
         
         ear = (left_ear + right_ear) / 2
         

@@ -16,16 +16,13 @@ with open(LOGO_PATH, "rb") as f:
     LOGO_BASE64 = base64.b64encode(f.read()).decode()
 
 st.set_page_config(
-    page_title="MANVER AI INTERVIEWER",
+    page_title="MANWAR AI INTERVIEWER",
     page_icon=LOGO_PATH,
     layout="wide",
     initial_sidebar_state="collapsed"
 )
 
-# Add skip link for accessibility
-st.markdown("""
-    <a href="#main-content" class="skip-link">Skip to main content</a>
-""", unsafe_allow_html=True)
+
 
 KILO_API_URL = "https://api.kilo.ai/api/gateway"
 DEFAULT_MODEL = "kilo-auto/free"
@@ -60,7 +57,7 @@ def safe_api_call(func, *args, **kwargs):
 def show_loading_overlay(message="Loading..."):
     """Show a full-screen loading overlay"""
     st.markdown(f'''
-    <div class="loading-overlay">
+    <div class="loading-overlay" id="loading-overlay">
         <div class="loading-content">
             <div class="loading-spinner"></div>
             <p style="color: var(--text-secondary); font-size: 0.9rem; margin: 0;">{message}</p>
@@ -94,35 +91,40 @@ if 'device_test_step' not in st.session_state:
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&display=swap');
 
     :root {
-        --bg-primary: #0a0e17;
-        --bg-secondary: #111827;
-        --bg-card: #1a2332;
-        --accent-blue: #3b82f6;
-        --accent-green: #10b981;
-        --accent-red: #ef4444;
-        --text-primary: #f1f5f9;
-        --text-secondary: #94a3b8;
-        --text-muted: #64748b;
-        --border-color: rgba(255, 255, 255, 0.08);
+        --bg-primary: #030712;
+        --bg-glass: rgba(17, 24, 39, 0.7);
+        --bg-card: rgba(31, 41, 55, 0.4);
+        --accent-primary: #3b82f6;
+        --accent-secondary: #8b5cf6;
+        --gradient-main: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+        --gradient-success: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+        --gradient-error: linear-gradient(135deg, #ef4444 0%, #f87171 100%);
+        --text-primary: #f9fafb;
+        --text-secondary: #9ca3af;
+        --text-muted: #6b7280;
+        --border-glass: rgba(255, 255, 255, 0.08);
+        --shadow-premium: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
     }
 
     * {
         font-family: 'Inter', sans-serif !important;
+        scroll-behavior: smooth;
     }
 
     .stApp {
-        background: var(--bg-primary);
+        background: radial-gradient(circle at top left, #1e1b4b 0%, #030712 40%),
+                    radial-gradient(circle at bottom right, #1e1b4b 0%, #030712 40%);
+        background-attachment: fixed;
         min-height: 100vh;
     }
 
     .block-container {
-        padding-top: 0 !important;
-        padding-bottom: 2rem !important;
-        max-width: 700px !important;
-        padding-left: 1.5rem !important;
-        padding-right: 1.5rem !important;
+        padding-top: 2rem !important;
+        padding-bottom: 3rem !important;
+        max-width: 720px !important;
         margin: 0 auto;
     }
 
@@ -131,262 +133,194 @@ st.markdown("""
     [data-testid="stMainBlockMenu"],
     #MainMenu, footer, header {
         display: none !important;
-        visibility: hidden !important;
     }
 
     h1, h2, h3, h4 {
-        font-family: 'Inter', sans-serif !important;
+        font-family: 'Outfit', sans-serif !important;
         color: var(--text-primary) !important;
+        letter-spacing: -0.02em;
     }
 
     h1 {
-        font-size: 1.75rem !important;
+        font-size: 2.25rem !important;
         font-weight: 700 !important;
-        margin-bottom: 0.25rem !important;
-    }
-
-    h2 {
-        font-size: 1.25rem !important;
-        font-weight: 600 !important;
+        background: var(--gradient-main);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin-bottom: 0.5rem !important;
+        animation: fadeInDown 0.8s ease-out;
     }
 
     .step-subtitle {
         color: var(--text-secondary);
-        font-size: 0.95rem;
-        margin-bottom: 2rem;
+        font-size: 1rem;
+        margin-bottom: 2.5rem;
+        animation: fadeIn 1s ease-out;
     }
 
-    /* Progress Bar */
+    /* Wizards & Progress */
     .wizard-progress {
         display: flex;
         justify-content: center;
-        gap: 0.5rem;
-        margin-bottom: 2rem;
-        padding: 1rem;
-        background: rgba(255,255,255,0.03);
-        border-radius: 12px;
+        gap: 0.75rem;
+        margin-bottom: 2.5rem;
+        padding: 1.25rem;
+        background: var(--bg-glass);
+        backdrop-filter: blur(12px);
+        border: 1px solid var(--border-glass);
+        border-radius: 20px;
+        box-shadow: var(--shadow-premium);
+        animation: fadeInUp 0.6s ease-out;
     }
 
     .wizard-step {
         display: flex;
         flex-direction: column;
         align-items: center;
-        gap: 0.35rem;
-        min-width: 3.5rem;
+        gap: 0.5rem;
+        min-width: 4rem;
+        transition: transform 0.3s ease;
+    }
+
+    .wizard-step:hover {
+        transform: translateY(-2px);
     }
 
     .wizard-step-num {
-        width: 2rem;
-        height: 2rem;
+        width: 2.25rem;
+        height: 2.25rem;
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 0.75rem;
+        font-size: 0.85rem;
         font-weight: 700;
-        border: 2px solid var(--border-color);
+        border: 2px solid var(--border-glass);
         color: var(--text-muted);
-        background: transparent;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        background: rgba(255, 255, 255, 0.03);
     }
 
     .wizard-step-num.active {
-        border-color: var(--accent-blue);
+        border-color: transparent;
         color: white;
-        background: var(--accent-blue);
+        background: var(--gradient-main);
+        box-shadow: 0 0 15px rgba(59, 130, 246, 0.4);
+        transform: scale(1.1);
     }
 
     .wizard-step-num.completed {
-        border-color: var(--accent-green);
+        border-color: transparent;
         color: white;
-        background: var(--accent-green);
+        background: var(--gradient-success);
+        box-shadow: 0 0 10px rgba(16, 185, 129, 0.2);
     }
 
     .wizard-step-label {
-        font-size: 0.6rem;
+        font-size: 0.65rem;
         font-weight: 600;
         color: var(--text-muted);
         text-transform: uppercase;
-        letter-spacing: 0.5px;
+        letter-spacing: 0.8px;
+        transition: color 0.3s ease;
     }
 
-    .wizard-step-label.active {
-        color: var(--accent-blue);
-    }
+    .wizard-step-label.active { color: var(--accent-primary); }
+    .wizard-step-label.completed { color: #10b981; }
 
-    .wizard-step-label.completed {
-        color: var(--accent-green);
-    }
-
-    /* Cards */
+    /* Cards & Containers */
     .wizard-card {
         background: var(--bg-card);
-        border: 1px solid var(--border-color);
-        border-radius: 16px;
-        padding: 1.5rem;
-        margin-bottom: 1rem;
+        backdrop-filter: blur(16px);
+        border: 1px solid var(--border-glass);
+        border-radius: 24px;
+        padding: 2rem;
+        margin-bottom: 1.5rem;
+        box-shadow: var(--shadow-premium);
+        animation: fadeIn 0.8s ease-out;
     }
 
-    .wizard-card-center {
-        text-align: center;
-    }
+    .wizard-card-center { text-align: center; }
 
-    /* Inputs */
+    /* Inputs Overhaul */
     .stTextInput > div > div > input,
     .stTextArea > div > div > textarea {
-        border-radius: 8px !important;
-        border: 1px solid var(--border-color) !important;
-        background: rgba(0,0,0,0.2) !important;
-        color: var(--text-primary) !important;
+        background: rgba(0, 0, 0, 0.2) !important;
+        border: 1px solid var(--border-glass) !important;
+        border-radius: 14px !important;
+        color: white !important;
+        padding: 0.75rem 1rem !important;
+        transition: all 0.3s ease !important;
     }
 
     .stTextInput > div > div > input:focus,
     .stTextArea > div > div > textarea:focus {
-        border-color: var(--accent-blue) !important;
-        box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15) !important;
+        border-color: var(--accent-primary) !important;
+        background: rgba(0, 0, 0, 0.3) !important;
+        box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15) !important;
     }
 
-    .stTextInput label, .stTextArea label {
-        font-weight: 500 !important;
-        font-size: 0.85rem !important;
-        color: var(--text-secondary) !important;
-    }
-
-    /* Buttons */
+    /* Buttons Overhaul */
     .stButton > button {
-        border-radius: 8px !important;
-        padding: 0.65rem 1.25rem !important;
+        border-radius: 14px !important;
+        padding: 0.8rem 2rem !important;
         font-weight: 600 !important;
-        font-size: 0.9rem !important;
+        font-size: 1rem !important;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
         border: none !important;
+        text-transform: none !important;
     }
 
     .stButton > button[kind="primary"] {
-        background: var(--accent-blue) !important;
+        background: var(--gradient-main) !important;
         color: white !important;
+        box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3) !important;
     }
 
     .stButton > button[kind="primary"]:hover {
-        background: #2563eb !important;
+        transform: translateY(-2px) !important;
+        box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4) !important;
     }
 
     .stButton > button[kind="secondary"] {
-        background: rgba(255,255,255,0.05) !important;
+        background: rgba(255, 255, 255, 0.05) !important;
         color: var(--text-primary) !important;
-        border: 1px solid var(--border-color) !important;
+        backdrop-filter: blur(8px);
+        border: 1px solid var(--border-glass) !important;
     }
 
-    /* File Upload */
-    .stFileUploader {
-        border: 2px dashed var(--border-color) !important;
-        border-radius: 12px !important;
-        padding: 1rem !important;
-        background: rgba(0,0,0,0.1) !important;
+    .stButton > button[kind="secondary"]:hover {
+        background: rgba(255, 255, 255, 0.1) !important;
     }
 
-    .stFileUploader:hover {
-        border-color: var(--accent-blue) !important;
-    }
-
-    /* Progress Bar in Interview */
+    /* Data Visualization */
     .stProgress > div > div > div {
-        background: var(--accent-green) !important;
+        background: var(--gradient-success) !important;
+        height: 8px !important;
+        border-radius: 10px !important;
     }
 
-    /* Alert Messages */
-    .stAlert {
-        border-radius: 8px !important;
-    }
+    /* Animations */
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes fadeInDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
 
-    /* Responsive */
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: var(--bg-primary); }
+    ::-webkit-scrollbar-thumb {
+        background: var(--border-glass);
+        border-radius: 10px;
+    }
+    ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+    /* Responsive Scaling */
     @media (max-width: 768px) {
-        .block-container {
-            padding-left: 1rem !important;
-            padding-right: 1rem !important;
-        }
-
-        .wizard-step {
-            min-width: 2.5rem;
-        }
-
-        .wizard-step-label {
-            font-size: 0.5rem;
-        }
-    }
-
-    @media (max-width: 480px) {
-        h1 {
-            font-size: 1.5rem !important;
-        }
-
-        .wizard-step-label {
-            display: none;
-        }
-    }
-
-    /* Loading Overlay */
-    .loading-overlay {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(10, 14, 23, 0.95);
-        z-index: 9999;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .loading-content {
-        text-align: center;
-    }
-
-    .loading-spinner {
-        width: 40px;
-        height: 40px;
-        border: 3px solid rgba(255,255,255,0.1);
-        border-top-color: var(--accent-blue);
-        border-radius: 50%;
-        animation: spin 1s linear infinite;
-        margin: 0 auto 1rem;
-    }
-
-    @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
-    }
-
-    /* Camera Input */
-    .stCameraInput video {
-        border-radius: 12px !important;
-    }
-
-    /* Warning Modal */
-    .warning-overlay {
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(239, 68, 68, 0.95);
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        z-index: 9999;
-        text-align: center;
-    }
-
-    /* Termination */
-    .termination-screen {
-        background: var(--bg-primary);
-        min-height: 100vh;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        text-align: center;
-        padding: 2rem;
+        .block-container { padding: 1rem !important; }
+        h1 { font-size: 1.75rem !important; }
+        .wizard-progress { padding: 0.75rem; gap: 0.4rem; }
+        .wizard-step { min-width: 3rem; }
     }
     </style>
 """, unsafe_allow_html=True)
@@ -503,7 +437,7 @@ def create_pdf_report(info, evaluation, transcript, photo_bytes=None):
     pdf.set_y(-15)
     pdf.set_font('Arial', 'I', 8)
     pdf.set_text_color(148, 163, 184)
-    pdf.cell(0, 10, '© 2026 MANVER AI INTERVIEWER - CONFIDENTIAL CANDIDATE DATA', 0, 0, 'C')
+    pdf.cell(0, 10, '© 2026 MANWAR AI INTERVIEWER - CONFIDENTIAL CANDIDATE DATA', 0, 0, 'C')
 
     output = pdf.output(dest='S')
     if isinstance(output, str):
@@ -567,37 +501,41 @@ if 'eye_tracking_report' not in st.session_state:
 if 'interview_terminated' not in st.session_state:
     st.session_state.interview_terminated = False
 
-@st.dialog("Submit Interview?")
+@st.dialog("Confirm Submission")
 def confirm_submission():
     if st.session_state.get('submitting_interview', False):
         st.markdown("""
             <div style="text-align: center; padding: 2rem;">
-                <div style="font-size: 3rem; margin-bottom: 1rem;">⏳</div>
-                <h3 style="color: var(--text-primary);">Processing Your Interview...</h3>
-                <p style="color: var(--text-secondary);">AI is analyzing your responses. Please wait.</p>
+                <div class="loading-spinner" style="width: 50px; height: 50px; margin: 0 auto 1.5rem;"></div>
+                <h3 style="margin-bottom: 0.5rem;">Finalizing Assessment</h3>
+                <p style="color: var(--text-secondary); font-size: 0.9rem;">AI is evaluating your session. Please hold on.</p>
             </div>
         """, unsafe_allow_html=True)
         return
 
     st.markdown("""
-        <div style="text-align: center; padding: 1rem;">
-            <h3 style="color: var(--text-primary) !important; -webkit-text-fill-color: var(--text-primary) !important;">Ready to Submit?</h3>
-            <p style="color: var(--text-secondary);">Once submitted, you won't be able to modify your answers.</p>
+        <div style="text-align: center; padding: 0.5rem 0 1.5rem 0;">
+            <h2 style="margin-bottom: 1rem;">Ready to finish?</h2>
+            <p style="color: var(--text-secondary); line-height: 1.6;">Once submitted, your responses will be processed and cannot be edited. A final score and report will be generated.</p>
         </div>
     """, unsafe_allow_html=True)
 
-    c1, c2 = st.columns(2, gap="large")
-    if c1.button("✅ Submit Interview", use_container_width=True, type="primary"):
-        st.session_state.submitting_interview = True
-        st.session_state.step = 'report'
-        st.rerun()
-    if c2.button("❌ Continue Interviewing", use_container_width=True):
-        st.rerun()
+    c1, c2 = st.columns(2, gap="medium")
+    with c1:
+        if st.button("✅ Yes, Submit", use_container_width=True, type="primary"):
+            st.session_state.submitting_interview = True
+            st.session_state.step = 'report'
+            st.rerun()
+    with c2:
+        if st.button("🔙 Not yet", use_container_width=True, kind="secondary"):
+            st.rerun()
 
 def render_step_progress():
     """Render a clean wizard-style progress indicator"""
     steps = [
         {"label": "Setup", "step": "device_test"},
+        {"label": "Photo", "step": "photo_capture"},
+        {"label": "Calibration", "step": "eye_calibration"},
         {"label": "Details", "step": "setup"},
         {"label": "Analysis", "step": "analysis"},
         {"label": "Interview", "step": "interview"},
@@ -648,12 +586,22 @@ def render_header():
 
     info = st.session_state.user_info
     st.markdown(f"""
-        <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 0; border-bottom: 1px solid var(--border-color); margin-bottom: 1rem;">
-            <div style="font-weight: 600; color: var(--text-primary); font-size: 0.9rem;">
-                {info['name']}
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: var(--bg-glass); backdrop-filter: blur(8px); border: 1px solid var(--border-glass); border-radius: 16px; margin-bottom: 2rem; box-shadow: var(--shadow-premium);">
+            <div style="display: flex; align-items: center; gap: 1rem;">
+                <div style="width: 32px; height: 32px; background: var(--gradient-main); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 800; color: white; font-size: 0.8rem;">
+                    {info['name'][0].upper() if info['name'] else 'C'}
+                </div>
+                <div>
+                    <div style="font-weight: 700; color: var(--text-primary); font-size: 0.9rem; line-height: 1;">
+                        {info['name']}
+                    </div>
+                    <div style="color: var(--text-muted); font-size: 0.65rem; margin-top: 4px; text-transform: uppercase; letter-spacing: 0.5px;">
+                        {info['id']}
+                    </div>
+                </div>
             </div>
-            <div style="color: var(--text-muted); font-size: 0.75rem;">
-                {info['id']} | {st.session_state.interview_time}
+            <div style="color: var(--text-muted); font-size: 0.75rem; font-weight: 500;">
+                {st.session_state.interview_time}
             </div>
         </div>
     """, unsafe_allow_html=True)
@@ -662,243 +610,100 @@ def show_device_test():
     render_step_progress()
 
     st.markdown("<h1>Setup Your Devices</h1>", unsafe_allow_html=True)
-    st.markdown('<p class="step-subtitle">Allow camera and microphone access to continue</p>', unsafe_allow_html=True)
+    st.markdown('<p class="step-subtitle">Verify your camera and microphone to begin the session</p>', unsafe_allow_html=True)
 
     step = st.session_state.get("device_test_step", 0)
 
     if step == 0:
         st.markdown("""
             <div class="wizard-card wizard-card-center">
-                <div style="font-size: 2.5rem; margin-bottom: 1rem;">📷🎤</div>
-                <h3 style="color: var(--text-primary) !important; margin-bottom: 0.75rem;">Device Permissions Required</h3>
-                <p style="color: var(--text-secondary); font-size: 0.9rem; max-width: 400px; margin: 0 auto;">
-                    We need access to your camera and microphone for the video interview.
+                <div style="font-size: 3.5rem; margin-bottom: 1.5rem; animation: pulse 2s infinite;">🛡️</div>
+                <h2 style="margin-bottom: 1rem;">System Verification</h2>
+                <p style="color: var(--text-secondary); max-width: 460px; margin: 0 auto 2rem; line-height: 1.6;">
+                    To ensure a fair and stable interview experience, we need to verify your hardware permissions. 
+                    Your data is secure and will only be used for this session.
                 </p>
             </div>
         """, unsafe_allow_html=True)
 
-        if st.button("Enable Camera & Microphone", type="primary", use_container_width=True):
+        if st.button("Initialize System Check", type="primary", use_container_width=True):
             st.session_state.device_test_step = 1
             st.rerun()
 
-    elif step == 1:
         col1, col2 = st.columns(2, gap="large")
 
         with col1:
-            st.markdown("#### 📷 Camera")
+            st.markdown('<div class="wizard-card" style="padding: 1.5rem;">', unsafe_allow_html=True)
+            st.markdown("#### 📷 Video Input")
             camera_ok = st.camera_input("Test camera", label_visibility="collapsed", key="test_camera")
             if camera_ok:
-                st.success("Camera working!")
+                st.markdown('<span style="color: #10b981; font-weight: 600; font-size: 0.85rem;">✓ Camera Active</span>', unsafe_allow_html=True)
+            st.markdown('</div>', unsafe_allow_html=True)
 
         with col2:
-            st.markdown("#### 🎤 Microphone")
+            st.markdown('<div class="wizard-card" style="padding: 1.5rem;">', unsafe_allow_html=True)
+            st.markdown("#### 🎤 Audio Input")
             mic_ok = st.audio_input("Test microphone", label_visibility="collapsed", key="test_mic")
             if mic_ok:
-                st.success("Microphone working!")
+                st.markdown('<span style="color: #10b981; font-weight: 600; font-size: 0.85rem;">✓ Audio Detected</span>', unsafe_allow_html=True)
+            st.markdown('</div>', unsafe_allow_html=True)
 
-        col1, col2 = st.columns([1, 1], gap="medium")
-        with col1:
-            if st.button("← Back", use_container_width=True):
+        st.markdown('<br>', unsafe_allow_html=True)
+        col_back, col_next = st.columns([1, 1], gap="medium")
+        with col_back:
+            if st.button("← Adjust Settings", use_container_width=True, kind="secondary"):
                 st.session_state.device_test_step = 0
                 st.rerun()
-        with col2:
+        with col_next:
             can_proceed = camera_ok is not None and mic_ok is not None
-            if st.button("Continue →", type="primary", use_container_width=True, disabled=not can_proceed):
+            if st.button("Proceed to Setup →", type="primary", use_container_width=True, disabled=not can_proceed):
                 st.session_state.device_test_done = True
                 st.session_state.device_permissions_granted = True
                 st.session_state.photo_verified = True
                 st.session_state.mic_verified = True
                 st.session_state.persistent_photo = camera_ok
-                st.session_state.step = 'setup'
-                st.rerun()
-        
-        if st.button("Go Back", use_container_width=True):
-            st.session_state.device_test_step = 0
-            st.rerun()
-    
-    elif step == 1:
-        st.markdown("""
-            <script>
-            async function checkPermissions() {
-                const camPerm = await navigator.permissions.query({name: 'camera'});
-                const micPerm = await navigator.permissions.query({name: 'microphone'});
-                const results = {
-                    camera: camPerm.state,
-                    microphone: micPerm.state
-                };
-                window.parent.postMessage({type: 'permissionCheck', results: results}, '*');
-            }
-            checkPermissions();
-            </script>
-        """, unsafe_allow_html=True)
-        
-        col1, col2 = st.columns([1, 1], gap="large")
-        
-        with col1:
-            st.markdown("""
-                <div class="card" style="text-align: center; padding: 1.5rem;">
-                    <div style="font-size: 2.5rem; margin-bottom: 0.75rem;">📷</div>
-                    <h4 style="color: var(--text-primary) !important; -webkit-text-fill-color: var(--text-primary) !important;">Camera</h4>
-                    <p style="color: var(--text-muted); font-size: 0.8rem;">Verify your camera is working</p>
-                </div>
-            """, unsafe_allow_html=True)
-            
-            st.markdown("""
-                <button id="start-camera-btn" onclick="startCamera()" style="
-                    background: linear-gradient(135deg, #3b82f6, #2563eb);
-                    color: white; border: none; padding: 0.75rem 1.5rem;
-                    border-radius: 10px; font-weight: 600; cursor: pointer;
-                    width: 100%; margin-top: 1rem;
-                ">Start Camera Preview</button>
-                <video id="camera-preview" autoplay playsinline style="display: none; width: 100%; border-radius: 10px; margin-top: 1rem;"></video>
-                <canvas id="camera-canvas" style="display: none;"></canvas>
-                <script>
-                let cameraStream = null;
-                async function startCamera() {
-                    try {
-                        cameraStream = await navigator.mediaDevices.getUserMedia({video: true, audio: false});
-                        const video = document.getElementById('camera-preview');
-                        video.srcObject = cameraStream;
-                        video.style.display = 'block';
-                        document.getElementById('start-camera-btn').style.display = 'none';
-                        window.parent.postMessage({type: 'cameraStarted', success: true}, '*');
-                    } catch(err) {
-                        alert('Camera access denied or not available: ' + err.message);
-                        window.parent.postMessage({type: 'cameraStarted', success: false, error: err.message}, '*');
-                    }
-                }
-                </script>
-            """, unsafe_allow_html=True)
-            
-            st.markdown('<span class="info-badge" id="camera-status">⏳ Checking...</span>', unsafe_allow_html=True)
-        
-        with col2:
-            st.markdown("""
-                <div class="card" style="text-align: center; padding: 1.5rem;">
-                    <div style="font-size: 2.5rem; margin-bottom: 0.75rem;">🎤</div>
-                    <h4 style="color: var(--text-primary) !important; -webkit-text-fill-color: var(--text-primary) !important;">Microphone</h4>
-                    <p style="color: var(--text-muted); font-size: 0.8rem;">Test your microphone input</p>
-                </div>
-            """, unsafe_allow_html=True)
-            
-            st.markdown("""
-                <button id="start-mic-btn" onclick="startMicrophone()" style="
-                    background: linear-gradient(135deg, #10b981, #059669);
-                    color: white; border: none; padding: 0.75rem 1.5rem;
-                    border-radius: 10px; font-weight: 600; cursor: pointer;
-                    width: 100%; margin-top: 1rem;
-                ">Start Microphone Test</button>
-                <canvas id="mic-visualizer" style="display: none; width: 100%; height: 60px; background: rgba(0,0,0,0.3); border-radius: 8px; margin-top: 1rem;"></canvas>
-                <p id="mic-level" style="display: none; text-align: center; color: var(--text-secondary); font-size: 0.85rem;">Listening...</p>
-                <script>
-                let audioContext = null;
-                let micStream = null;
-                async function startMicrophone() {
-                    try {
-                        audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                        micStream = await navigator.mediaDevices.getUserMedia({audio: true});
-                        const source = audioContext.createMediaStreamSource(micStream);
-                        const analyser = audioContext.createAnalyser();
-                        analyser.fftSize = 256;
-                        source.connect(analyser);
-                        
-                        const canvas = document.getElementById('mic-visualizer');
-                        canvas.style.display = 'block';
-                        document.getElementById('mic-level').style.display = 'block';
-                        document.getElementById('start-mic-btn').style.display = 'none';
-                        
-                        const ctx = canvas.getContext('2d');
-                        const bufferLength = analyser.frequencyBinCount;
-                        const dataArray = new Uint8Array(bufferLength);
-                        
-                        function draw() {
-                            requestAnimationFrame(draw);
-                            analyser.getByteFrequencyData(dataArray);
-                            ctx.fillStyle = 'rgba(0,0,0,0.2)';
-                            ctx.fillRect(0, 0, canvas.width, canvas.height);
-                            const barWidth = (canvas.width / bufferLength) * 2.5;
-                            let x = 0;
-                            for(let i = 0; i < bufferLength; i++) {
-                                const barHeight = dataArray[i] / 2;
-                                ctx.fillStyle = 'rgb(' + (dataArray[i] + 100) + ',200,50)';
-                                ctx.fillRect(x, canvas.height - barHeight, barWidth, barHeight);
-                                x += barWidth + 1;
-                            }
-                        }
-                        draw();
-                        window.parent.postMessage({type: 'micStarted', success: true}, '*');
-                    } catch(err) {
-                        alert('Microphone access denied or not available: ' + err.message);
-                        window.parent.postMessage({type: 'micStarted', success: false, error: err.message}, '*');
-                    }
-                }
-                </script>
-            """, unsafe_allow_html=True)
-            
-            st.markdown('<span class="info-badge" id="mic-status">⏳ Checking...</span>', unsafe_allow_html=True)
-        
-        st.markdown('<div class="divider"></div>', unsafe_allow_html=True)
-        
-        col_done, col_back = st.columns([2, 1], gap="medium")
-        with col_done:
-            if st.button("✅ Done - Continue to Photo", type="primary", use_container_width=True):
-                st.session_state.device_test_done = True
-                st.session_state.device_permissions_granted = True
                 st.session_state.step = 'photo_capture'
-                st.rerun()
-        with col_back:
-            if st.button("← Back", use_container_width=True):
-                st.session_state.device_test_step = 0
                 st.rerun()
 
 def show_photo_capture():
+    render_step_progress()
     st.markdown("""
-        <div style="text-align: center; margin-bottom: 1.5rem;">
-            <h1 style="margin-bottom: 0.5rem;">📸 Identity Verification</h1>
-            <p style="color: var(--text-secondary);">Capture your photograph for identity verification</p>
+        <div style="text-align: center; margin-bottom: 2rem;">
+            <h1>Identification</h1>
+            <p style="color: var(--text-secondary);">Verify your identity for the official session record</p>
         </div>
     """, unsafe_allow_html=True)
     
-    col_cam, col_info = st.columns([1, 1], gap="large")
+    col_cam, col_info = st.columns([1.2, 1], gap="large")
     
     with col_cam:
-        st.markdown("""
-            <div style="background: rgba(0,0,0,0.3); border-radius: 12px; padding: 1rem; text-align: center;">
-                <p style="color: var(--accent-cyan); font-weight: 600; margin-bottom: 1rem;">
-                    📸 Capturing your photograph...
-                </p>
-            </div>
-        """, unsafe_allow_html=True)
-        
+        st.markdown('<div class="wizard-card" style="padding: 1.25rem;">', unsafe_allow_html=True)
         photo_cam = st.camera_input(
-            "Capture Photo", 
+            "Capture Identity", 
             key="photo_capture_cam",
             label_visibility="collapsed"
         )
+        st.markdown('</div>', unsafe_allow_html=True)
         
         if photo_cam:
             st.session_state.persistent_photo = photo_cam
             st.session_state.photo_verified = True
-            st.markdown('<span class="success-badge">✓ Photo Captured!</span>', unsafe_allow_html=True)
-            st.image(photo_cam, width=200)
+            st.markdown('<div style="text-align: center; color: #10b981; font-weight: 600; margin-top: 1rem;">✨ Verification Photo Captured</div>', unsafe_allow_html=True)
     
     with col_info:
         st.markdown("""
-            <div class="card">
-                <h3 style="color: var(--text-primary) !important; -webkit-text-fill-color: var(--text-primary) !important; margin-bottom: 1rem;">
-                    Photo Guidelines
-                </h3>
-                <ul style="color: var(--text-secondary); line-height: 1.8; padding-left: 1rem;">
-                    <li>Ensure your face is clearly visible</li>
-                    <li>Good lighting on your face</li>
-                    <li>Remove glasses or sunglasses</li>
-                    <li>Look directly at the camera</li>
-                    <li>Neutral expression preferred</li>
-                </ul>
+            <div class="wizard-card">
+                <h3 style="margin-bottom: 1.25rem;">Guidelines</h3>
+                <div style="display: grid; gap: 0.75rem; color: var(--text-secondary); font-size: 0.9rem;">
+                    <div style="display: flex; gap: 0.75rem;"><span>👤</span> Clear face visibility</div>
+                    <div style="display: flex; gap: 0.75rem;"><span>💡</span> Good ambient lighting</div>
+                    <div style="display: flex; gap: 0.75rem;"><span>👓</span> No sunglasses/hats</div>
+                    <div style="display: flex; gap: 0.75rem;"><span>🎯</span> Look directly forward</div>
+                </div>
             </div>
         """, unsafe_allow_html=True)
         
-        if st.session_state.get("photo_verified") and st.button("Continue →", type="primary", use_container_width=True):
+        if st.session_state.get("photo_verified") and st.button("Finalize Verification →", type="primary", use_container_width=True):
             st.session_state.mic_verified = True
             st.session_state.device_test_done = True
             st.session_state.device_permissions_granted = True
@@ -923,21 +728,16 @@ def show_eye_calibration():
     
     with col_info:
         st.markdown("""
-            <div class="card">
-                <h3 style="color: var(--text-primary) !important; -webkit-text-fill-color: var(--text-primary) !important; margin-bottom: 1rem;">
-                    Calibration Instructions
-                </h3>
-                <ul style="color: var(--text-secondary); line-height: 1.8; padding-left: 1rem;">
-                    <li>Sit at a comfortable distance from your camera (arm's length)</li>
-                    <li>Keep your head straight and look directly at the screen</li>
-                    <li>Remove glasses if possible for better accuracy</li>
-                    <li>Ensure good lighting on your face</li>
-                    <li>Stay still during calibration (about 3 seconds)</li>
-                </ul>
-                <div style="margin-top: 1rem; padding: 1rem; background: rgba(59, 130, 246, 0.1); border-radius: 8px;">
-                    <p style="color: var(--accent-blue); font-weight: 500; margin: 0;">
-                        ⚠️ Eye tracking will monitor your gaze throughout the interview. 
-                        Looking away from the screen may result in warnings or session termination.
+            <div class="wizard-card">
+                <h3 style="margin-bottom: 1.25rem;">Calibration Protocol</h3>
+                <div style="display: grid; gap: 1rem; color: var(--text-secondary); font-size: 0.9rem;">
+                    <div style="display: flex; gap: 0.75rem;"><span>📏</span> Maintain arm's length distance</div>
+                    <div style="display: flex; gap: 0.75rem;"><span>👁️</span> Focus directly on the camera</div>
+                    <div style="display: flex; gap: 0.75rem;"><span>🧘</span> Remain stationary for 3 seconds</div>
+                </div>
+                <div style="margin-top: 1.5rem; padding: 1rem; background: rgba(59, 130, 246, 0.08); border-radius: 14px; border: 1px solid rgba(59, 130, 246, 0.15);">
+                    <p style="color: var(--accent-primary); font-size: 0.8rem; line-height: 1.5; margin: 0;">
+                        <b>Security Note:</b> Gaze monitoring is active during the session. Persistent looking away may trigger automated warnings.
                     </p>
                 </div>
             </div>
@@ -1065,6 +865,9 @@ def show_setup():
 
                 model = st.session_state.get("available_models", ["kilo-auto/free"])[0]
                 res = safe_api_call(call_ai, [{"role": "system", "content": prompt_msg}, {"role": "user", "content": input_content}], model=model)
+                
+                hide_loading_overlay() # Added hide
+                
                 if res:
                     st.session_state.analysis = res
                     st.session_state.step = 'analysis'
@@ -1112,6 +915,9 @@ def show_analysis():
 
             prompt = "Generate exactly 8 specific, high-level technical interview questions based on the provided skills. One question per line. No numbering. Make them challenging and relevant to the role."
             text = safe_api_call(call_ai, [{"role": "system", "content": prompt}, {"role": "user", "content": analysis_text}])
+            
+            hide_loading_overlay() # Added hide
+            
             if text:
                 questions = [q.strip() for q in text.split('\n') if len(q.strip()) > 15][:8]
                 if len(questions) < 5:
@@ -1163,35 +969,41 @@ def interview_content():
     q_idx = st.session_state.current_q
     total = len(st.session_state.questions)
 
-    # Question and answer area
-    st.progress((q_idx + 1) / total, text=f"Question {q_idx + 1} of {total}")
+    # Question header
+    st.markdown(f"""
+        <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 1rem;">
+            <h2 style="margin: 0;">Question {q_idx + 1}</h2>
+            <span style="color: var(--text-muted); font-size: 0.85rem; font-weight: 600;">{q_idx + 1} / {total}</span>
+        </div>
+    """, unsafe_allow_html=True)
+    st.progress((q_idx + 1) / total)
 
     st.markdown(f"""
-        <div class="wizard-card" style="margin-bottom: 1rem;">
-            <div style="font-size: 1.1rem; font-weight: 600; color: var(--text-primary); line-height: 1.6;">
+        <div class="wizard-card" style="margin-top: 1.5rem; border-left: 4px solid var(--accent-primary);">
+            <div style="font-size: 1.15rem; font-weight: 500; color: var(--text-primary); line-height: 1.6;">
                 {st.session_state.questions[q_idx]}
             </div>
         </div>
     """, unsafe_allow_html=True)
 
     st.session_state.answers[q_idx] = st.text_area(
-        "Your Answer",
+        "Response Area",
         value=st.session_state.answers[q_idx],
-        height=180,
+        height=220,
         key=f"ans_ta_{q_idx}",
-        placeholder="Type your answer here...",
+        placeholder="Type your comprehensive response here...",
         label_visibility="collapsed"
     )
 
-    col_back, _, col_next = st.columns([1, 0.5, 1], gap="medium")
+    col_back, _, col_next = st.columns([1, 0.4, 1], gap="medium")
 
     with col_back:
-        if st.button("← Previous", disabled=(q_idx == 0), use_container_width=True):
+        if st.button("← Previous Question", disabled=(q_idx == 0), use_container_width=True, kind="secondary"):
             st.session_state.current_q -= 1
             st.rerun()
 
     with col_next:
-        label = "Finish" if q_idx + 1 == total else "Next →"
+        label = "Complete Interview" if q_idx + 1 == total else "Next Question →"
         if st.button(label, use_container_width=True, type="primary"):
             if q_idx + 1 < total:
                 st.session_state.current_q += 1
@@ -1199,25 +1011,32 @@ def interview_content():
             else:
                 confirm_submission()
 
-    # Proctoring section (collapsible)
-    with st.expander("📹 Monitoring", expanded=False):
-        tracker = st.session_state.get('eye_tracker')
-        strikes = tracker.state.strikes if tracker else 0
-
-        camera_key = "interview_camera"
-        proctor_frame = st.camera_input("Camera", key=camera_key, label_visibility="collapsed")
-
-        if proctor_frame is not None and tracker and st.session_state.get('eye_tracking_active'):
-            import cv2
-            import numpy as np
-            bytes_data = proctor_frame.getvalue()
-            frame = cv2.imdecode(np.frombuffer(bytes_data, np.uint8), cv2.IMREAD_COLOR)
-            gaze_result = tracker.process_frame(frame)
-
-        if strikes > 0:
-            st.error(f"Strikes: {strikes}/4")
-        else:
-            st.success("Status: Compliant")
+    # Proctoring section (Refined)
+    with st.expander("🛠️ Advanced Monitoring & AI Assistant", expanded=False):
+        t_col1, t_col2 = st.columns([1, 1.2])
+        with t_col1:
+            st.markdown("##### 📹 Vision Status")
+            proctor_frame = st.camera_input("Camera", key="interview_camera", label_visibility="collapsed")
+            
+            if proctor_frame is not None and tracker and st.session_state.get('eye_tracking_active'):
+                import cv2
+                import numpy as np
+                bytes_data = proctor_frame.getvalue()
+                frame = cv2.imdecode(np.frombuffer(bytes_data, np.uint8), cv2.IMREAD_COLOR)
+                tracker.process_frame(frame)
+        
+        with t_col2:
+            st.markdown("##### 📊 Integrity Report")
+            tracker = st.session_state.get('eye_tracker')
+            strikes = tracker.state.strikes if tracker else 0
+            
+            if strikes > 0:
+                st.warning(f"Attention Required: {strikes} tracking anomalies detected.")
+            else:
+                st.markdown('<div style="padding: 15px; background: rgba(16, 185, 129, 0.1); border-radius: 12px; border: 1px solid rgba(16, 185, 129, 0.2);"><p style="color: #10b981; margin: 0; font-weight: 600;">✅ Tracking: Secure & Compliant</p></div>', unsafe_allow_html=True)
+            
+            st.markdown("<br>", unsafe_allow_html=True)
+            st.markdown(f'<p style="color: var(--text-muted); font-size: 0.8rem;">Session ID: {st.session_state.user_info.get("id", "N/A")}</p>', unsafe_allow_html=True)
 
 def show_interview():
     render_header()
@@ -1240,75 +1059,114 @@ def show_report():
         {"role": "user", "content": f"Candidate: {info.get('name', 'N/A')}\nID: {info.get('id', 'N/A')}\nEmail: {info.get('email', 'N/A')}\nDate: {st.session_state.interview_time}\n\nInterview Transcript:\n{transcript}"}
     ])
 
+    hide_loading_overlay() # Added hide
+
     is_pass = "PASS" in str(res).upper()
 
-    st.markdown("<h1>Results</h1>", unsafe_allow_html=True)
+    st.markdown("<h1>Performance Report</h1>", unsafe_allow_html=True)
 
-    # Result card
+    # Result state card
     if is_pass:
-        st.success("PASS - Congratulations! You successfully completed the interview.")
-    else:
-        st.error("FAIL - Thank you for your time. We encourage you to apply again.")
-
-    # Candidate info
-    st.markdown(f"""
-        <div class="wizard-card">
-            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
-                <div>
-                    <div style="font-size: 1.25rem; font-weight: 700; color: var(--text-primary);">{info.get('name', 'N/A')}</div>
-                    <div style="color: var(--text-muted); font-size: 0.85rem;">{info.get('id', 'N/A')} | {info.get('email', 'N/A')}</div>
+        st.markdown(f"""
+            <div class="wizard-card" style="border-left: 5px solid #10b981; background: rgba(16, 185, 129, 0.05);">
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <span style="font-size: 2.5rem;">🎉</span>
+                    <div>
+                        <h3 style="margin: 0; color: #10b981 !important;">Interview Successful</h3>
+                        <p style="margin: 0; color: var(--text-secondary); font-size: 0.9rem;">You have met the technical threshold for this assessment.</p>
+                    </div>
                 </div>
-                <div style="color: var(--text-muted); font-size: 0.85rem;">{st.session_state.interview_time}</div>
             </div>
-        </div>
-    """, unsafe_allow_html=True)
+        """, unsafe_allow_html=True)
+    else:
+        st.markdown(f"""
+            <div class="wizard-card" style="border-left: 5px solid #ef4444; background: rgba(239, 68, 68, 0.05);">
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <span style="font-size: 2.5rem;">📋</span>
+                    <div>
+                        <h3 style="margin: 0; color: #ef4444 !important;">Session Completed</h3>
+                        <p style="margin: 0; color: var(--text-secondary); font-size: 0.9rem;">The assessment is complete. Review your feedback below.</p>
+                    </div>
+                </div>
+            </div>
+        """, unsafe_allow_html=True)
 
-    # Analysis
+    # Main evaluation logic
     if res:
         analysis_text = res.replace("RESULT: PASS", "").replace("RESULT: FAIL", "").strip()
-        with st.expander("View Detailed Analysis", expanded=True):
-            st.markdown(analysis_text)
-    else:
-        st.info("Interview completed. Your responses have been recorded.")
-
-    # Transcript
-    with st.expander("View Interview Transcript", expanded=False):
-        for i, (q, a) in enumerate(zip(st.session_state.questions, st.session_state.answers)):
-            st.markdown(f"**Q{i+1}:** {q}")
-            st.markdown(f"**A:** {a if a else '_No answer provided_'}")
-            if i < len(st.session_state.questions) - 1:
-                st.markdown("---")
-
-    # Eye tracking report
+        st.markdown("### AI Evaluation & Feedback")
+        st.markdown(f"""
+            <div class="wizard-card" style="line-height: 1.7; color: var(--text-secondary);">
+                {analysis_text}
+            </div>
+        """, unsafe_allow_html=True)
+    
+    # Metrics row
     tracker = st.session_state.get('eye_tracker')
     if tracker and st.session_state.get('eye_tracking_active'):
         report = tracker.generate_report()
-        st.session_state.eye_tracking_report = report
-
-        with st.expander("Eye Tracking Report", expanded=False):
-            score = report.get('compliance_score', 0)
-            strikes = report.get('strikes', 0)
-            total_events = report.get('total_events', 0)
-
-            col1, col2, col3 = st.columns(3)
-            with col1:
-                st.metric("Compliance", f"{score:.0f}%")
-            with col2:
-                st.metric("Warnings", f"{strikes}/4")
-            with col3:
-                st.metric("Gaze Events", str(total_events))
+        score = report.get('compliance_score', 0)
+        strikes = report.get('strikes', 0)
+        
+        # Duration calculation
+        try:
+            start_dt = datetime.strptime(st.session_state.interview_time, "%B %d, %Y at %I:%M %p")
+            duration_mins = int((datetime.now() - start_dt).total_seconds() / 60)
+            duration_str = f"{duration_mins}m" if duration_mins > 0 else "< 1m"
+        except:
+            duration_str = "N/A"
+            
+        st.markdown("### Integrity & Compliance")
+        m1, m2, m3 = st.columns(3)
+        with m1:
+            st.markdown(f"""
+                <div class="wizard-card" style="text-align: center; padding: 1.25rem;">
+                    <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.5rem;">Compliance</div>
+                    <div style="font-size: 1.75rem; font-weight: 700; color: var(--accent-primary);">{score:.0f}%</div>
+                </div>
+            """, unsafe_allow_html=True)
+        with m2:
+            st.markdown(f"""
+                <div class="wizard-card" style="text-align: center; padding: 1.25rem;">
+                    <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.5rem;">Alerts</div>
+                    <div style="font-size: 1.75rem; font-weight: 700; color: { '#ef4444' if strikes > 0 else '#10b981' };">{strikes}/4</div>
+                </div>
+            """, unsafe_allow_html=True)
+        with m3:
+            st.markdown(f"""
+                <div class="wizard-card" style="text-align: center; padding: 1.25rem;">
+                    <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.5rem;">Duration</div>
+                    <div style="font-size: 1.75rem; font-weight: 700; color: var(--text-primary);">{duration_str}</div>
+                </div>
+            """, unsafe_allow_html=True)
 
     st.markdown("<br>", unsafe_allow_html=True)
-
-    if st.button("Start New Interview", use_container_width=True):
-        for key in list(st.session_state.keys()):
-            del st.session_state[key]
-        st.rerun()
+    
+    col_pdf, col_new = st.columns(2, gap="medium")
+    with col_pdf:
+        pdf_data = create_pdf_report(info, res, transcript, st.session_state.get('persistent_photo'))
+        st.download_button(
+            label="📄 Download Official Report",
+            data=pdf_data,
+            file_name=f"Assessment_{info.get('name', 'Report')}.pdf",
+            mime="application/pdf",
+            use_container_width=True,
+            type="primary"
+        )
+    with col_new:
+        if st.button("Start New Session", use_container_width=True):
+            for key in list(st.session_state.keys()):
+                del st.session_state[key]
+            st.rerun()
 
 step = st.session_state.get('step', 'device_test')
 
 if step == 'device_test':
     show_device_test()
+elif step == 'photo_capture':
+    show_photo_capture()
+elif step == 'eye_calibration':
+    show_eye_calibration()
 elif step == 'setup':
     show_setup()
 elif step == 'analysis':
