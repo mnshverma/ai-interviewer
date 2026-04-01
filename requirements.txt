@@ -3,3 +3,6 @@ pypdf
 requests
 python-dotenv
 fpdf
+mediapipe
+opencv-python
+numpy

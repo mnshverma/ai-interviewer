@@ -8,6 +8,7 @@ import time
 from fpdf import FPDF
 from datetime import datetime
 import base64
+from eye_tracking import EyeTracker
 
 load_dotenv()
 LOGO_PATH = "manver-logo.png"
@@ -199,14 +200,103 @@ st.markdown("""
         background: var(--accent-green);
     }
 
-    .stTextInput > div > div > input,
-    .stTextArea > div > div > textarea {
-        background: rgba(0, 0, 0, 0.3) !important;
-        border: 1px solid var(--border-color) !important;
-        border-radius: 10px !important;
-        color: var(--text-primary) !important;
-        padding: 0.875rem 1rem !important;
-        font-size: 0.95rem !important;
+    .stFileUploader {
+        background: rgba(0, 0, 0, 0.2);
+        border: 2px dashed var(--border-color) !important;
+        border-radius: 12px !important;
+        padding: 1.5rem !important;
+        transition: all 0.3s ease;
+    }
+
+    .stFileUploader:hover {
+        border-color: var(--accent-blue) !important;
+        background: rgba(59, 130, 246, 0.05) !important;
+    }
+
+    .stFileUploader [data-testid="stFileUploadDropzone"] {
+        background: transparent !important;
+        border: none !important;
+    }
+
+    .stFileUploader [data-testid="stFileUploadDropzone"] button {
+        background: var(--accent-blue) !important;
+        border-radius: 8px !important;
+        padding: 0.75rem 1.5rem !important;
+        font-weight: 500 !important;
+    }
+
+    .stFileUploader [data-testid="stFileUploadDropzone"] button:hover {
+        background: #2563eb !important;
+    }
+
+    .upload-zone {
+        background: rgba(0, 0, 0, 0.25);
+        border: 2px dashed var(--border-color);
+        border-radius: 12px;
+        padding: 2rem;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .upload-zone:hover {
+        border-color: var(--accent-blue);
+        background: rgba(59, 130, 246, 0.05);
+    }
+
+    .upload-zone.dragover {
+        border-color: var(--accent-cyan);
+        background: rgba(6, 182, 212, 0.1);
+    }
+
+    .upload-icon {
+        font-size: 2.5rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .upload-text {
+        color: var(--text-primary);
+        font-weight: 500;
+        margin-bottom: 0.25rem;
+    }
+
+    .upload-hint {
+        color: var(--text-muted);
+        font-size: 0.85rem;
+    }
+
+    .file-selected {
+        background: rgba(16, 185, 129, 0.1);
+        border: 2px solid var(--accent-green);
+        border-radius: 12px;
+        padding: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .file-selected-icon {
+        font-size: 1.5rem;
+    }
+
+    .file-selected-info {
+        flex: 1;
+    }
+
+    .file-selected-name {
+        color: var(--text-primary);
+        font-weight: 500;
+    }
+
+    .file-selected-size {
+        color: var(--text-muted);
+        font-size: 0.85rem;
+    }
+
+    .file-selected .remove-btn {
+        color: var(--accent-red);
+        cursor: pointer;
+        padding: 0.25rem;
     }
 
     .stTextInput > div > div > input:focus,
@@ -330,6 +420,146 @@ st.markdown("""
         .page-title h1 {
             font-size: 1.75rem !important;
         }
+    }
+
+    .warning-pulse {
+        animation: pulse-red 1.5s ease-in-out infinite;
+    }
+
+    @keyframes pulse-red {
+        0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+        50% { box-shadow: 0 0 20px 10px rgba(239, 68, 68, 0.6); }
+    }
+
+    .warning-border {
+        border: 3px solid #ef4444 !important;
+        animation: pulse-border 1s ease-in-out infinite;
+    }
+
+    @keyframes pulse-border {
+        0%, 100% { border-color: #ef4444 !important; }
+        50% { border-color: #f87171 !important; }
+    }
+
+    .status-indicator {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 500;
+    }
+
+    .status-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+    }
+
+    .status-dot.green {
+        background: #10b981;
+        box-shadow: 0 0 8px #10b981;
+    }
+
+    .status-dot.red {
+        background: #ef4444;
+        box-shadow: 0 0 8px #ef4444;
+        animation: blink 0.5s ease-in-out infinite;
+    }
+
+    @keyframes blink {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.5; }
+    }
+
+    .warning-modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(239, 68, 68, 0.95);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        padding: 2rem;
+        text-align: center;
+    }
+
+    .warning-icon {
+        font-size: 5rem;
+        margin-bottom: 1rem;
+        animation: shake 0.5s ease-in-out infinite;
+    }
+
+    @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        25% { transform: translateX(-10px); }
+        75% { transform: translateX(10px); }
+    }
+
+    .warning-text {
+        color: white;
+        font-size: 1.5rem;
+        font-weight: 600;
+        max-width: 600px;
+    }
+
+    .calibration-circle {
+        width: 100px;
+        height: 100px;
+        border: 3px solid #3b82f6;
+        border-radius: 50%;
+        margin: 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .calibration-dot {
+        width: 20px;
+        height: 20px;
+        background: #3b82f6;
+        border-radius: 50%;
+    }
+
+    .calibration-dot.active {
+        background: #10b981;
+        box-shadow: 0 0 15px #10b981;
+    }
+
+    .eye-preview {
+        position: fixed;
+        bottom: 1rem;
+        right: 1rem;
+        width: 160px;
+        border-radius: 8px;
+        border: 2px solid var(--border-color);
+        z-index: 100;
+    }
+
+    .eye-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        pointer-events: none;
+        z-index: 1000;
+    }
+
+    .strike-1 { border: 2px solid #ef4444; }
+    .strike-2 { border: 4px solid #dc2626; }
+    .strike-3 { border: 6px solid #b91c1c; }
+
+    .termination-screen {
+        background: #0a0e17;
+        color: white;
+        padding: 2rem;
+        text-align: center;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -479,6 +709,16 @@ if 'mic_verified' not in st.session_state:
     st.session_state.mic_verified = False
 if 'photo_verified' not in st.session_state:
     st.session_state.photo_verified = False
+if 'eye_tracker' not in st.session_state:
+    st.session_state.eye_tracker = EyeTracker()
+if 'eye_calibration_done' not in st.session_state:
+    st.session_state.eye_calibration_done = False
+if 'eye_tracking_active' not in st.session_state:
+    st.session_state.eye_tracking_active = False
+if 'eye_tracking_report' not in st.session_state:
+    st.session_state.eye_tracking_report = None
+if 'interview_terminated' not in st.session_state:
+    st.session_state.interview_terminated = False
 
 @st.dialog("Submit Interview?")
 def confirm_submission():
@@ -757,16 +997,92 @@ def show_photo_capture():
         """, unsafe_allow_html=True)
         
         if st.session_state.get("photo_verified") and st.button("Continue →", type="primary", use_container_width=True):
-            # Preserve all verification states across steps
             st.session_state.mic_verified = True
             st.session_state.device_test_done = True
             st.session_state.device_permissions_granted = True
-            st.session_state.step = 'setup'
+            st.session_state.step = 'eye_calibration'
             st.rerun()
         
         if st.button("← Go Back", use_container_width=True):
             st.session_state.step = 'device_test'
             st.rerun()
+
+def show_eye_calibration():
+    tracker = st.session_state.get('eye_tracker')
+    
+    st.markdown("""
+        <div style="text-align: center; margin-bottom: 1.5rem;">
+            <h1 style="margin-bottom: 0.5rem;">👁️ Eye Tracking Calibration</h1>
+            <p style="color: var(--text-secondary);">Look directly at the camera and follow the instructions</p>
+        </div>
+    """, unsafe_allow_html=True)
+    
+    col_info, col_cam = st.columns([1, 1.5], gap="large")
+    
+    with col_info:
+        st.markdown("""
+            <div class="card">
+                <h3 style="color: var(--text-primary) !important; -webkit-text-fill-color: var(--text-primary) !important; margin-bottom: 1rem;">
+                    Calibration Instructions
+                </h3>
+                <ul style="color: var(--text-secondary); line-height: 1.8; padding-left: 1rem;">
+                    <li>Sit at a comfortable distance from your camera (arm's length)</li>
+                    <li>Keep your head straight and look directly at the screen</li>
+                    <li>Remove glasses if possible for better accuracy</li>
+                    <li>Ensure good lighting on your face</li>
+                    <li>Stay still during calibration (about 3 seconds)</li>
+                </ul>
+                <div style="margin-top: 1rem; padding: 1rem; background: rgba(59, 130, 246, 0.1); border-radius: 8px;">
+                    <p style="color: var(--accent-blue); font-weight: 500; margin: 0;">
+                        ⚠️ Eye tracking will monitor your gaze throughout the interview. 
+                        Looking away from the screen may result in warnings or session termination.
+                    </p>
+                </div>
+            </div>
+        """, unsafe_allow_html=True)
+        
+        if st.session_state.get('eye_calibration_done'):
+            st.markdown("""
+                <div style="text-align: center; padding: 1rem; background: rgba(16, 185, 129, 0.1); border-radius: 8px; border: 1px solid #10b981;">
+                    <span style="font-size: 2rem;">✅</span>
+                    <p style="color: #10b981; font-weight: 600; margin-top: 0.5rem;">Calibration Complete!</p>
+                </div>
+            """, unsafe_allow_html=True)
+    
+    with col_cam:
+        frame_data = st.camera_input(
+            "Position your face in the center",
+            key="calibration_camera",
+            label_visibility="collapsed"
+        )
+        
+        if frame_data is not None:
+            import cv2
+            import numpy as np
+            from io import BytesIO
+            
+            bytes_data = frame_data.getvalue()
+            frame = cv2.imdecode(np.frombuffer(bytes_data, np.uint8), cv2.IMREAD_COLOR)
+            
+            if tracker:
+                success = tracker.calibrate(frame)
+                if success:
+                    st.session_state.eye_calibration_done = True
+                    st.session_state.eye_tracking_active = True
+                    tracker.state.is_active = True
+                    st.success("Calibration successful!")
+                    time.sleep(0.5)
+                    st.rerun()
+        
+        if st.session_state.get('eye_calibration_done'):
+            if st.button("Continue to Interview Setup →", type="primary", use_container_width=True):
+                st.session_state.step = 'setup'
+                st.rerun()
+        else:
+            if st.button("Skip Calibration", use_container_width=True):
+                st.session_state.eye_calibration_done = True
+                st.session_state.step = 'setup'
+                st.rerun()
 
 def show_setup():
     st.markdown("""
@@ -820,7 +1136,25 @@ def show_setup():
             jd_text = ""
             
             if input_type == "Upload Resume (PDF)":
-                uploaded_file = st.file_uploader("Upload Resume (PDF) *", type=['pdf'], label_visibility="collapsed")
+                st.markdown("""
+                    <div class="upload-zone" id="upload-zone">
+                        <div class="upload-icon">📄</div>
+                        <div class="upload-text">Choose Resume File</div>
+                        <div class="upload-hint">or drag and drop PDF here</div>
+                    </div>
+                """, unsafe_allow_html=True)
+                uploaded_file = st.file_uploader("Upload Resume (PDF) *", type=['pdf'], label_visibility="collapsed", help="Upload your resume in PDF format")
+                if uploaded_file is not None:
+                    file_size = uploaded_file.size / 1024
+                    st.markdown(f"""
+                        <div class="file-selected">
+                            <span class="file-selected-icon">✅</span>
+                            <div class="file-selected-info">
+                                <div class="file-selected-name">{uploaded_file.name}</div>
+                                <div class="file-selected-size">{file_size:.1f} KB</div>
+                            </div>
+                        </div>
+                    """, unsafe_allow_html=True)
             else:
                 jd_text = st.text_area("Paste Job Description (JD) *", height=120, placeholder="Example: Senior Software Engineer with 5+ years experience...", label_visibility="collapsed")
             
@@ -841,22 +1175,17 @@ def show_setup():
             )
             
             if st.button("🚀 Start Interview Session", type="primary", use_container_width=True):
-                # Get values - use try/except to handle missing keys
-                try:
-                    v_name = st.session_state.get("reg_name", "")
-                    v_id = st.session_state.get("reg_id", "")
-                    v_email = st.session_state.get("reg_email", "")
-                    v_phone = st.session_state.get("reg_phone", "")
-                except:
-                    v_name = v_id = v_email = v_phone = ""
+                v_name = st.session_state.get("reg_name", "")
+                v_id = st.session_state.get("reg_id", "")
+                v_email = st.session_state.get("reg_email", "")
+                v_phone = st.session_state.get("reg_phone", "")
                 
-                # Convert to string and strip - handle None values
                 v_name = str(v_name).strip() if v_name is not None else ""
                 v_id = str(v_id).strip() if v_id is not None else ""
                 v_email = str(v_email).strip() if v_email is not None else ""
                 v_phone = str(v_phone).strip() if v_phone is not None else ""
                 
-                if not (v_name and v_id and v_email and v_phone):
+                if not v_name or not v_id or not v_email or not v_phone:
                     st.error("⚠️ Please fill all required fields")
                 elif input_type == "Upload Resume (PDF)" and (uploaded_file is None):
                     st.error("📄 Please upload your resume PDF.")
@@ -1028,6 +1357,49 @@ def show_analysis():
 
 @st.fragment
 def interview_content():
+    tracker = st.session_state.get('eye_tracker')
+    
+    if tracker and st.session_state.get('eye_tracking_active'):
+        warning_info = tracker.get_warning_info()
+        
+        if warning_info and tracker.state.strikes >= 1:
+            strike_num = tracker.state.strikes
+            
+            if strike_num == 1:
+                st.markdown("""
+                    <div class="warning-modal" style="background: rgba(239, 68, 68, 0.15); padding: 1rem; border-radius: 12px; margin-bottom: 1rem; animation: pulse-red 1.5s ease-in-out infinite;">
+                        <div style="font-size: 2rem;">⚠️</div>
+                        <p style="color: #ef4444; font-weight: 600;">Please keep your eyes on the screen. This is your first warning.</p>
+                    </div>
+                """, unsafe_allow_html=True)
+            elif strike_num == 2:
+                st.markdown("""
+                    <div class="warning-modal" style="background: rgba(239, 68, 68, 0.25); padding: 1rem; border-radius: 12px; margin-bottom: 1rem; border: 2px solid #ef4444; animation: pulse-red 1s ease-in-out infinite;">
+                        <div style="font-size: 2.5rem;">🚨</div>
+                        <p style="color: #ef4444; font-weight: 600; font-size: 1.1rem;">Warning: Looking away from the screen is considered cheating. One more violation and your interview may be terminated.</p>
+                    </div>
+                """, unsafe_allow_html=True)
+            elif strike_num == 3:
+                st.markdown("""
+                    <div class="warning-modal" style="background: rgba(239, 68, 68, 0.35); padding: 1.5rem; border-radius: 12px; margin-bottom: 1rem; border: 3px solid #dc2626; animation: shake 0.3s ease-in-out infinite;">
+                        <div style="font-size: 3rem;">🛑</div>
+                        <p style="color: #ef4444; font-weight: 700; font-size: 1.2rem;">Final Warning Detected. If you look away from the screen again, your interview will be immediately stopped and your session will be permanently terminated.</p>
+                    </div>
+                """, unsafe_allow_html=True)
+            elif strike_num >= 4:
+                st.session_state.interview_terminated = True
+                tracker.state.is_active = False
+                st.markdown("""
+                    <div class="termination-screen">
+                        <div style="font-size: 4rem;">❌</div>
+                        <h1 style="color: #ef4444; font-size: 2rem; margin-top: 1rem;">Interview Terminated</h1>
+                        <p style="color: #94a3b8; margin-top: 1rem;">You have been flagged for repeated eye-tracking violations.</p>
+                        <p style="color: #64748b; margin-top: 2rem;">This incident has been logged and reported.</p>
+                    </div>
+                """, unsafe_allow_html=True)
+                st.session_state.step = 'report'
+                st.rerun()
+    
     q_idx = st.session_state.current_q
     total = len(st.session_state.questions)
     
@@ -1152,6 +1524,9 @@ def interview_content():
                     confirm_submission()
     
     with col_proc:
+        tracker = st.session_state.get('eye_tracker')
+        strikes = tracker.state.strikes if tracker else 0
+        
         st.markdown("""
             <div style="color: #64748b; font-weight: 600; margin-bottom: 0.5rem; font-size: 0.75rem; letter-spacing: 0.5px;">
                 📹 PROCTORING
@@ -1159,14 +1534,36 @@ def interview_content():
         """, unsafe_allow_html=True)
         
         st.markdown('<div class="proctor-card" style="padding: 0.25rem;">', unsafe_allow_html=True)
-        st.camera_input("Monitoring", key=f"proctor_cam_{q_idx}", label_visibility="collapsed")
+        proctor_frame = st.camera_input("Monitoring", key=f"proctor_cam_{q_idx}", label_visibility="collapsed")
         st.markdown('</div>', unsafe_allow_html=True)
         
-        st.markdown(f"""
-            <div style="background: rgba(16, 185, 129, 0.1); color: #10b981; padding: 0.4rem; border-radius: 6px; margin-top: 0.5rem; font-size: 0.6rem; font-weight: 600; text-align: center;">
-                🛡️ LIVE
-            </div>
-        """, unsafe_allow_html=True)
+        if proctor_frame is not None and tracker and st.session_state.get('eye_tracking_active'):
+            import cv2
+            import numpy as np
+            from io import BytesIO
+            
+            bytes_data = proctor_frame.getvalue()
+            frame = cv2.imdecode(np.frombuffer(bytes_data, np.uint8), cv2.IMREAD_COLOR)
+            
+            gaze_result = tracker.process_frame(frame)
+            
+            if gaze_result.get("is_looking_away"):
+                pass
+        
+        if strikes > 0:
+            status_color = "#ef4444" if strikes > 0 else "#10b981"
+            status_text = "WARNING" if strikes < 3 else "TERMINATED"
+            st.markdown(f"""
+                <div style="background: rgba(239, 68, 68, 0.2); color: #ef4444; padding: 0.4rem; border-radius: 6px; margin-top: 0.5rem; font-size: 0.6rem; font-weight: 600; text-align: center;">
+                    ⚠️ STRIKE {strikes}/4
+                </div>
+            """, unsafe_allow_html=True)
+        else:
+            st.markdown(f"""
+                <div style="background: rgba(16, 185, 129, 0.1); color: #10b981; padding: 0.4rem; border-radius: 6px; margin-top: 0.5rem; font-size: 0.6rem; font-weight: 600; text-align: center;">
+                    🛡️ COMPLIANT
+                </div>
+            """, unsafe_allow_html=True)
 
 def show_interview():
     render_header()
@@ -1246,6 +1643,54 @@ def show_report():
                 st.markdown(f"**Q{i+1}:** {q}")
                 st.markdown(f"**A:** {a if a else '_No answer provided_'}")
                 st.markdown("---")
+        
+        tracker = st.session_state.get('eye_tracker')
+        if tracker and st.session_state.get('eye_tracking_active'):
+            report = tracker.generate_report()
+            st.session_state.eye_tracking_report = report
+            
+            with st.expander("👁️ Eye Tracking Integrity Report", expanded=True):
+                score = report.get('compliance_score', 0)
+                strikes = report.get('strikes', 0)
+                total_events = report.get('total_events', 0)
+                
+                score_color = "#10b981" if score >= 80 else "#f59e0b" if score >= 50 else "#ef4444"
+                
+                st.markdown(f"""
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1rem;">
+                        <div style="text-align: center; padding: 1rem; background: rgba(0,0,0,0.2); border-radius: 12px;">
+                            <div style="font-size: 2rem; font-weight: 700; color: {score_color};">{score:.0f}%</div>
+                            <div style="color: #94a3b8; font-size: 0.85rem;">Compliance Score</div>
+                        </div>
+                        <div style="text-align: center; padding: 1rem; background: rgba(0,0,0,0.2); border-radius: 12px;">
+                            <div style="font-size: 2rem; font-weight: 700; color: {'#ef4444' if strikes > 0 else '#10b981'};">{strikes}/4</div>
+                            <div style="color: #94a3b8; font-size: 0.85rem;">Warnings Issued</div>
+                        </div>
+                        <div style="text-align: center; padding: 1rem; background: rgba(0,0,0,0.2); border-radius: 12px;">
+                            <div style="font-size: 2rem; font-weight: 700; color: #3b82f6;">{total_events}</div>
+                            <div style="color: #94a3b8; font-size: 0.85rem;">Gaze Events</div>
+                        </div>
+                    </div>
+                """, unsafe_allow_html=True)
+                
+                tracking_time = report.get('total_tracking_time', 0)
+                away_time = report.get('away_time', 0)
+                
+                if tracking_time > 0:
+                    away_pct = (away_time / tracking_time) * 100
+                    st.markdown(f"""
+                        <div style="color: #94a3b8; font-size: 0.9rem;">
+                            <p><strong>Total Tracking Time:</strong> {tracking_time:.1f}s</p>
+                            <p><strong>Time Looking Away:</strong> {away_time:.1f}s ({away_pct:.1f}%)</p>
+                        </div>
+                    """, unsafe_allow_html=True)
+                
+                if strikes >= 4:
+                    st.markdown("""
+                        <div style="background: rgba(239, 68, 68, 0.2); border: 1px solid #ef4444; border-radius: 8px; padding: 1rem; margin-top: 1rem;">
+                            <p style="color: #ef4444; font-weight: 600; margin: 0;">⚠️ Interview terminated due to eye-tracking violations</p>
+                        </div>
+                    """, unsafe_allow_html=True)
     
     with col_candidate:
         st.markdown("""
@@ -1284,6 +1729,8 @@ if step == 'device_test':
     show_device_test()
 elif step == 'photo_capture':
     show_photo_capture()
+elif step == 'eye_calibration':
+    show_eye_calibration()
 elif step == 'device_test_complete' or step == 'setup': 
     show_setup()
 elif step == 'analysis': 
