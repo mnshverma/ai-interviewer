@@ -688,7 +688,18 @@ if 'step' not in st.session_state:
 
 if 'user_info' not in st.session_state:
     st.session_state.user_info = {"name": "", "email": "", "phone": "", "id": ""}
-else:
+
+# Initialize registration form fields
+if 'reg_name' not in st.session_state:
+    st.session_state.reg_name = ""
+if 'reg_email' not in st.session_state:
+    st.session_state.reg_email = ""
+if 'reg_id' not in st.session_state:
+    st.session_state.reg_id = ""
+if 'reg_phone' not in st.session_state:
+    st.session_state.reg_phone = ""
+
+if 'user_info' in st.session_state:
     for key in ["name", "email", "phone", "id"]:
         if key not in st.session_state.user_info:
             st.session_state.user_info[key] = ""
@@ -1136,13 +1147,6 @@ def show_setup():
             jd_text = ""
             
             if input_type == "Upload Resume (PDF)":
-                st.markdown("""
-                    <div class="upload-zone" id="upload-zone">
-                        <div class="upload-icon">📄</div>
-                        <div class="upload-text">Choose Resume File</div>
-                        <div class="upload-hint">or drag and drop PDF here</div>
-                    </div>
-                """, unsafe_allow_html=True)
                 uploaded_file = st.file_uploader("Upload Resume (PDF) *", type=['pdf'], label_visibility="collapsed", help="Upload your resume in PDF format")
                 if uploaded_file is not None:
                     file_size = uploaded_file.size / 1024
@@ -1185,8 +1189,18 @@ def show_setup():
                 v_email = str(v_email).strip() if v_email is not None else ""
                 v_phone = str(v_phone).strip() if v_phone is not None else ""
                 
-                if not v_name or not v_id or not v_email or not v_phone:
-                    st.error("⚠️ Please fill all required fields")
+                missing_fields = []
+                if not v_name:
+                    missing_fields.append("Full Name")
+                if not v_email:
+                    missing_fields.append("Email ID")
+                if not v_id:
+                    missing_fields.append("Candidate ID")
+                if not v_phone:
+                    missing_fields.append("Phone Number")
+
+                if missing_fields:
+                    st.error(f"⚠️ Please fill the following required fields: {', '.join(missing_fields)}")
                 elif input_type == "Upload Resume (PDF)" and (uploaded_file is None):
                     st.error("📄 Please upload your resume PDF.")
                 elif input_type == "Paste Job Description (JD)" and (not jd_text or not jd_text.strip()):
