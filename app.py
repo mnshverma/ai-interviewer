@@ -115,39 +115,36 @@ st.markdown("""
     }
 
     .stApp {
-        background: radial-gradient(circle at top left, #1e1b4b 0%, #030712 40%),
-                    radial-gradient(circle at bottom right, #1e1b4b 0%, #030712 40%);
+        background: radial-gradient(circle at 0% 0%, #1e1b4b 0%, #030712 50%),
+                    radial-gradient(circle at 100% 100%, #1e1b4b 0%, #030712 50%);
         background-attachment: fixed;
         min-height: 100vh;
     }
 
     .block-container {
-        padding-top: 2rem !important;
-        padding-bottom: 3rem !important;
-        max-width: 720px !important;
+        padding-top: 3.5rem !important;
+        padding-bottom: 4rem !important;
+        max-width: 820px !important;
         margin: 0 auto;
-    }
-
-    header[data-testid="stHeader"],
-    [data-testid="stFooter"],
-    [data-testid="stMainBlockMenu"],
-    #MainMenu, footer, header {
-        display: none !important;
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
     }
 
     h1, h2, h3, h4 {
         font-family: 'Outfit', sans-serif !important;
         color: var(--text-primary) !important;
-        letter-spacing: -0.02em;
+        letter-spacing: -0.015em;
+        margin: 0 !important;
     }
 
     h1 {
-        font-size: 2.25rem !important;
-        font-weight: 700 !important;
+        font-size: 2.75rem !important;
+        font-weight: 800 !important;
         background: var(--gradient-main);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
-        margin-bottom: 0.5rem !important;
+        line-height: 1.2 !important;
         animation: fadeInDown 0.8s ease-out;
     }
 
@@ -271,25 +268,25 @@ st.markdown("""
         text-transform: none !important;
     }
 
-    .stButton > button[kind="primary"] {
+    .stButton > button[type="primary"] {
         background: var(--gradient-main) !important;
         color: white !important;
         box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3) !important;
     }
 
-    .stButton > button[kind="primary"]:hover {
+    .stButton > button[type="primary"]:hover {
         transform: translateY(-2px) !important;
         box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4) !important;
     }
 
-    .stButton > button[kind="secondary"] {
+    .stButton > button[type="secondary"] {
         background: rgba(255, 255, 255, 0.05) !important;
         color: var(--text-primary) !important;
         backdrop-filter: blur(8px);
         border: 1px solid var(--border-glass) !important;
     }
 
-    .stButton > button[kind="secondary"]:hover {
+    .stButton > button[type="secondary"]:hover {
         background: rgba(255, 255, 255, 0.1) !important;
     }
 
@@ -527,17 +524,22 @@ def confirm_submission():
             st.session_state.step = 'report'
             st.rerun()
     with c2:
-        if st.button("🔙 Not yet", use_container_width=True, kind="secondary"):
+        if st.button("🔙 Not yet", use_container_width=True, type="secondary"):
             st.rerun()
 
 def render_branding():
-    """Global branding header for all steps"""
+    """Ultra-premium branding header"""
     st.markdown(f"""
-        <div style="text-align: center; margin-bottom: 2.5rem; animation: fadeInDown 0.8s ease-out;">
-            <div style="display: inline-block; padding: 1rem; background: var(--bg-glass); border-radius: 24px; border: 1px solid var(--border-glass); box-shadow: var(--shadow-premium); backdrop-filter: blur(12px);">
-                <img src="data:image/png;base64,{LOGO_BASE64}" style="height: 60px; margin-bottom: 0.5rem; filter: drop-shadow(0 0 10px rgba(59, 130, 246, 0.3));">
-                <div style="font-family: 'Outfit', sans-serif; font-size: 1.25rem; font-weight: 800; background: var(--gradient-main); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: 0.1em; text-transform: uppercase;">
+        <div style="text-align: center; margin-bottom: 3rem;">
+            <div style="display: inline-flex; flex-direction: column; align-items: center; gap: 0.5rem; padding: 1.5rem 2.5rem; background: var(--bg-glass); border-radius: 32px; border: 1px solid var(--border-glass); box-shadow: var(--shadow-premium); backdrop-filter: blur(20px); animation: fadeIn 1s ease-out;">
+                <div style="width: 80px; height: 80px; background: rgba(0,0,0,0.2); border-radius: 20px; display: flex; align-items: center; justify-content: center; border: 1px solid var(--border-glass); margin-bottom: 0.5rem;">
+                    <img src="data:image/png;base64,{LOGO_BASE64}" style="height: 50px; filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.4));">
+                </div>
+                <div style="font-family: 'Outfit', sans-serif; font-size: 1.5rem; font-weight: 800; background: var(--gradient-main); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: 0.15em; text-transform: uppercase;">
                     MANVER AI
+                </div>
+                <div style="color: var(--text-muted); font-size: 0.7rem; font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase; opacity: 0.8;">
+                    Next-Gen Candidate Screening
                 </div>
             </div>
         </div>
@@ -622,59 +624,71 @@ def render_header():
 def show_device_test():
     render_branding()
     render_step_progress()
-
     st.markdown("""
-        <div style="text-align: center;">
-            <h1 style="margin-bottom: 0.25rem;">Welcome to MANVER</h1>
-            <p class="step-subtitle">Secure Technical Assessment Platform</p>
+        <div style="text-align: center; margin-top: 1rem;">
+            <h1>Ready to Begin?</h1>
+            <p class="step-subtitle" style="margin-top: 0.5rem;">Join thousands of candidates worldwide in our secure assessment environment.</p>
         </div>
     """, unsafe_allow_html=True)
 
-    step = st.session_state.get("device_test_step", 0)
+    step_num = st.session_state.get("device_test_step", 0)
 
-    if step == 0:
+    if step_num == 0:
         st.markdown("""
-            <div class="wizard-card wizard-card-center">
-                <div style="font-size: 3.5rem; margin-bottom: 1.5rem; animation: pulse 2s infinite;">🛡️</div>
-                <h2 style="margin-bottom: 1rem;">System Verification</h2>
-                <p style="color: var(--text-secondary); max-width: 460px; margin: 0 auto 2rem; line-height: 1.6;">
-                    To ensure a fair and stable interview experience, we need to verify your hardware permissions. 
-                    Your data is secure and will only be used for this session.
+            <div class="wizard-card wizard-card-center" style="padding: 3rem 2rem;">
+                <div style="font-size: 4rem; margin-bottom: 2rem; animation: pulse 2.5s infinite;">🛡️</div>
+                <h2 style="margin-bottom: 1.25rem; font-size: 2rem !important;">Advanced Session Shield</h2>
+                <p style="color: var(--text-secondary); max-width: 500px; margin: 0 auto 2.5rem; line-height: 1.8; font-size: 1.05rem;">
+                    To initiate your secure interview, we must verify your system's hardware configuration. 
+                    This ensures optimal video and audio transmission during your session.
                 </p>
+                <div style="display: flex; justify-content: center; gap: 2rem; color: var(--text-muted); font-size: 0.8rem; font-weight: 600; text-transform: uppercase;">
+                    <span style="display: flex; align-items: center; gap: 0.5rem;">🔒 Encrypted</span>
+                    <span style="display: flex; align-items: center; gap: 0.5rem;">⚡ Low Latency</span>
+                    <span style="display: flex; align-items: center; gap: 0.5rem;">🤖 AI Powered</span>
+                </div>
             </div>
         """, unsafe_allow_html=True)
 
-        if st.button("Initialize System Check", type="primary", use_container_width=True):
+        if st.button("Start System Initialization", type="primary", use_container_width=True):
             st.session_state.device_test_step = 1
             st.rerun()
+
+    elif step_num == 1:
+        st.markdown("""
+            <div style="margin-top: 1rem; margin-bottom: 2rem;">
+                <h3 style="margin-bottom: 0.5rem;">Hardware Configuration</h3>
+                <p style="color: var(--text-secondary); font-size: 0.95rem;">Test your inputs before proceeding to the session</p>
+            </div>
+        """, unsafe_allow_html=True)
 
         col1, col2 = st.columns(2, gap="large")
 
         with col1:
-            st.markdown('<div class="wizard-card" style="padding: 1.5rem;">', unsafe_allow_html=True)
-            st.markdown("#### 📷 Video Input")
+            st.markdown('<div class="wizard-card" style="padding: 1.5rem; height: 100%;">', unsafe_allow_html=True)
+            st.markdown('<h4 style="margin-bottom: 1.25rem;">📷 Video Status</h4>', unsafe_allow_html=True)
             camera_ok = st.camera_input("Test camera", label_visibility="collapsed", key="test_camera")
             if camera_ok:
-                st.markdown('<span style="color: #10b981; font-weight: 600; font-size: 0.85rem;">✓ Camera Active</span>', unsafe_allow_html=True)
+                st.markdown('<div style="margin-top: 1rem; padding: 0.75rem; background: rgba(16, 185, 129, 0.1); border-radius: 10px; border: 1px solid rgba(16, 185, 129, 0.2);"><p style="color: #10b981; margin: 0; font-weight: 600; text-align: center; font-size: 0.85rem;">✓ Video Ready</p></div>', unsafe_allow_html=True)
             st.markdown('</div>', unsafe_allow_html=True)
 
         with col2:
-            st.markdown('<div class="wizard-card" style="padding: 1.5rem;">', unsafe_allow_html=True)
-            st.markdown("#### 🎤 Audio Input")
+            st.markdown('<div class="wizard-card" style="padding: 1.5rem; height: 100%;">', unsafe_allow_html=True)
+            st.markdown('<h4 style="margin-bottom: 1.25rem;">🎤 Audio Status</h4>', unsafe_allow_html=True)
             mic_ok = st.audio_input("Test microphone", label_visibility="collapsed", key="test_mic")
             if mic_ok:
-                st.markdown('<span style="color: #10b981; font-weight: 600; font-size: 0.85rem;">✓ Audio Detected</span>', unsafe_allow_html=True)
+                st.markdown('<div style="margin-top: 1rem; padding: 0.75rem; background: rgba(16, 185, 129, 0.1); border-radius: 10px; border: 1px solid rgba(16, 185, 129, 0.2);"><p style="color: #10b981; margin: 0; font-weight: 600; text-align: center; font-size: 0.85rem;">✓ Audio Detected</p></div>', unsafe_allow_html=True)
             st.markdown('</div>', unsafe_allow_html=True)
 
         st.markdown('<br>', unsafe_allow_html=True)
-        col_back, col_next = st.columns([1, 1], gap="medium")
+        col_back, _, col_next = st.columns([1, 0.2, 1])
         with col_back:
-            if st.button("← Adjust Settings", use_container_width=True, kind="secondary"):
+            if st.button("← Reset Defaults", use_container_width=True, type="secondary"):
                 st.session_state.device_test_step = 0
                 st.rerun()
         with col_next:
             can_proceed = camera_ok is not None and mic_ok is not None
-            if st.button("Proceed to Setup →", type="primary", use_container_width=True, disabled=not can_proceed):
+            if st.button("Finalize Verification →", type="primary", use_container_width=True, disabled=not can_proceed):
                 st.session_state.device_test_done = True
                 st.session_state.device_permissions_granted = True
                 st.session_state.photo_verified = True
@@ -1018,7 +1032,7 @@ def interview_content():
     col_back, _, col_next = st.columns([1, 0.4, 1], gap="medium")
 
     with col_back:
-        if st.button("← Previous Question", disabled=(q_idx == 0), use_container_width=True, kind="secondary"):
+        if st.button("← Previous Question", disabled=(q_idx == 0), use_container_width=True, type="secondary"):
             st.session_state.current_q -= 1
             st.rerun()
 

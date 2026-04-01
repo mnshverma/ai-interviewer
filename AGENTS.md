@@ -158,13 +158,13 @@ elif step == 'photo_capture':
 
 ## Workflow Steps
 
-1. **device_test** - Camera/microphone permission and testing
-2. **photo_capture** - Candidate photo capture for identity
-3. **eye_calibration** - Gaze tracking calibration for proctoring
-4. **setup** - Candidate details form (name, email, ID, phone)
-5. **analysis** - AI analysis of resume/JD
-6. **interview** - Q&A session with proctoring
-7. **report** - Final evaluation report
+1. **Verify** - Camera/microphone initializing and hardware testing
+2. **Photo** - Candidate photo capture for identity verification
+3. **Sync** - Eye tracking calibration and gaze synchronization
+4. **Details** - Candidate information form (Name, Email, ID, Phone)
+5. **Analyze** - AI analysis of Resume or Job Description
+6. **Session** - AI-powered technical Q&A with real-time proctoring
+7. **Results** - Final evaluation score, AI feedback, and PDF report generation
 
 ---
 
