@@ -5,16 +5,23 @@ from datetime import datetime
 from typing import Optional, Tuple, List, Dict
 from dataclasses import dataclass, field, asdict
 
+CV2_AVAILABLE = False
+MP_AVAILABLE = False
+NP_AVAILABLE = False
+
 try:
     import cv2
-    import mediapipe as mp
     import numpy as np
+    NP_AVAILABLE = True
+    import mediapipe as mp
+    if hasattr(mp, 'solutions'):
+        MP_AVAILABLE = True
     CV2_AVAILABLE = True
-except ImportError:
+except (ImportError, AttributeError) as e:
     cv2 = None
     mp = None
     np = None
-    CV2_AVAILABLE = False
+    print(f"Warning: Could not import computer vision libraries: {e}")
 
 
 @dataclass
